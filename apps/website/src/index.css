@@ -3,7 +3,309 @@
 @source "./**/*.{ts,tsx}";
 @source "../../../packages/ui/src/**/*.{ts,tsx}";
 
-.sr-only {
+:root {
+  color-scheme: light;
+}
+
+::selection {
+  background: #ff90e8;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+input,
+button,
+textarea,
+select {
+  font-family: inherit;
+}
+
+/* ---------- Neo-brutalist primitives ---------- */
+
+.ms-focus:focus-visible {
+  outline: none;
+  box-shadow: 4px 4px 0 #000;
+  transform: translate(-1px, -1px);
+}
+
+.ms-input {
+  width: 100%;
+  border: 2px solid #000;
+  border-radius: var(--radius-md);
+  background: #fff;
+  padding: 0.7rem 0.85rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #000;
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+
+.ms-input::placeholder {
+  color: #888;
+  font-weight: 500;
+}
+
+.ms-input:focus {
+  outline: none;
+  box-shadow: 4px 4px 0 #000;
+  transform: translate(-1px, -1px);
+}
+
+.ms-input[data-invalid="true"] {
+  background: #ffb3b3;
+}
+
+.ms-card {
+  position: relative;
+  border: 2px solid #000;
+  border-radius: var(--radius-xl);
+  background: #fff;
+  box-shadow: var(--shadow-brutal-lg);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.ms-card-hover:hover:not(:disabled) {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-brutal-xl);
+}
+
+.ms-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 2px solid #000;
+  border-radius: var(--radius-md);
+  background: #fff;
+  padding: 0.55rem 1rem;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #000;
+  cursor: pointer;
+  box-shadow: var(--shadow-brutal-sm);
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.12s ease;
+}
+
+.ms-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow-brutal);
+}
+
+.ms-btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 #000;
+}
+
+.ms-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  transform: none;
+  box-shadow: var(--shadow-brutal-sm);
+}
+
+.ms-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 2px solid #000;
+  border-radius: var(--radius-md);
+  background: #000;
+  color: #fff;
+  padding: 0.65rem 1.15rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  box-shadow: var(--shadow-brutal);
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+
+.ms-btn-primary:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-brutal-xl);
+}
+
+.ms-btn-primary:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 #000;
+}
+
+.ms-btn-primary:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  transform: none;
+  box-shadow: var(--shadow-brutal);
+}
+
+.ms-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 2px solid #000;
+  border-radius: var(--radius-pill);
+  padding: 0.2rem 0.6rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.7rem;
+  line-height: 1;
+  color: #000;
+  background: #fff;
+}
+
+.ms-kbd {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #000;
+  border-radius: 0.25rem;
+  background: var(--color-chip);
+  padding: 0 0.35rem;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.7rem;
+  color: #000;
+}
+
+.ms-divider {
+  height: 2px;
+  background: #000;
+}
+
+.ms-stripe-bg {
+  background-image: repeating-linear-gradient(
+    45deg,
+    #000 0,
+    #000 2px,
+    transparent 2px,
+    transparent 8px
+  );
+}
+
+/* ---------- Dropzone ---------- */
+
+.ms-dropzone {
+  border: 2px dashed #000;
+  border-radius: var(--radius-xl);
+  background: #fff;
+  transition: transform 0.1s ease, background 0.12s ease;
+}
+
+.ms-dropzone[data-drag="true"] {
+  background: #dfe6ff;
+  transform: scale(1.005);
+}
+
+/* ---------- Animations ---------- */
+
+@keyframes ms-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.96) translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes ms-fade {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ms-stripes {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 32px 0;
+  }
+}
+
+@keyframes ms-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@keyframes ms-slide-in {
+  0% {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.ms-animate-pop {
+  animation: ms-pop 0.18s ease-out both;
+}
+
+.ms-animate-fade {
+  animation: ms-fade 0.2s ease-out both;
+}
+
+.ms-animate-slide {
+  animation: ms-slide-in 0.18s ease-out both;
+}
+
+.ms-progress-stripes {
+  background-image: repeating-linear-gradient(
+    45deg,
+    #000 0,
+    #000 6px,
+    #fff 6px,
+    #fff 12px
+  );
+  background-size: 32px 32px;
+  animation: ms-stripes 0.7s linear infinite;
+}
+
+.ms-pulse {
+  animation: ms-pulse 1.1s ease-in-out infinite;
+}
+
+/* staggered list entrance */
+.ms-stagger > * {
+  animation: ms-fade 0.22s ease-out both;
+}
+.ms-stagger > *:nth-child(1) { animation-delay: 0.02s; }
+.ms-stagger > *:nth-child(2) { animation-delay: 0.06s; }
+.ms-stagger > *:nth-child(3) { animation-delay: 0.1s; }
+.ms-stagger > *:nth-child(4) { animation-delay: 0.14s; }
+.ms-stagger > *:nth-child(5) { animation-delay: 0.18s; }
+.ms-stagger > *:nth-child(6) { animation-delay: 0.22s; }
+.ms-stagger > *:nth-child(7) { animation-delay: 0.26s; }
+.ms-stagger > *:nth-child(8) { animation-delay: 0.3s; }
+
+/* ---------- Accessibility ---------- */
+
+.ms-sr-only {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -15,10 +317,21 @@
   border: 0;
 }
 
-body {
-  margin: 0;
-  min-height: 100vh;
-  background: var(--color-canvas);
-  color: var(--color-ink);
-  font-family: var(--font-sans);
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .ms-card-hover:hover:not(:disabled),
+  .ms-btn:hover,
+  .ms-btn-primary:hover,
+  .ms-input:focus {
+    transform: none;
+  }
+  .ms-progress-stripes {
+    animation: none;
+  }
 }
