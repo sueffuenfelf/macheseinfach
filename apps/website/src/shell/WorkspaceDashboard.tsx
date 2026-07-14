@@ -1,9 +1,17 @@
 import { useEffect, useMemo, useState, type DragEvent } from 'react';
 import { allTools, getTool, searchTools, type ToolId } from '../data/catalog';
 import { getToolWidget, listToolWidgets } from './widgets/registry';
-import type { Workspace, WorkspaceLayoutItem, WorkspaceLayoutSet } from './workspaces/model';
+import { WidgetSettingsPopover } from './widgets/WidgetSettingsPopover';
+import {
+    resolvePasswordOptions,
+    resolveUseSharedInput,
+    type Workspace,
+    type WorkspaceLayoutItem,
+    type WorkspaceLayoutSet,
+    type WidgetPasswordOptions,
+} from './workspaces/model';
 import { useDragAutoScroll } from './useDragAutoScroll';
-import GridLayout from 'react-grid-layout';
+import GridLayout, { useContainerWidth } from 'react-grid-layout';
 
 const STAGED_WIDGET_DRAG_MIME = 'application/x-macheseinfach-widget-id';
 
@@ -14,6 +22,9 @@ type WorkspaceDashboardProps = {
     onLayoutChange: (next: WorkspaceLayoutSet) => void;
     onLayoutSaved?: () => void;
     onLayoutEditModeChange: (next: boolean) => void;
+    onSharedInputChange: (value: string) => void;
+    onToggleWidgetUseSharedInput: (widgetId: string, useSharedInput: boolean) => void;
+    onWidgetPasswordOptionsChange: (widgetId: string, options: WidgetPasswordOptions) => void;
     onAddWidget: (widgetId: string) => void;
     onRemoveWidget: (widgetId: string) => void;
     onRemoveStagedWidget: (widgetId: string) => void;
@@ -34,6 +45,9 @@ export function WorkspaceDashboard({
     onLayoutChange,
     onLayoutSaved,
     onLayoutEditModeChange,
+    onSharedInputChange,
+    onToggleWidgetUseSharedInput,
+    onWidgetPasswordOptionsChange,
     onAddWidget,
     onRemoveWidget,
     onRemoveStagedWidget,
@@ -47,16 +61,12 @@ export function WorkspaceDashboard({
     const [query, setQuery] = useState('');
     const [stagingOpen, setStagingOpen] = useState(true);
     const [draggingStagedWidgetId, setDraggingStagedWidgetId] = useState<string | null>(null);
-    const [viewportWidth, setViewportWidth] = useState(() =>
-        typeof window === 'undefined' ? 1280 : window.innerWidth,
-    );
+    const [gridInteracting, setGridInteracting] = useState(false);
+    const [openSettingsWidgetId, setOpenSettingsWidgetId] = useState<string | null>(null);
+    const { width: gridWidth, containerRef: gridContainerRef, mounted: gridMounted } = useContainerWidth({
+        initialWidth: 1168,
+    });
     const { beginDragAutoScroll, endDragAutoScroll, trackDragPointer } = useDragAutoScroll();
-
-    useEffect(() => {
-        const onResize = () => setViewportWidth(window.innerWidth);
-        window.addEventListener('resize', onResize);
-        return () => window.removeEventListener('resize', onResize);
-    }, []);
 
     useEffect(() => {
         if (!draggingStagedWidgetId) return;
@@ -70,13 +80,28 @@ export function WorkspaceDashboard({
     useEffect(() => {
         if (layoutEditMode) return;
         setDraggingStagedWidgetId(null);
+        setGridInteracting(false);
         endDragAutoScroll();
     }, [endDragAutoScroll, layoutEditMode]);
 
-    const currentBreakpoint = viewportWidth >= 1200 ? 'lg' : viewportWidth >= 996 ? 'md' : viewportWidth >= 768 ? 'sm' : viewportWidth >= 480 ? 'xs' : 'xxs';
+    useEffect(() => {
+        const active = gridInteracting || Boolean(draggingStagedWidgetId);
+        if (!active) return;
+        document.body.classList.add('workspace-grid-interacting');
+        return () => document.body.classList.remove('workspace-grid-interacting');
+    }, [draggingStagedWidgetId, gridInteracting]);
+
+    useEffect(() => {
+        setOpenSettingsWidgetId(null);
+    }, [workspace.id]);
+
+    const currentBreakpoint = gridWidth >= 1200 ? 'lg' : gridWidth >= 996 ? 'md' : gridWidth >= 768 ? 'sm' : gridWidth >= 480 ? 'xs' : 'xxs';
     const cols = currentBreakpoint === 'lg' ? 12 : currentBreakpoint === 'md' ? 10 : currentBreakpoint === 'sm' ? 6 : currentBreakpoint === 'xs' ? 4 : 2;
-    const dashboardWidth = Math.max(320, Math.min(1200, viewportWidth - 32));
     const currentLayout = layout[currentBreakpoint] ?? layout.lg ?? [];
+    const layoutConfigByWidgetId = useMemo(() => {
+        const source = layout.lg ?? currentLayout;
+        return new Map(source.map((item) => [item.i, item]));
+    }, [currentLayout, layout.lg]);
 
     const stagedWidgets = useMemo(
         () => workspace.stagedWidgetIds.map((widgetId) => getToolWidget(widgetId)).filter((widget) => Boolean(widget)),
@@ -122,8 +147,14 @@ export function WorkspaceDashboard({
     const draggingStagedWidget = draggingStagedWidgetId ? getToolWidget(draggingStagedWidgetId) : undefined;
     const showEmptyState = widgets.length === 0 && stagedWidgets.length === 0;
 
+    function clearTextSelection() {
+        window.getSelection()?.removeAllRanges();
+    }
+
     function handleGridDragStart(_layout: unknown, _oldItem: unknown, _newItem: unknown, _placeholder: unknown, event: Event) {
         if (!layoutEditMode) return;
+        setGridInteracting(true);
+        clearTextSelection();
         beginDragAutoScroll();
         if ('clientY' in event) trackDragPointer(event.clientY);
     }
@@ -135,7 +166,20 @@ export function WorkspaceDashboard({
 
     function handleGridDragStop() {
         if (!layoutEditMode) return;
+        setGridInteracting(false);
         endDragAutoScroll();
+        onLayoutSaved?.();
+    }
+
+    function handleGridResizeStart() {
+        if (!layoutEditMode) return;
+        setGridInteracting(true);
+        clearTextSelection();
+    }
+
+    function handleGridResizeStop() {
+        if (!layoutEditMode) return;
+        setGridInteracting(false);
         onLayoutSaved?.();
     }
 
@@ -145,6 +189,7 @@ export function WorkspaceDashboard({
         event.dataTransfer.setData('text/plain', widgetId);
         event.dataTransfer.effectAllowed = 'copy';
         setDraggingStagedWidgetId(widgetId);
+        clearTextSelection();
         beginDragAutoScroll();
         trackDragPointer(event.clientY);
     }
@@ -279,6 +324,23 @@ export function WorkspaceDashboard({
                 </section>
             ) : null}
 
+            <section className="mb-4 rounded-[12px] border-2 border-black bg-white p-3 shadow-brutal-sm">
+                <label htmlFor="workspace-shared-input" className="font-display text-[13px] font-bold">
+                    Gemeinsame Eingabe
+                </label>
+                <p className="mt-0.5 text-[11px] text-[var(--color-ink-soft)]">
+                    Ein Wert für alle Widgets, die „Gemeinsame Eingabe" in den Einstellungen aktiviert haben.
+                </p>
+                <input
+                    id="workspace-shared-input"
+                    type="text"
+                    value={workspace.sharedInput}
+                    onChange={(event) => onSharedInputChange(event.target.value)}
+                    placeholder="z. B. IBAN, URL oder Text …"
+                    className="ms-input mt-2 text-[13px]"
+                />
+            </section>
+
             {showEmptyState ? (
                 <div className="rounded-[12px] border-2 border-black bg-white p-6 shadow-brutal-sm">
                     <p className="font-display text-[18px] font-bold">Dein Dashboard ist noch leer.</p>
@@ -303,7 +365,8 @@ export function WorkspaceDashboard({
                 </div>
             ) : (
                 <div
-                    className={`rounded-[12px] border-2 border-dashed border-black/35 p-1 ${
+                    ref={gridContainerRef}
+                    className={`workspace-canvas overflow-hidden rounded-[12px] border-2 border-dashed border-black/35 p-1 ${
                         draggingStagedWidgetId ? 'bg-[#e8f7ff]' : 'bg-transparent'
                     }`}
                 >
@@ -312,10 +375,11 @@ export function WorkspaceDashboard({
                             Dashboard leer — ziehe Widgets aus dem Bereitstellungsbereich hierher.
                         </p>
                     ) : null}
+                    {gridMounted ? (
                     <GridLayout
                         className="workspace-grid-layout"
                         layout={currentLayout}
-                        width={dashboardWidth}
+                        width={gridWidth}
                         gridConfig={{
                             cols,
                             rowHeight: 48,
@@ -358,7 +422,8 @@ export function WorkspaceDashboard({
                         onDragStart={handleGridDragStart}
                         onDrag={handleGridDrag}
                         onDragStop={handleGridDragStop}
-                        onResizeStop={() => onLayoutSaved?.()}
+                        onResizeStart={handleGridResizeStart}
+                        onResizeStop={handleGridResizeStop}
                         onDropDragOver={(event) => {
                             if (!draggingStagedWidgetId || !layoutEditMode) return false;
                             const widget = getToolWidget(draggingStagedWidgetId);
@@ -376,58 +441,93 @@ export function WorkspaceDashboard({
                         {widgets.map((widget) => {
                             const tool = getTool(widget.toolId);
                             const WidgetComponent = widget.component;
+                            const layoutItem = layoutConfigByWidgetId.get(widget.id);
+                            const useSharedInput = resolveUseSharedInput(widget.id, layoutItem?.useSharedInput);
+                            const passwordOptions = resolvePasswordOptions(layoutItem?.passwordOptions);
                             return (
                                 <div
                                     key={widget.id}
-                                    className={`overflow-hidden rounded-[12px] border-2 border-black bg-[var(--color-chip)] shadow-brutal-sm ${
-                                        layoutEditMode ? 'border-dashed ring-2 ring-black/15' : ''
+                                    className={`flex h-full min-h-0 flex-col overflow-hidden rounded-[12px] border-2 border-black bg-[var(--color-chip)] shadow-brutal-sm ${
+                                        layoutEditMode ? 'border-dashed' : ''
                                     }`}
                                 >
                                     <div
-                                        className={`widget-drag-handle flex items-center justify-between border-b-2 border-black bg-white px-3 py-2 ${
+                                        className={`widget-drag-handle relative z-10 flex items-center justify-between overflow-visible border-b-2 border-black bg-white px-3 py-2 ${
                                             layoutEditMode ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'
                                         }`}
                                     >
-                                        {layoutEditMode ? (
-                                            <span className="font-display text-[12px] font-bold">{widget.title}</span>
-                                        ) : (
-                                            <button
-                                                type="button"
-                                                className="font-display text-[12px] font-bold underline decoration-dotted underline-offset-2"
-                                                onClick={() => onOpenTool(tool.id)}
-                                            >
-                                                {widget.title}
-                                            </button>
-                                        )}
-                                        <div className={`widget-no-drag flex items-center gap-1 ${layoutEditMode ? 'pointer-events-none opacity-60' : ''}`}>
-                                            <button
-                                                type="button"
-                                                className="rounded-[6px] border-2 border-black bg-white px-1.5 py-0.5 text-[10px] font-semibold"
-                                                disabled={layoutEditMode}
-                                                aria-disabled={layoutEditMode}
-                                                tabIndex={layoutEditMode ? -1 : undefined}
-                                                onClick={() => onOpenTool(tool.id)}
-                                                aria-label={`${widget.title} als Tool öffnen`}
-                                            >
-                                                öffnen
-                                            </button>
-                                            <button
-                                                type="button"
-                                                className="rounded-[6px] border-2 border-black bg-white px-1.5 py-0.5 text-[10px] font-semibold"
-                                                disabled={layoutEditMode}
-                                                aria-disabled={layoutEditMode}
-                                                tabIndex={layoutEditMode ? -1 : undefined}
-                                                onClick={() => onRemoveWidget(widget.id)}
-                                                aria-label={`${widget.title} entfernen`}
-                                            >
-                                                x
-                                            </button>
+                                        <div className="flex min-w-0 items-center gap-1.5">
+                                            {useSharedInput && widget.supportsSharedInput ? (
+                                                <span className="ms-shared-input-indicator ms-info-tip">
+                                                    <button
+                                                        type="button"
+                                                        className="ms-shared-input-indicator__trigger"
+                                                        aria-label="Gemeinsame Eingabe"
+                                                        aria-describedby={`${widget.id}-shared-input-desc`}
+                                                        tabIndex={0}
+                                                    >
+                                                        <svg
+                                                            viewBox="0 0 24 24"
+                                                            fill="none"
+                                                            stroke="currentColor"
+                                                            strokeWidth="2.5"
+                                                            aria-hidden
+                                                        >
+                                                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                                                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                                                        </svg>
+                                                    </button>
+                                                    <span
+                                                        id={`${widget.id}-shared-input-desc`}
+                                                        role="tooltip"
+                                                        className="ms-info-tip__bubble"
+                                                    >
+                                                        Nutzt den workspace-weiten Wert statt eines lokalen Feldes.
+                                                    </span>
+                                                </span>
+                                            ) : null}
+                                            {layoutEditMode ? (
+                                                <span className="truncate font-display text-[12px] font-bold">{widget.title}</span>
+                                            ) : (
+                                                <button
+                                                    type="button"
+                                                    className="truncate font-display text-[12px] font-bold underline decoration-dotted underline-offset-2"
+                                                    onClick={() => onOpenTool(tool.id)}
+                                                >
+                                                    {widget.title}
+                                                </button>
+                                            )}
+                                        </div>
+                                        <div className="widget-no-drag flex items-center gap-1">
+                                            <WidgetSettingsPopover
+                                                widget={widget}
+                                                open={openSettingsWidgetId === widget.id}
+                                                onOpenChange={(open) => setOpenSettingsWidgetId(open ? widget.id : null)}
+                                                passwordOptions={passwordOptions}
+                                                onPasswordOptionsChange={(options) =>
+                                                    onWidgetPasswordOptionsChange(widget.id, options)
+                                                }
+                                                useSharedInput={useSharedInput}
+                                                onUseSharedInputChange={(value) =>
+                                                    onToggleWidgetUseSharedInput(widget.id, value)
+                                                }
+                                            />
+                                            {layoutEditMode ? (
+                                                <button
+                                                    type="button"
+                                                    className="rounded-[6px] border-2 border-black bg-white px-1.5 py-0.5 text-[10px] font-semibold"
+                                                    onClick={() => onRemoveWidget(widget.id)}
+                                                    aria-label={`${widget.title} entfernen`}
+                                                >
+                                                    x
+                                                </button>
+                                            ) : null}
                                         </div>
                                     </div>
-                                    <div className="relative">
-                                        <fieldset disabled={layoutEditMode} className="m-0 min-w-0 border-0 p-0">
+                                    <div className="relative flex min-h-0 flex-1 flex-col">
+                                        <fieldset disabled={layoutEditMode} className="m-0 flex min-h-0 min-w-0 flex-1 flex-col border-0 p-0">
                                             <div
-                                                className={`${
+                                                className={`flex min-h-0 flex-1 flex-col ${
                                                     layoutEditMode ? 'pointer-events-none select-none opacity-65 [&_button]:pointer-events-none [&_input]:pointer-events-none [&_textarea]:pointer-events-none [&_select]:pointer-events-none' : ''
                                                 }`}
                                             >
@@ -435,19 +535,23 @@ export function WorkspaceDashboard({
                                                     widgetId={widget.id}
                                                     openTool={() => onOpenTool(tool.id)}
                                                     embedded
+                                                    sharedInput={workspace.sharedInput}
+                                                    useSharedInput={useSharedInput}
+                                                    passwordOptions={passwordOptions}
+                                                    onPasswordOptionsChange={(options) =>
+                                                        onWidgetPasswordOptionsChange(widget.id, options)
+                                                    }
                                                 />
                                             </div>
                                         </fieldset>
-                                        {layoutEditMode ? (
-                                            <span className="pointer-events-none absolute right-2 top-2 rounded-[6px] border-2 border-black border-dashed bg-white px-1.5 py-0.5 text-[10px] font-bold">
-                                                Layout bearbeiten
-                                            </span>
-                                        ) : null}
                                     </div>
                                 </div>
                             );
                         })}
                     </GridLayout>
+                    ) : (
+                        <div className="min-h-[12rem]" aria-hidden />
+                    )}
                 </div>
             )}
 

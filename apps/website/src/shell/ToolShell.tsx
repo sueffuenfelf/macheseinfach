@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getTool } from '../data/catalog';
 import { usePlatformNav } from '../routing/usePlatformNav';
-import { favoritesPath, homePath, settingsPath } from '../routing/paths';
+import { favoritesPath, homePath, settingsPath, workspacePath } from '../routing/paths';
 import { AreaStep } from './AreaStep';
 import { CommandPalette } from './CommandPalette';
 import { FavoritesPage } from './FavoritesPage';
@@ -27,6 +27,9 @@ import {
     saveWorkspaceState,
     setDefaultWorkspace,
     setWorkspaceLayout,
+    setWorkspaceSharedInput,
+    setWidgetPasswordOptions,
+    setWidgetUseSharedInput,
     toggleWorkspaceTool,
     type Workspace,
     type WorkspaceState,
@@ -194,6 +197,7 @@ export function ToolShell() {
     }, [activeWorkspace, platform, workspaceState, workspaces]);
 
     const paletteMode = page === 'workspace' ? 'workspace' : 'global';
+    const defaultWorkspaceSlug = defaultWorkspace(workspaceState)?.slug;
 
     const mainContent =
         page === 'favorites' ? (
@@ -214,6 +218,15 @@ export function ToolShell() {
                             message: next ? 'Layout entsperrt: Ziehen und Skalieren aktiv' : 'Layout gesperrt: Widgets wieder bedienbar',
                             variant: next ? 'info' : 'success',
                         });
+                    }}
+                    onSharedInputChange={(value) => {
+                        updateState(setWorkspaceSharedInput(workspaceState, activeWorkspace.id, value));
+                    }}
+                    onToggleWidgetUseSharedInput={(widgetId, useSharedInput) => {
+                        updateState(setWidgetUseSharedInput(workspaceState, activeWorkspace.id, widgetId, useSharedInput));
+                    }}
+                    onWidgetPasswordOptionsChange={(widgetId, options) => {
+                        updateState(setWidgetPasswordOptions(workspaceState, activeWorkspace.id, widgetId, options));
                     }}
                     onAddWidget={(widgetId) => {
                         updateState(addWidgetToWorkspace(workspaceState, activeWorkspace.id, widgetId));
@@ -270,10 +283,28 @@ export function ToolShell() {
                             </svg>
                             Favoriten
                         </Link>
+                        {defaultWorkspaceSlug ? (
+                            <Link
+                                to={workspacePath(defaultWorkspaceSlug)}
+                                onClick={() => platform.goToWorkspace(defaultWorkspaceSlug)}
+                                aria-current={page === 'workspace' ? 'page' : undefined}
+                                className={`ms-focus inline-flex h-10 items-center gap-1.5 rounded-[8px] border-2 border-black px-3 font-display text-[13px] font-semibold shadow-[2px_2px_0_#000] transition hover:-translate-x-[2px] hover:-translate-y-[2px] hover:shadow-brutal active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0_#000] ${
+                                    page === 'workspace' ? 'bg-[var(--color-brand)] text-white' : 'bg-white'
+                                }`}
+                            >
+                                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <rect x="3" y="3" width="7" height="7" rx="1" />
+                                    <rect x="14" y="3" width="7" height="7" rx="1" />
+                                    <rect x="3" y="14" width="7" height="7" rx="1" />
+                                    <rect x="14" y="14" width="7" height="7" rx="1" />
+                                </svg>
+                                Arbeitsbereiche
+                            </Link>
+                        ) : null}
                         <Link to={settingsPath()} className="ms-focus inline-flex h-10 w-10 items-center justify-center rounded-[8px] border-2 border-black bg-white shadow-[2px_2px_0_#000] transition hover:-translate-x-[2px] hover:-translate-y-[2px] hover:shadow-brutal active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0_#000]" aria-label="Einstellungen">
-                            <svg viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="none" stroke="currentColor" strokeWidth="2.2">
+                            <svg viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="none" stroke="currentColor" strokeWidth="2">
                                 <circle cx="12" cy="12" r="3" />
-                                <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" />
                             </svg>
                         </Link>
                         <button type="button" onClick={platform.openPalette} className="ms-focus inline-flex items-center gap-2 rounded-[8px] border-2 border-black bg-white px-3 py-2 font-display text-[14px] font-semibold shadow-[2px_2px_0_#000] transition hover:-translate-x-[2px] hover:-translate-y-[2px] hover:shadow-brutal active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0_#000]">

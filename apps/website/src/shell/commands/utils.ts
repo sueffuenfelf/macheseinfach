@@ -1,11 +1,44 @@
-const PW_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%&*';
+export type PasswordCharsetOptions = {
+    uppercase: boolean;
+    lowercase: boolean;
+    numbers: boolean;
+    symbols: boolean;
+};
 
-export function generatePassword(length: number): string {
+export const DEFAULT_PASSWORD_CHARSET: PasswordCharsetOptions = {
+    uppercase: true,
+    lowercase: true,
+    numbers: true,
+    symbols: true,
+};
+
+const PASSWORD_CHARSET_PARTS = {
+    uppercase: 'ABCDEFGHJKLMNPQRSTUVWXYZ',
+    lowercase: 'abcdefghijkmnopqrstuvwxyz',
+    numbers: '23456789',
+    symbols: '!@#$%&*',
+} as const;
+
+export function buildPasswordCharset(options: PasswordCharsetOptions): string {
+    let chars = '';
+    if (options.uppercase) chars += PASSWORD_CHARSET_PARTS.uppercase;
+    if (options.lowercase) chars += PASSWORD_CHARSET_PARTS.lowercase;
+    if (options.numbers) chars += PASSWORD_CHARSET_PARTS.numbers;
+    if (options.symbols) chars += PASSWORD_CHARSET_PARTS.symbols;
+    return chars;
+}
+
+export function generatePassword(
+    length: number,
+    charsetOptions: PasswordCharsetOptions = DEFAULT_PASSWORD_CHARSET,
+): string {
+    const chars = buildPasswordCharset(charsetOptions);
+    if (!chars) return '';
     const bytes = new Uint8Array(length);
     crypto.getRandomValues(bytes);
     let out = '';
     for (let i = 0; i < length; i++) {
-        out += PW_CHARS[bytes[i] % PW_CHARS.length];
+        out += chars[bytes[i] % chars.length];
     }
     return out;
 }

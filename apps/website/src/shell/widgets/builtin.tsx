@@ -1,9 +1,11 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { getTool, type ToolId } from '../../data/catalog';
 import { validateIban } from '../../lib/iban';
 import { parseGermanNumber } from '../../lib/format';
 import { buildEpcPayload, generateQrDataUrl } from '../../lib/qr';
 import { generatePassword } from '../commands/utils';
+import { DEFAULT_WIDGET_PASSWORD_OPTIONS } from '../workspaces/model';
+import { PasswordCharTypesInline } from './WidgetSettingsPopover';
 import type { ToolWidgetDef, WidgetComponentProps } from './types';
 
 function WidgetCard({
@@ -16,34 +18,45 @@ function WidgetCard({
     embedded?: boolean;
 }) {
     if (embedded) {
-        return <div className="flex h-full flex-col p-3">{children}</div>;
+        return <div className="widget-tile">{children}</div>;
     }
 
     return (
-        <section className="flex h-full flex-col rounded-[10px] border-2 border-black bg-white">
+        <section className="flex h-full min-h-0 flex-col rounded-[10px] border-2 border-black bg-white">
             <header className="border-b-2 border-black px-3 py-2">
                 <h3 className="font-display text-[13px] font-bold">{title}</h3>
             </header>
-            <div className="flex-1 p-3">{children}</div>
+            <div className="widget-tile min-h-0 flex-1">{children}</div>
         </section>
     );
 }
 
-function QuickIbanWidget({ embedded }: WidgetComponentProps) {
+function QuickIbanWidget({ embedded, sharedInput = '', useSharedInput = false }: WidgetComponentProps) {
     const [input, setInput] = useState('');
-    const result = useMemo(() => (input.trim() ? validateIban(input) : null), [input]);
-    const state = !input.trim() ? null : result?.ok ? 'ok' : 'bad';
+    const linked = useSharedInput && sharedInput.trim().length > 0;
+    const effectiveInput = linked ? sharedInput : input;
+
+    useEffect(() => {
+        if (useSharedInput) setInput(sharedInput);
+    }, [sharedInput, useSharedInput]);
+
+    const result = useMemo(() => (effectiveInput.trim() ? validateIban(effectiveInput) : null), [effectiveInput]);
+    const state = !effectiveInput.trim() ? null : result?.ok ? 'ok' : 'bad';
     return (
         <WidgetCard title="IBAN Quick Check" embedded={embedded}>
-            <input
-                value={input}
-                onChange={(event) => setInput(event.target.value)}
-                placeholder="DE89 3704 0044 0532 0130 00"
-                className="ms-input font-mono text-[12px]"
-            />
-            <p className="mt-2 text-[12px] text-[var(--color-ink-soft)]">
-                {state === null ? 'Prueft lokal ohne Netzwerkzugriff.' : state === 'ok' ? 'Gueltige IBAN.' : 'IBAN ist ungueltig.'}
-            </p>
+            <div className="widget-iban">
+                <input
+                    value={effectiveInput}
+                    onChange={(event) => setInput(event.target.value)}
+                    readOnly={linked}
+                    placeholder="DE89 3704 0044 0532 0130 00"
+                    className={`widget-iban__input ms-input font-mono ${linked ? 'bg-[var(--color-chip)]' : ''}`}
+                    aria-readonly={linked}
+                />
+                <p className="widget-iban__status">
+                    {state === null ? 'Prueft lokal ohne Netzwerkzugriff.' : state === 'ok' ? 'Gueltige IBAN.' : 'IBAN ist ungueltig.'}
+                </p>
+            </div>
         </WidgetCard>
     );
 }
@@ -109,50 +122,192 @@ function QuickLeakWidget({ embedded }: WidgetComponentProps) {
     );
 }
 
-function PasswordMiniWidget({ embedded }: WidgetComponentProps) {
-    const [length, setLength] = useState(16);
-    const [password, setPassword] = useState(() => generatePassword(16));
+const PASSWORD_MIN_LENGTH = 8;
+const PASSWORD_MAX_LENGTH = 48;
+
+function clampPasswordLength(value: number): number {
+    return Math.min(PASSWORD_MAX_LENGTH, Math.max(PASSWORD_MIN_LENGTH, value));
+}
+
+function PasswordMiniWidget({
+    embedded,
+    passwordOptions: passwordOptionsProp,
+    onPasswordOptionsChange,
+}: WidgetComponentProps) {
+    const passwordOptions = passwordOptionsProp ?? DEFAULT_WIDGET_PASSWORD_OPTIONS;
+    const [password, setPassword] = useState(() =>
+        generatePassword(passwordOptions.length, passwordOptions),
+    );
+    const [copied, setCopied] = useState(false);
+
+    const { length } = passwordOptions;
+
+    useEffect(() => {
+        setPassword(generatePassword(passwordOptions.length, passwordOptions));
+    }, [
+        passwordOptions.length,
+        passwordOptions.uppercase,
+        passwordOptions.lowercase,
+        passwordOptions.numbers,
+        passwordOptions.symbols,
+    ]);
+
+    function setLengthClamped(value: number) {
+        onPasswordOptionsChange?.({
+            ...passwordOptions,
+            length: clampPasswordLength(value),
+        });
+    }
+
+    function regenerate() {
+        setPassword(generatePassword(passwordOptions.length, passwordOptions));
+    }
+
     async function copyPassword() {
         try {
             await navigator.clipboard.writeText(password);
+            setCopied(true);
+            window.setTimeout(() => setCopied(false), 1600);
         } catch {
             // Ignore clipboard permission failures.
         }
     }
+
     return (
         <WidgetCard title="Passwort Generator" embedded={embedded}>
-            <div className="flex items-end gap-2">
-                <label className="flex-1 text-[12px] font-semibold">
-                    Laenge
-                    <input type="range" min={8} max={48} value={length} onChange={(event) => setLength(Number(event.target.value))} className="mt-1 w-full" />
-                </label>
-                <button type="button" className="ms-btn px-2 py-1 text-[12px]" onClick={() => setPassword(generatePassword(length))}>
-                    Neu
-                </button>
+            <div className="widget-password">
+                <div className="widget-password__main">
+                    <div className="widget-password__controls">
+                        <div className="widget-password__stepper">
+                            <span className="widget-password__label widget-password__label--decorative">Länge</span>
+                            <div className="widget-password__stepper-group">
+                                <button
+                                    type="button"
+                                    className="widget-password__step"
+                                    aria-label="Passwort kürzer"
+                                    disabled={length <= PASSWORD_MIN_LENGTH}
+                                    onClick={() => setLengthClamped(length - 1)}
+                                >
+                                    −
+                                </button>
+                                <span className="widget-password__value" aria-live="polite">
+                                    {length}
+                                </span>
+                                <button
+                                    type="button"
+                                    className="widget-password__step"
+                                    aria-label="Passwort länger"
+                                    disabled={length >= PASSWORD_MAX_LENGTH}
+                                    onClick={() => setLengthClamped(length + 1)}
+                                >
+                                    +
+                                </button>
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            className="widget-password__generate ms-btn"
+                            aria-label="Neues Passwort generieren"
+                            onClick={() => regenerate()}
+                        >
+                            <span className="widget-password__generate-label widget-password__generate-label--full">Neu</span>
+                            <span className="widget-password__generate-label widget-password__generate-label--short" aria-hidden>
+                                ↻
+                            </span>
+                        </button>
+                    </div>
+                    {onPasswordOptionsChange ? (
+                        <PasswordCharTypesInline
+                            options={passwordOptions}
+                            onChange={onPasswordOptionsChange}
+                        />
+                    ) : null}
+                    <button
+                        type="button"
+                        className="widget-password__output ms-focus"
+                        onClick={() => void copyPassword()}
+                        title={copied ? 'Kopiert!' : 'Klicken zum Kopieren'}
+                        aria-label={copied ? 'Passwort kopiert' : 'Passwort kopieren'}
+                    >
+                        <span className="widget-password__output-text">{password}</span>
+                        <span className="widget-password__copy-hint" aria-hidden>
+                            {copied ? '✓' : '⎘'}
+                        </span>
+                    </button>
+                </div>
             </div>
-            <div className="mt-2 rounded-[8px] border-2 border-black bg-[var(--color-chip)] p-2 font-mono text-[12px] break-all">{password}</div>
-            <button type="button" className="ms-btn mt-2 w-full py-1 text-[12px]" onClick={() => void copyPassword()}>
-                Kopieren
-            </button>
         </WidgetCard>
     );
 }
 
-function QuickQrWidget({ embedded }: WidgetComponentProps) {
+function QuickQrWidget({ embedded, sharedInput = '', useSharedInput = false }: WidgetComponentProps) {
     const [text, setText] = useState('https://macheseinfa.ch');
     const [image, setImage] = useState<string | null>(null);
-    async function generate() {
-        if (!text.trim()) return;
-        setImage(await generateQrDataUrl(text.trim(), 150));
-    }
+    const linked = useSharedInput && sharedInput.trim().length > 0;
+    const effectiveText = linked ? sharedInput : text;
+
+    useEffect(() => {
+        if (useSharedInput) setText(sharedInput);
+    }, [sharedInput, useSharedInput]);
+
+    useEffect(() => {
+        const value = effectiveText.trim();
+        if (!value) {
+            setImage(null);
+            return;
+        }
+        let cancelled = false;
+        const timer = window.setTimeout(() => {
+            void generateQrDataUrl(value, 128).then((url) => {
+                if (!cancelled) setImage(url);
+            });
+        }, linked ? 0 : 280);
+        return () => {
+            cancelled = true;
+            window.clearTimeout(timer);
+        };
+    }, [effectiveText, linked]);
+
     return (
         <WidgetCard title="QR Mini" embedded={embedded}>
-            <input value={text} onChange={(event) => setText(event.target.value)} className="ms-input text-[12px]" />
-            <button type="button" className="ms-btn mt-2 w-full py-1 text-[12px]" onClick={() => void generate()}>
-                QR erzeugen
-            </button>
-            <div className="mt-2 grid min-h-[88px] place-items-center rounded-[8px] border-2 border-black bg-[var(--color-chip)]">
-                {image ? <img src={image} alt="QR Vorschau" className="h-[84px] w-[84px]" /> : <span className="text-[11px]">Noch kein QR</span>}
+            <div className={`widget-qr${linked ? ' widget-qr--linked' : ''}`}>
+                <div className="widget-qr__main">
+                    {!linked ? (
+                        <div className="widget-qr__controls widget-no-drag">
+                            <input
+                                value={effectiveText}
+                                onChange={(event) => setText(event.target.value)}
+                                placeholder="URL oder Text"
+                                className="widget-qr__input ms-input"
+                            />
+                            <button
+                                type="button"
+                                className="widget-qr__generate ms-btn"
+                                aria-label="QR-Code erzeugen"
+                                disabled={!effectiveText.trim()}
+                                onClick={() => {
+                                    const value = effectiveText.trim();
+                                    if (!value) return;
+                                    void generateQrDataUrl(value, 128).then(setImage);
+                                }}
+                            >
+                                <span className="widget-qr__generate-label widget-qr__generate-label--full">QR erzeugen</span>
+                                <span className="widget-qr__generate-label widget-qr__generate-label--short" aria-hidden>
+                                    QR
+                                </span>
+                            </button>
+                        </div>
+                    ) : null}
+                    <div className="widget-qr__preview">
+                        {image ? (
+                            <img src={image} alt="QR Vorschau" className="widget-qr__image" />
+                        ) : (
+                            <span className="widget-qr__placeholder widget-qr__placeholder--decorative">
+                                {linked ? 'Gemeinsame Eingabe leer' : 'Noch kein QR'}
+                            </span>
+                        )}
+                    </div>
+                </div>
             </div>
         </WidgetCard>
     );
@@ -207,6 +362,7 @@ export const builtinWidgets: ToolWidgetDef[] = [
         tags: ['IBAN', 'Bank', 'Quick'],
         toolId: 'iban-validate',
         component: QuickIbanWidget,
+        supportsSharedInput: true,
         minW: 3,
         maxW: 6,
         minH: 3,
@@ -249,12 +405,12 @@ export const builtinWidgets: ToolWidgetDef[] = [
         tags: ['Passwort', 'Generator'],
         toolId: 'pwned-check',
         component: PasswordMiniWidget,
-        minW: 3,
-        maxW: 6,
-        minH: 3,
-        maxH: 5,
+        minW: 4,
+        maxW: 8,
+        minH: 2,
+        maxH: 4,
         defaultW: 4,
-        defaultH: 3,
+        defaultH: 2,
     },
     {
         id: 'widget-qr-mini',
@@ -263,12 +419,13 @@ export const builtinWidgets: ToolWidgetDef[] = [
         tags: ['QR', 'Quick'],
         toolId: 'girocode-gen',
         component: QuickQrWidget,
-        minW: 3,
-        maxW: 6,
-        minH: 3,
-        maxH: 6,
+        supportsSharedInput: true,
+        minW: 4,
+        maxW: 8,
+        minH: 2,
+        maxH: 4,
         defaultW: 4,
-        defaultH: 4,
+        defaultH: 2,
     },
     createLaunchWidget('widget-pdf-compress', 'pdf-compress'),
     createLaunchWidget('widget-pdf-redact', 'pdf-redact'),

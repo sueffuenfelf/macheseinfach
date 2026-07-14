@@ -26,6 +26,24 @@ export type Workspace = {
     toolIds: ToolId[];
     widgetIds: string[];
     stagedWidgetIds: string[];
+    /** Workspace-wide text reused by widgets that opt in via layout item config. */
+    sharedInput: string;
+};
+
+export type WidgetPasswordOptions = {
+    length: number;
+    uppercase: boolean;
+    lowercase: boolean;
+    numbers: boolean;
+    symbols: boolean;
+};
+
+export const DEFAULT_WIDGET_PASSWORD_OPTIONS: WidgetPasswordOptions = {
+    length: 16,
+    uppercase: true,
+    lowercase: true,
+    numbers: true,
+    symbols: true,
 };
 
 export type WorkspaceLayoutItem = {
@@ -38,6 +56,10 @@ export type WorkspaceLayoutItem = {
     maxW?: number;
     minH?: number;
     maxH?: number;
+    /** When true, widget reads `Workspace.sharedInput` instead of its local field. */
+    useSharedInput?: boolean;
+    /** Per-instance password generator settings (`widget-password-mini`). */
+    passwordOptions?: WidgetPasswordOptions;
 };
 
 export type WorkspaceLayoutSet = Partial<Record<Breakpoint, WorkspaceLayoutItem[]>>;
@@ -90,6 +112,23 @@ function toolIdsFromWidgets(widgetIds: readonly string[]): ToolId[] {
     return [...ids];
 }
 
+const PASSWORD_WIDGET_ID = 'widget-password-mini';
+
+export function resolvePasswordOptions(value?: Partial<WidgetPasswordOptions>): WidgetPasswordOptions {
+    return {
+        ...DEFAULT_WIDGET_PASSWORD_OPTIONS,
+        ...value,
+    };
+}
+
+/** Supported widgets default to shared input on; explicit `false` is preserved. */
+export function resolveUseSharedInput(widgetId: string, value?: boolean): boolean {
+    const widget = getToolWidget(widgetId);
+    if (!widget?.supportsSharedInput) return false;
+    if (value === false) return false;
+    return true;
+}
+
 function applyWidgetBounds(item: WorkspaceLayoutItem): WorkspaceLayoutItem | null {
     const widget = getToolWidget(item.i);
     if (!widget) return null;
@@ -99,6 +138,8 @@ function applyWidgetBounds(item: WorkspaceLayoutItem): WorkspaceLayoutItem | nul
         maxW: widget.maxW,
         minH: widget.minH,
         maxH: widget.maxH,
+        useSharedInput: resolveUseSharedInput(item.i, item.useSharedInput),
+        ...(item.i === PASSWORD_WIDGET_ID ? { passwordOptions: resolvePasswordOptions(item.passwordOptions) } : {}),
     };
 }
 
@@ -126,6 +167,7 @@ function baseLayoutFor(widgetIds: readonly string[], cols: number): WorkspaceLay
             maxW: Math.min(widget.maxW, cols),
             minH: widget.minH,
             maxH: widget.maxH,
+            ...(widget.supportsSharedInput ? { useSharedInput: true } : {}),
         };
         x += width;
         rowHeight = Math.max(rowHeight, widget.defaultH);
@@ -175,6 +217,7 @@ function createDefaultWorkspace(): Workspace {
         widgetIds: defaultWidgetIds,
         toolIds: toolIdsFromWidgets(defaultWidgetIds),
         stagedWidgetIds: [],
+        sharedInput: '',
     };
 }
 
@@ -206,6 +249,7 @@ function normalizeState(workspaces: Workspace[], layouts: WorkspaceLayouts): Wor
             createdAt,
             updatedAt,
             isDefault,
+            sharedInput: workspace.sharedInput ?? '',
         };
     });
 
@@ -273,6 +317,7 @@ function migrateLegacyState(): WorkspaceState {
             widgetIds,
             toolIds: toolIdsFromWidgets(widgetIds),
             stagedWidgetIds: [],
+            sharedInput: '',
         };
     });
 
@@ -330,6 +375,7 @@ export function createWorkspace(
         widgetIds: source?.widgetIds ?? [],
         toolIds: source?.toolIds ?? toolIdsFromWidgets(source?.widgetIds ?? []),
         stagedWidgetIds: source?.stagedWidgetIds ?? [],
+        sharedInput: source?.sharedInput ?? '',
     };
     const nextState = normalizeState(
         [...state.workspaces, workspace],
@@ -489,6 +535,7 @@ export function placeStagedWidget(
         maxW: Math.min(widget.maxW, cols),
         minH: widget.minH,
         maxH: widget.maxH,
+        ...(widget.supportsSharedInput ? { useSharedInput: true } : {}),
     };
 
     const nextWorkspaces = state.workspaces.map((entry) => {
@@ -567,6 +614,53 @@ export function setWorkspaceLayout(
         [workspaceId]: layoutSet,
     };
     return normalizeState(state.workspaces, nextLayouts);
+}
+
+export function setWorkspaceSharedInput(
+    state: WorkspaceState,
+    workspaceId: string,
+    sharedInput: string,
+): WorkspaceState {
+    const nextWorkspaces = state.workspaces.map((workspace) =>
+        workspace.id === workspaceId
+            ? { ...workspace, sharedInput, updatedAt: new Date().toISOString() }
+            : workspace,
+    );
+    return normalizeState(nextWorkspaces, state.layouts);
+}
+
+export function setWidgetUseSharedInput(
+    state: WorkspaceState,
+    workspaceId: string,
+    widgetId: string,
+    useSharedInput: boolean,
+): WorkspaceState {
+    const layoutSet = state.layouts[workspaceId];
+    if (!layoutSet) return state;
+    const nextLayoutSet: WorkspaceLayoutSet = {};
+    for (const breakpoint of BREAKPOINTS) {
+        nextLayoutSet[breakpoint] = (layoutSet[breakpoint] ?? []).map((item) =>
+            item.i === widgetId ? { ...item, useSharedInput } : item,
+        );
+    }
+    return normalizeState(state.workspaces, { ...state.layouts, [workspaceId]: nextLayoutSet });
+}
+
+export function setWidgetPasswordOptions(
+    state: WorkspaceState,
+    workspaceId: string,
+    widgetId: string,
+    passwordOptions: WidgetPasswordOptions,
+): WorkspaceState {
+    const layoutSet = state.layouts[workspaceId];
+    if (!layoutSet) return state;
+    const nextLayoutSet: WorkspaceLayoutSet = {};
+    for (const breakpoint of BREAKPOINTS) {
+        nextLayoutSet[breakpoint] = (layoutSet[breakpoint] ?? []).map((item) =>
+            item.i === widgetId ? { ...item, passwordOptions: resolvePasswordOptions(passwordOptions) } : item,
+        );
+    }
+    return normalizeState(state.workspaces, { ...state.layouts, [workspaceId]: nextLayoutSet });
 }
 
 export function defaultWorkspace(state: WorkspaceState): Workspace {

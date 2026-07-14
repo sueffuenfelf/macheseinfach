@@ -305,9 +305,27 @@ select {
 .ms-stagger > *:nth-child(7) { animation-delay: 0.26s; }
 .ms-stagger > *:nth-child(8) { animation-delay: 0.3s; }
 
+.workspace-canvas {
+  contain: layout paint;
+}
+
+body.workspace-grid-interacting,
+body.workspace-grid-interacting * {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.workspace-grid-layout {
+  width: 100% !important;
+}
+
+.workspace-grid-layout .react-grid-item {
+  overflow: hidden;
+}
+
 .workspace-grid-layout .react-grid-item > .react-resizable-handle {
-  right: 3px;
-  bottom: 3px;
+  right: 0;
+  bottom: 0;
   z-index: 20;
   pointer-events: auto;
 }
@@ -318,6 +336,774 @@ select {
 
 .workspace-grid-layout .react-grid-item.react-resizable-resizing {
   z-index: 40;
+}
+
+.workspace-grid-layout .react-grid-item.react-resizable-resizing {
+  z-index: 40;
+}
+
+/* ---------- Widget tile shell (embedded body) ---------- */
+
+.widget-tile {
+  container-type: inline-size;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: clamp(0.35rem, 2.5cqi, 0.75rem);
+  gap: clamp(0.35rem, 2cqi, 0.65rem);
+}
+
+@container (min-width: 280px) {
+  .widget-tile {
+    gap: clamp(0.5rem, 2.5cqi, 0.85rem);
+  }
+}
+
+/* ---------- IBAN widget ---------- */
+
+.widget-iban {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: clamp(0.35rem, 2cqi, 0.65rem);
+  height: 100%;
+  min-height: 0;
+}
+
+.widget-iban__input {
+  flex-shrink: 0;
+  padding: clamp(0.25rem, 1.5cqi, 0.45rem) clamp(0.35rem, 2cqi, 0.55rem);
+  font-size: clamp(0.68rem, 2.5cqi, 0.78rem);
+  line-height: 1.25;
+}
+
+.widget-iban__status {
+  display: flex;
+  flex: 1;
+  align-items: flex-start;
+  min-height: 0;
+  margin: 0;
+  font-size: clamp(0.68rem, 2.2cqi, 0.78rem);
+  line-height: 1.35;
+  color: var(--color-ink-soft);
+}
+
+@container (min-width: 280px) {
+  .widget-iban {
+    gap: clamp(0.5rem, 2.5cqi, 0.85rem);
+  }
+}
+
+/* ---------- Password widget (container queries) ---------- */
+
+.widget-password {
+  container-type: size;
+  container-name: password;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  gap: clamp(0.35rem, 2cqi, 0.65rem);
+}
+
+.widget-password__main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: clamp(0.35rem, 2cqi, 0.65rem);
+  min-height: 0;
+}
+
+.widget-password__controls {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: clamp(0.35rem, 2cqi, 0.65rem);
+}
+
+.widget-password__stepper {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: clamp(0.35rem, 2cqi, 0.65rem);
+  min-width: 0;
+}
+
+.widget-password__label {
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-ink-muted, #666);
+  white-space: nowrap;
+}
+
+/* Tier 1: decorative labels hidden by default; full text only when wide enough */
+.widget-password__label--decorative {
+  display: none;
+}
+
+.widget-password__stepper-group {
+  display: inline-flex;
+  align-items: stretch;
+  overflow: hidden;
+  border: 2px solid #000;
+  border-radius: var(--radius-md);
+  background: #fff;
+  box-shadow: 1px 1px 0 #000;
+}
+
+.widget-password__step {
+  display: grid;
+  place-items: center;
+  width: 1.55rem;
+  border: 0;
+  background: #fff;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #000;
+  cursor: pointer;
+}
+
+.widget-password__step:not(:last-child) {
+  border-right: 2px solid #000;
+}
+
+.widget-password__step:hover:not(:disabled) {
+  background: var(--color-chip);
+}
+
+.widget-password__step:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+.widget-password__value {
+  display: grid;
+  min-width: 1.65rem;
+  place-items: center;
+  padding: 0.15rem 0.25rem;
+  border-right: 2px solid #000;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.widget-password__generate {
+  flex-shrink: 0;
+  min-width: auto;
+  padding: 0.2rem 0.4rem;
+  font-size: 0.72rem;
+  line-height: 1.1;
+}
+
+/* Tier 1: icon-only by default; full label when container is comfortably wide */
+.widget-password__generate-label--full {
+  display: none;
+}
+
+.widget-password__generate-label--short {
+  display: inline;
+}
+
+.widget-password__output {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: clamp(0.35rem, 2cqi, 0.55rem);
+  min-height: 0;
+  min-width: 0;
+  border: 2px solid #000;
+  border-radius: var(--radius-md);
+  background: var(--color-chip);
+  padding: clamp(0.2rem, 1.5cqi, 0.45rem) clamp(0.35rem, 2cqi, 0.55rem);
+  font: inherit;
+  color: #000;
+  cursor: pointer;
+  box-shadow: 1px 1px 0 #000;
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.12s ease;
+}
+
+.widget-password__output:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 2px 2px 0 #000;
+  background: #fff;
+}
+
+.widget-password__output-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.widget-password__copy-hint {
+  flex-shrink: 0;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  opacity: 0.65;
+}
+
+/* Inline char types — hidden at default h=2; visible when tile is tall enough */
+.widget-password__char-types {
+  display: none;
+  flex-shrink: 0;
+}
+
+.widget-password__char-types .widget-settings__legend {
+  margin-bottom: 0.15rem;
+  font-size: 0.58rem;
+}
+
+.widget-password__char-types .widget-settings__checks--inline {
+  gap: 0.25rem 0.45rem;
+}
+
+.widget-password__char-types .widget-settings__check {
+  font-size: 0.62rem;
+}
+
+@container password (min-height: 100px) {
+  .widget-password__char-types {
+    display: block;
+  }
+}
+
+/* Tier 1: restore decorative label only when container is comfortably wide */
+@container password (min-width: 320px) {
+  .widget-password__label--decorative {
+    display: inline;
+  }
+}
+
+/* Tier 1: restore full generate label when there is room for text */
+@container password (min-width: 360px) {
+  .widget-password__generate-label--full {
+    display: inline;
+  }
+
+  .widget-password__generate-label--short {
+    display: none;
+  }
+
+  .widget-password__generate {
+    padding-inline: 0.55rem;
+  }
+}
+
+/* Tier 4: hide tertiary copy hint when space is critical */
+@container password (max-width: 160px) {
+  .widget-password__copy-hint {
+    display: none;
+  }
+}
+
+/* Tier 3: side-by-side layout when container is wide enough */
+@container password (min-width: 280px) {
+  .widget-password__main {
+    flex-direction: row;
+    align-items: stretch;
+    gap: clamp(0.5rem, 2.5cqi, 0.85rem);
+    min-width: 0;
+  }
+
+  .widget-password__controls {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: flex-start;
+    width: auto;
+    max-width: 42%;
+    gap: clamp(0.35rem, 2cqi, 0.55rem);
+  }
+
+  .widget-password__stepper {
+    flex: 0 0 auto;
+  }
+
+  .widget-password__generate {
+    width: auto;
+    min-width: auto;
+    padding-inline: 0.35rem;
+  }
+
+  .widget-password__output {
+    flex: 1 1 0%;
+    min-width: 0;
+  }
+}
+
+/* ---------- Widget settings popover ---------- */
+
+.widget-settings__gear {
+  display: grid;
+  place-items: center;
+  width: 1.55rem;
+  height: 1.55rem;
+  border: 2px solid #000;
+  border-radius: var(--radius-md);
+  background: #fff;
+  color: #000;
+  cursor: pointer;
+  box-shadow: 1px 1px 0 #000;
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.12s ease;
+}
+
+.widget-settings__gear:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 2px 2px 0 #000;
+  background: var(--color-chip);
+}
+
+.widget-settings__popover--portal {
+  position: fixed;
+  z-index: 100;
+  width: min(16.5rem, calc(100vw - 1rem));
+  overflow: visible;
+  border: 2px solid #000;
+  border-radius: var(--radius-lg);
+  background: #fff;
+  box-shadow: 3px 3px 0 #000;
+}
+
+.widget-settings__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border-bottom: 2px solid #000;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  padding: 0.4rem 0.55rem;
+  background: var(--color-chip);
+}
+
+.widget-settings__close {
+  display: grid;
+  place-items: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border: 2px solid #000;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.widget-settings__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0.55rem;
+}
+
+.widget-settings__empty {
+  padding: 0.55rem;
+  font-size: 0.72rem;
+  color: var(--color-ink-soft);
+}
+
+.widget-settings__field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.widget-settings__label {
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.widget-settings__stepper {
+  flex-shrink: 0;
+}
+
+.widget-settings__fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.widget-settings__legend {
+  padding: 0;
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-ink-muted, #666);
+}
+
+.widget-settings__checks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+}
+
+.widget-settings__checks--inline {
+  flex-flow: row wrap;
+  margin-top: 0.2rem;
+}
+
+.widget-settings__check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.widget-settings__check input {
+  margin-top: 0.1rem;
+  flex-shrink: 0;
+}
+
+.widget-settings__toggle-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-top: 0.35rem;
+}
+
+/* ---------- Settings toggle row ---------- */
+
+.ms-settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  padding: 0.4rem 0.45rem;
+  border: 2px solid #000;
+  border-radius: var(--radius-md);
+  background: #fff;
+}
+
+.ms-settings-row--disabled {
+  opacity: 0.72;
+}
+
+.ms-settings-row__label-group {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.ms-settings-row__title {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.ms-settings-toggle {
+  flex-shrink: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.ms-settings-toggle:disabled {
+  cursor: not-allowed;
+}
+
+.ms-settings-toggle:focus-visible {
+  outline: none;
+}
+
+.ms-settings-toggle:focus-visible .ms-settings-toggle__track {
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #000;
+}
+
+.ms-settings-toggle__track {
+  display: block;
+  position: relative;
+  width: 2.35rem;
+  height: 1.25rem;
+  border: 2px solid #000;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 1px 1px 0 #000;
+  transition: background 0.12s ease;
+}
+
+.ms-settings-toggle[aria-checked="true"] .ms-settings-toggle__track {
+  background: var(--color-success, #b8ffb8);
+}
+
+.ms-settings-toggle__thumb {
+  position: absolute;
+  top: 50%;
+  left: 2px;
+  width: 0.85rem;
+  height: 0.85rem;
+  border: 2px solid #000;
+  border-radius: 50%;
+  background: #fff;
+  transform: translateY(-50%);
+  transition: transform 0.12s ease;
+}
+
+.ms-settings-toggle[aria-checked="true"] .ms-settings-toggle__thumb {
+  transform: translate(1.05rem, -50%);
+}
+
+/* ---------- Info tooltip (CSS hover) ---------- */
+
+.ms-info-tip {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.ms-info-tip__trigger {
+  display: grid;
+  place-items: center;
+  width: 0.95rem;
+  height: 0.95rem;
+  padding: 0;
+  border: 1.5px solid #000;
+  border-radius: 50%;
+  background: #fff;
+  font-family: var(--font-display);
+  font-size: 0.58rem;
+  font-weight: 800;
+  font-style: italic;
+  line-height: 1;
+  color: #000;
+  cursor: help;
+}
+
+.ms-info-tip__trigger:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 3px #000;
+}
+
+.ms-info-tip__bubble {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  z-index: 1;
+  width: max-content;
+  max-width: 11rem;
+  padding: 0.35rem 0.45rem;
+  border: 2px solid #000;
+  border-radius: var(--radius-md);
+  background: #fff;
+  box-shadow: 2px 2px 0 #000;
+  font-size: 0.62rem;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--color-ink-soft);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(-50%) translateY(2px);
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+
+.ms-info-tip:hover .ms-info-tip__bubble,
+.ms-info-tip:focus-within .ms-info-tip__bubble {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ---------- Shared input indicator (widget header) ---------- */
+
+.ms-shared-input-indicator__trigger {
+  display: grid;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  border: 2px solid #000;
+  border-radius: var(--radius-md);
+  background: #fff8b8;
+  color: #000;
+  cursor: help;
+  box-shadow: 1px 1px 0 #000;
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+
+.ms-shared-input-indicator__trigger svg {
+  width: 0.68rem;
+  height: 0.68rem;
+}
+
+.ms-shared-input-indicator__trigger:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #000;
+}
+
+.ms-shared-input-indicator:hover .ms-shared-input-indicator__trigger {
+  transform: translate(-1px, -1px);
+  box-shadow: 2px 2px 0 #000;
+}
+
+/* ---------- QR widget (container queries) ---------- */
+
+.widget-qr {
+  container-type: inline-size;
+  container-name: qr;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.widget-qr__main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: clamp(0.35rem, 2cqi, 0.65rem);
+  min-height: 0;
+}
+
+.widget-qr__controls {
+  display: flex;
+  flex-shrink: 0;
+  align-items: stretch;
+  gap: clamp(0.35rem, 2cqi, 0.65rem);
+  min-width: 0;
+}
+
+.widget-qr__input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.25rem 0.45rem;
+  font-size: 0.72rem;
+  line-height: 1.2;
+}
+
+.widget-qr__generate {
+  flex-shrink: 0;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.72rem;
+  line-height: 1.1;
+}
+
+/* Tier 1: short button label by default; full label when wide */
+.widget-qr__generate-label--full {
+  display: none;
+}
+
+.widget-qr__generate-label--short {
+  display: inline;
+}
+
+.widget-qr__preview {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  overflow: hidden;
+  border: 2px solid #000;
+  border-radius: var(--radius-md);
+  background: var(--color-chip);
+  box-shadow: 1px 1px 0 #000;
+}
+
+.widget-qr__image {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  padding: 0.15rem;
+}
+
+.widget-qr__placeholder {
+  padding: 0.35rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-align: center;
+  color: var(--color-ink-muted, #666);
+}
+
+/* Tier 2: hide decorative empty-state copy before dropping layout chrome */
+.widget-qr__placeholder--decorative {
+  display: none;
+}
+
+.widget-qr--linked .widget-qr__main {
+  flex-direction: row;
+}
+
+.widget-qr--linked .widget-qr__preview {
+  flex: 1;
+}
+
+/* Tier 1: full generate label when container is comfortably wide */
+@container qr (min-width: 320px) {
+  .widget-qr__generate-label--full {
+    display: inline;
+  }
+
+  .widget-qr__generate-label--short {
+    display: none;
+  }
+}
+
+/* Tier 2: show empty-state hint only when there is room */
+@container qr (min-width: 240px) {
+  .widget-qr__placeholder--decorative {
+    display: block;
+  }
+}
+
+/* Tier 3: side-by-side layout when container is wide enough */
+@container qr (min-width: 280px) {
+  .widget-qr__main {
+    flex-direction: row;
+    align-items: stretch;
+    gap: clamp(0.5rem, 2.5cqi, 0.85rem);
+  }
+
+  .widget-qr__controls {
+    flex-direction: column;
+    justify-content: center;
+    width: auto;
+    min-width: 7.5rem;
+    max-width: 46%;
+    gap: clamp(0.5rem, 2.5cqi, 0.75rem);
+  }
+
+  .widget-qr__generate {
+    width: 100%;
+  }
+
+  .widget-qr__preview {
+    flex: 1;
+    min-width: 0;
+  }
 }
 
 /* ---------- Accessibility ---------- */
