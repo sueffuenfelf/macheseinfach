@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /*
- * Macheseinfach tokens — soft canvas, ink type, warm clay accent.
+ * Macheseinfach / macheseinfa.ch — trust-first utility tokens.
  * Components reference var(--color-accent*) only; change palette here.
  */
 @theme {
@@ -13,9 +13,9 @@
   --color-ink: #242423;
   --color-ink-muted: #5c5c58;
   --color-border: #e8e8e4;
-  --color-accent: #c17f3a;
-  --color-accent-strong: #9a6330;
-  --color-accent-soft: #f3ebe2;
+  --color-accent: #3d5a80;
+  --color-accent-strong: #293241;
+  --color-accent-soft: #e8eef4;
   --color-success: #22c55e;
   --color-danger: #ef4444;
 
