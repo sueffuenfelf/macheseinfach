@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 /*
- * Gumroad-inspired tokens — soft canvas, ink type, pink accent.
- * Reference: creator-commerce cards, rounded corners, minimal chrome.
+ * Macheseinfach tokens — soft canvas, ink type, warm clay accent.
+ * Components reference var(--color-accent*) only; change palette here.
  */
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
@@ -13,9 +13,9 @@
   --color-ink: #242423;
   --color-ink-muted: #5c5c58;
   --color-border: #e8e8e4;
-  --color-accent: #ff90e8;
-  --color-accent-strong: #f056c1;
-  --color-accent-soft: #ffe8f9;
+  --color-accent: #c17f3a;
+  --color-accent-strong: #9a6330;
+  --color-accent-soft: #f3ebe2;
   --color-success: #22c55e;
   --color-danger: #ef4444;
 
