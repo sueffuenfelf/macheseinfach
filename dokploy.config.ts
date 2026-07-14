@@ -19,6 +19,8 @@ export default defineDokployProject({
     },
     /** Required: deploy server (server4you) ≠ build server (s4u) → image via registry. */
     buildRegistryId: 'WqeR6oI7GXbZglo9UKPST',
+    /** Bootstrap GitHub integration (Dokploy GitHub App) — fresh 'suefien' project has no reference app. */
+    githubId: 'TN2khWa4pE6qBu0Td1zyt',
     deployments: [
         {
             id: 'website',
