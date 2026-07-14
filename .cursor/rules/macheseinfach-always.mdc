@@ -1,0 +1,12 @@
+---
+description: Macheseinfach project defaults — Bun monorepo, PolyForm license, SOPS secrets
+alwaysApply: true
+---
+
+# Macheseinfach defaults
+
+- **Runtime:** Bun — use `bun run`, `bun test`, `bun install` from repo root.
+- **UI:** `@macheseinfach/ui` (Gumroad-inspired tokens) — extend primitives before one-off styles.
+- **Secrets:** SOPS + age — never commit `.env`, `.kounds/age.key`, or cleartext credentials.
+- **License:** PolyForm Noncommercial — no commercial redistribution without explicit permission.
+- **Plans:** Non-trivial changes → `docs/plans/YYYY-MM-DD-<slug>.md` before large diffs.

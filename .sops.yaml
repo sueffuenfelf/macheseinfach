@@ -1,0 +1,5 @@
+creation_rules:
+  - path_regex: (secrets\.env|\.kounds/env/.*\.env)$
+    # Generate a key pair: age-keygen -o .kounds/age.key
+    # Never commit .kounds/age.key — public key only below.
+    age: "age1jpl477g3cgvs7jh5qa4ytrmaahhstdgscax53w6kd7mrwp6a3yps50wyjl"
