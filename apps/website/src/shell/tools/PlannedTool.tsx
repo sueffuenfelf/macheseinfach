@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Tool } from '../../data/catalog';
-import { ResultCard, useToast } from './_shared';
+import { ResultCard } from './_shared';
+import { useToast } from '../toast';
 
 type PlannedToolProps = {
     tool: Tool;
@@ -8,7 +9,7 @@ type PlannedToolProps = {
 
 export function PlannedTool({ tool }: PlannedToolProps) {
     const [email, setEmail] = useState('');
-    const { node, show } = useToast();
+    const { toast } = useToast();
 
     return (
         <div className="ms-animate-fade mx-auto w-full max-w-2xl px-4 py-6 md:px-6">
@@ -31,7 +32,7 @@ export function PlannedTool({ tool }: PlannedToolProps) {
                         className="ms-btn"
                         onClick={() => {
                             if (!email.trim()) return;
-                            show('Danke — wir melden uns.');
+                            toast({ message: 'Danke — wir melden uns.', variant: 'success' });
                             setEmail('');
                         }}
                     >
@@ -39,7 +40,6 @@ export function PlannedTool({ tool }: PlannedToolProps) {
                     </button>
                 </div>
             </ResultCard>
-            {node}
         </div>
     );
 }

@@ -3,7 +3,7 @@ import type { Tool } from '../../data/catalog';
 import { downloadDataUrl, parseGermanNumber } from '../../lib/format';
 import { buildEpcPayload, generateQrDataUrl, type GiroCodeData } from '../../lib/qr';
 import { validateIban } from '../../lib/iban';
-import { useToast } from './_shared';
+import { useToast } from '../toast';
 
 type GiroCodeToolProps = {
     tool: Tool;
@@ -16,7 +16,7 @@ export function GiroCodeTool({ tool }: GiroCodeToolProps) {
     const [purpose, setPurpose] = useState('');
     const [loadingQr, setLoadingQr] = useState(false);
     const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
-    const { node, show } = useToast();
+    const { toast } = useToast();
 
     const ibanResult = useMemo(() => {
         if (!iban.trim()) return null;
@@ -142,13 +142,12 @@ export function GiroCodeTool({ tool }: GiroCodeToolProps) {
                     onClick={() => {
                         if (!qrDataUrl) return;
                         downloadDataUrl(qrDataUrl, 'girocode.png');
-                        show('PNG wurde heruntergeladen.');
+                        toast('PNG wurde heruntergeladen.');
                     }}
                 >
                     Als PNG herunterladen
                 </button>
             </aside>
-            {node}
         </div>
     );
 }

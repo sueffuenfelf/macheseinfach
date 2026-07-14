@@ -1,15 +1,50 @@
-import { useEffect } from 'react';
-import { toolsForStory } from '../data/catalog';
-import { usePlatform } from '../context/PlatformContext';
+import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { getTool } from '../data/catalog';
+import { usePlatformNav } from '../routing/usePlatformNav';
+import { favoritesPath, homePath, settingsPath } from '../routing/paths';
 import { AreaStep } from './AreaStep';
-import { Breadcrumb } from './Breadcrumb';
 import { CommandPalette } from './CommandPalette';
+import { FavoritesPage } from './FavoritesPage';
+import { GlobalActionPalette, type GlobalAction } from './GlobalActionPalette';
+import { SettingsPage } from './SettingsPage';
 import { StoryPickStep, ToolPickForStory } from './StoryPickStep';
 import { ToolWorkspace } from './ToolWorkspace';
-import { TrustBadge } from './components/Primitives';
+import { WorkspaceDashboard } from './WorkspaceDashboard';
+import { getToolWidget } from './widgets/registry';
+import {
+    addToolToWorkspaceStaging,
+    addWidgetToWorkspace,
+    createWorkspace,
+    defaultWorkspace,
+    deleteWorkspace,
+    loadWorkspaceState,
+    placeStagedWidget,
+    removeStagedWidget,
+    removeWidgetFromWorkspace,
+    renameWorkspace,
+    reorderWorkspaces,
+    saveWorkspaceState,
+    setDefaultWorkspace,
+    setWorkspaceLayout,
+    toggleWorkspaceTool,
+    type Workspace,
+    type WorkspaceState,
+} from './workspaces/model';
+import { useToast } from './toast';
 
 export function ToolShell() {
-    const platform = usePlatform();
+    const platform = usePlatformNav();
+    const { toast } = useToast();
+    const [workspaceState, setWorkspaceState] = useState<WorkspaceState>(() => loadWorkspaceState());
+    const [editingWorkspaceId, setEditingWorkspaceId] = useState<string | null>(null);
+    const [workspaceNameDraft, setWorkspaceNameDraft] = useState('');
+    const [workspacePickerOpen, setWorkspacePickerOpen] = useState(false);
+    const [pendingToolForWorkspace, setPendingToolForWorkspace] = useState<ReturnType<typeof getTool> | null>(null);
+    const [layoutEditMode, setLayoutEditMode] = useState(false);
+
+    const { page, activeAreaId, activeStoryId, activeTool, activeWorkspaceId } = platform;
+    const workspaces = workspaceState.workspaces;
 
     useEffect(() => {
         document.documentElement.dataset.shell = 'brutalist';
@@ -18,74 +53,379 @@ export function ToolShell() {
         };
     }, []);
 
-    const { activeAreaId, activeStoryId, activeTool } = platform;
-    const needsToolPick = Boolean(activeStoryId && !activeTool && toolsForStory(activeStoryId).length > 1);
+    useEffect(() => {
+        saveWorkspaceState(workspaceState);
+    }, [workspaceState]);
+
+    const activeWorkspace = useMemo(() => {
+        if (page !== 'workspace') return null;
+        const current = activeWorkspaceId ? workspaces.find((workspace) => workspace.slug === activeWorkspaceId) : null;
+        return current ?? defaultWorkspace(workspaceState) ?? null;
+    }, [activeWorkspaceId, page, workspaceState, workspaces]);
+
+    useEffect(() => {
+        if (page !== 'workspace') return;
+        if (activeWorkspace) return;
+        const fallback = defaultWorkspace(workspaceState);
+        if (fallback) platform.goToWorkspace(fallback.slug);
+    }, [activeWorkspace, page, platform, workspaceState]);
+
+    const workspaceToolIds = useMemo(() => {
+        if (!activeWorkspace) return [];
+        const ids = new Set(activeWorkspace.toolIds);
+        activeWorkspace.widgetIds.forEach((widgetId) => {
+            const toolId = getToolWidget(widgetId)?.toolId;
+            if (toolId) ids.add(toolId);
+        });
+        return [...ids];
+    }, [activeWorkspace]);
+
+    function updateState(nextState: WorkspaceState) {
+        setWorkspaceState(nextState);
+    }
+
+    function createNewWorkspace(name?: string) {
+        const created = createWorkspace(workspaceState, { name });
+        updateState(created.state);
+        platform.goToWorkspace(created.workspace.slug);
+        toast({ message: `Arbeitsbereich „${created.workspace.name}" erstellt`, variant: 'success' });
+    }
+
+    function duplicateActiveWorkspace() {
+        if (!activeWorkspace) return;
+        const created = createWorkspace(workspaceState, { duplicateFromId: activeWorkspace.id });
+        updateState(created.state);
+        platform.goToWorkspace(created.workspace.slug);
+        toast({ message: `„${created.workspace.name}" wurde dupliziert`, variant: 'success' });
+    }
+
+    function deleteActiveWorkspace() {
+        if (!activeWorkspace) return;
+        if (workspaces.length <= 1) {
+            toast({ message: 'Mindestens ein Arbeitsbereich muss bestehen.', variant: 'error' });
+            return;
+        }
+        const next = deleteWorkspace(workspaceState, activeWorkspace.id);
+        updateState(next);
+        const fallback = defaultWorkspace(next);
+        if (fallback) platform.goToWorkspace(fallback.slug);
+        toast({ message: `Arbeitsbereich „${activeWorkspace.name}" gelöscht`, variant: 'info' });
+    }
+
+    function moveActiveWorkspace(direction: -1 | 1) {
+        if (!activeWorkspace) return;
+        const currentIndex = workspaces.findIndex((workspace) => workspace.id === activeWorkspace.id);
+        updateState(reorderWorkspaces(workspaceState, currentIndex, currentIndex + direction));
+    }
+
+    function addToolToWorkspace(targetWorkspace: Workspace, tool = activeTool, baseState = workspaceState) {
+        if (!tool) return;
+        const result = addToolToWorkspaceStaging(baseState, targetWorkspace.id, tool.id);
+        updateState(result.state);
+        const workspace = result.state.workspaces.find((entry) => entry.id === targetWorkspace.id) ?? targetWorkspace;
+        platform.goToWorkspace(workspace.slug);
+
+        if (result.reason === 'added') {
+            toast({
+                message: `„${tool.shortTitle}" wurde zu „${workspace.name}" hinzugefügt — ziehe es auf das Dashboard`,
+                variant: 'success',
+            });
+            return;
+        }
+        if (result.reason === 'already-placed') {
+            toast({ message: `Widget ist bereits in „${workspace.name}" platziert`, variant: 'info' });
+            return;
+        }
+        if (result.reason === 'already-staged') {
+            toast({ message: `Widget wartet bereits in „${workspace.name}" auf Platzierung`, variant: 'info' });
+            return;
+        }
+        if (result.reason === 'no-widget') {
+            toast({ message: 'Für dieses Tool ist noch kein Widget verfügbar', variant: 'error' });
+        }
+    }
+
+    function requestAddActiveToolToWorkspace() {
+        if (!activeTool) return;
+        if (workspaces.length === 1) {
+            addToolToWorkspace(workspaces[0]!);
+            return;
+        }
+        setPendingToolForWorkspace(activeTool);
+        setWorkspacePickerOpen(true);
+    }
+
+    const globalActions = useMemo<GlobalAction[]>(() => {
+        const switchActions = workspaces.map((workspace) => ({
+            id: `switch-${workspace.slug}`,
+            label: `Arbeitsbereich öffnen: ${workspace.name}`,
+            hint: 'Switch',
+            run: () => platform.goToWorkspace(workspace.slug),
+        }));
+        return [
+            ...switchActions,
+            { id: 'create-workspace', label: 'Neuer Arbeitsbereich', hint: 'Create', run: () => createNewWorkspace() },
+            { id: 'duplicate-workspace', label: 'Aktiven Arbeitsbereich duplizieren', hint: 'Duplicate', run: duplicateActiveWorkspace },
+            {
+                id: 'rename-workspace',
+                label: 'Aktiven Arbeitsbereich umbenennen',
+                hint: 'Rename',
+                run: () => {
+                    if (!activeWorkspace) return;
+                    setWorkspaceNameDraft(activeWorkspace.name);
+                    setEditingWorkspaceId(activeWorkspace.id);
+                },
+            },
+            {
+                id: 'default-workspace',
+                label: 'Als Standard setzen',
+                hint: 'Default',
+                run: () => {
+                    if (!activeWorkspace) return;
+                    updateState(setDefaultWorkspace(workspaceState, activeWorkspace.id));
+                    toast({ message: `„${activeWorkspace.name}" ist jetzt Standard`, variant: 'success' });
+                },
+            },
+            { id: 'delete-workspace', label: 'Aktiven Arbeitsbereich löschen', hint: 'Delete', run: deleteActiveWorkspace },
+            { id: 'open-settings', label: 'Einstellungen öffnen', hint: 'Settings', run: platform.goToSettings },
+            { id: 'open-favorites', label: 'Favoriten öffnen', hint: 'Favorites', run: platform.goToFavorites },
+            { id: 'go-home', label: 'Startseite öffnen', hint: 'Home', run: platform.goHome },
+        ];
+    }, [activeWorkspace, platform, workspaceState, workspaces]);
+
+    const paletteMode = page === 'workspace' ? 'workspace' : 'global';
+
+    const mainContent =
+        page === 'favorites' ? (
+            <FavoritesPage />
+        ) : page === 'settings' ? (
+            <SettingsPage />
+        ) : page === 'workspace' ? (
+            activeWorkspace ? (
+                <WorkspaceDashboard
+                    workspace={activeWorkspace}
+                    layout={workspaceState.layouts[activeWorkspace.id] ?? {}}
+                    layoutEditMode={layoutEditMode}
+                    onLayoutChange={(nextLayout) => updateState(setWorkspaceLayout(workspaceState, activeWorkspace.id, nextLayout))}
+                    onLayoutSaved={() => toast({ message: 'Dashboard-Layout gespeichert', variant: 'success' })}
+                    onLayoutEditModeChange={(next) => {
+                        setLayoutEditMode(next);
+                        toast({
+                            message: next ? 'Layout entsperrt: Ziehen und Skalieren aktiv' : 'Layout gesperrt: Widgets wieder bedienbar',
+                            variant: next ? 'info' : 'success',
+                        });
+                    }}
+                    onAddWidget={(widgetId) => {
+                        updateState(addWidgetToWorkspace(workspaceState, activeWorkspace.id, widgetId));
+                        toast({ message: 'Widget hinzugefügt', variant: 'success' });
+                    }}
+                    onRemoveWidget={(widgetId) => {
+                        updateState(removeWidgetFromWorkspace(workspaceState, activeWorkspace.id, widgetId));
+                        toast({ message: 'Widget entfernt', variant: 'info' });
+                    }}
+                    onRemoveStagedWidget={(widgetId) => {
+                        updateState(removeStagedWidget(workspaceState, activeWorkspace.id, widgetId));
+                        toast({ message: 'Widget aus Bereitstellung entfernt', variant: 'info' });
+                    }}
+                    onPlaceStagedWidget={(widgetId, position, breakpoint) => {
+                        updateState(placeStagedWidget(workspaceState, activeWorkspace.id, widgetId, position, breakpoint));
+                        toast({ message: 'Widget platziert', variant: 'success' });
+                    }}
+                    onToggleWorkspaceTool={(toolId) => {
+                        updateState(toggleWorkspaceTool(workspaceState, activeWorkspace.id, toolId));
+                        toast({ message: 'Tool-Set aktualisiert', variant: 'success' });
+                    }}
+                    onOpenTool={(toolId) => platform.selectTool(toolId)}
+                    onOpenCatalog={platform.goHome}
+                />
+            ) : null
+        ) : !activeAreaId ? (
+            <AreaStep />
+        ) : page === 'tool' && activeTool ? (
+            <ToolWorkspace tool={activeTool} onAddToWorkspace={requestAddActiveToolToWorkspace} />
+        ) : page === 'story' && activeStoryId ? (
+            <ToolPickForStory storyId={activeStoryId} />
+        ) : activeAreaId ? (
+            <StoryPickStep areaId={activeAreaId} />
+        ) : (
+            <AreaStep />
+        );
 
     return (
         <div className="flex min-h-screen flex-col bg-[var(--color-canvas)] text-[var(--color-ink)]" data-shell="brutalist">
             <header className="sticky top-0 z-30 border-b-2 border-black bg-white">
                 <div className="mx-auto flex w-full max-w-[1040px] items-center justify-between gap-4 px-4 py-3 md:px-6">
-                    <button
-                        type="button"
-                        onClick={platform.goHome}
-                        className="ms-focus inline-flex items-center gap-2 text-left"
-                        aria-label="Zur Startseite"
-                    >
+                    <Link to={homePath()} onClick={platform.goHome} className="ms-focus inline-flex items-center gap-2 text-left" aria-label="Zur Startseite">
                         <span className="inline-flex h-[26px] w-[26px] items-center justify-center rounded-[7px] border-2 border-black bg-[#ff90e8] font-display text-[16px] font-bold text-white shadow-[2px_2px_0_#000]">
                             m
                         </span>
                         <span className="font-display text-[19px] font-bold tracking-[-0.02em] text-[var(--color-ink)]">
                             macheseinfa<span className="text-[var(--color-brand)]">.ch</span>
                         </span>
-                    </button>
+                    </Link>
                     <div className="flex items-center gap-2">
-                        <button
-                            type="button"
-                            onClick={platform.openPalette}
-                            className="ms-focus inline-flex items-center gap-2 rounded-[8px] border-2 border-black bg-white px-3 py-2 font-display text-[14px] font-semibold shadow-[2px_2px_0_#000] transition hover:-translate-x-[2px] hover:-translate-y-[2px] hover:shadow-brutal active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0_#000]"
-                        >
-                            <svg
-                                viewBox="0 0 24 24"
-                                className="h-4 w-4"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.2"
-                            >
+                        <Link to={favoritesPath()} className="ms-focus inline-flex h-10 items-center gap-1.5 rounded-[8px] border-2 border-black bg-white px-3 font-display text-[13px] font-semibold shadow-[2px_2px_0_#000] transition hover:-translate-x-[2px] hover:-translate-y-[2px] hover:shadow-brutal active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0_#000]">
+                            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M12 3.8l2.68 5.43 5.99.87-4.33 4.22 1.02 5.96L12 17.43l-5.36 2.83 1.02-5.96-4.33-4.22 5.99-.87z" />
+                            </svg>
+                            Favoriten
+                        </Link>
+                        <Link to={settingsPath()} className="ms-focus inline-flex h-10 w-10 items-center justify-center rounded-[8px] border-2 border-black bg-white shadow-[2px_2px_0_#000] transition hover:-translate-x-[2px] hover:-translate-y-[2px] hover:shadow-brutal active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0_#000]" aria-label="Einstellungen">
+                            <svg viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="none" stroke="currentColor" strokeWidth="2.2">
+                                <circle cx="12" cy="12" r="3" />
+                                <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+                            </svg>
+                        </Link>
+                        <button type="button" onClick={platform.openPalette} className="ms-focus inline-flex items-center gap-2 rounded-[8px] border-2 border-black bg-white px-3 py-2 font-display text-[14px] font-semibold shadow-[2px_2px_0_#000] transition hover:-translate-x-[2px] hover:-translate-y-[2px] hover:shadow-brutal active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0_#000]">
+                            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.2">
                                 <circle cx="11" cy="11" r="7" />
                                 <path d="M20 20l-4-4" />
                             </svg>
-                            Tools finden
+                            {paletteMode === 'workspace' ? 'Tools suchen' : 'Aktionen'}
                             <span className="ms-kbd">⌘K</span>
                         </button>
-                        <div className="hidden sm:block">
-                            <TrustBadge />
-                        </div>
                     </div>
                 </div>
+                {page === 'workspace' && activeWorkspace ? (
+                    <div className="mx-auto flex w-full max-w-[1040px] items-center gap-2 overflow-x-auto border-t-2 border-black px-4 py-2 md:px-6">
+                        {workspaces.map((workspace) => (
+                            <button
+                                key={workspace.id}
+                                type="button"
+                                onClick={() => platform.goToWorkspace(workspace.slug)}
+                                className={`ms-focus shrink-0 rounded-[8px] border-2 border-black px-3 py-1.5 font-display text-[12px] font-semibold ${
+                                    workspace.id === activeWorkspace.id ? 'bg-[var(--color-brand)] text-white' : 'bg-white'
+                                }`}
+                            >
+                                {workspace.name} {workspace.isDefault ? '•' : ''}
+                            </button>
+                        ))}
+                        <button type="button" onClick={() => createNewWorkspace()} className="ms-focus shrink-0 rounded-[8px] border-2 border-black bg-white px-3 py-1.5 font-display text-[12px] font-semibold">
+                            + Neu
+                        </button>
+                        <button type="button" onClick={() => { setWorkspaceNameDraft(activeWorkspace.name); setEditingWorkspaceId(activeWorkspace.id); }} className="ms-focus ml-auto shrink-0 rounded-[8px] border-2 border-black bg-white px-3 py-1.5 text-[11px] font-semibold">
+                            Umbenennen
+                        </button>
+                        <button type="button" onClick={duplicateActiveWorkspace} className="ms-focus shrink-0 rounded-[8px] border-2 border-black bg-white px-3 py-1.5 text-[11px] font-semibold">
+                            Duplizieren
+                        </button>
+                        <button type="button" onClick={() => updateState(setDefaultWorkspace(workspaceState, activeWorkspace.id))} className="ms-focus shrink-0 rounded-[8px] border-2 border-black bg-white px-3 py-1.5 text-[11px] font-semibold">
+                            Standard
+                        </button>
+                        <button type="button" onClick={() => moveActiveWorkspace(-1)} className="ms-focus shrink-0 rounded-[8px] border-2 border-black bg-white px-3 py-1.5 text-[11px] font-semibold" aria-label="Arbeitsbereich nach links verschieben">
+                            ←
+                        </button>
+                        <button type="button" onClick={() => moveActiveWorkspace(1)} className="ms-focus shrink-0 rounded-[8px] border-2 border-black bg-white px-3 py-1.5 text-[11px] font-semibold" aria-label="Arbeitsbereich nach rechts verschieben">
+                            →
+                        </button>
+                        <button type="button" onClick={deleteActiveWorkspace} className="ms-focus shrink-0 rounded-[8px] border-2 border-black bg-white px-3 py-1.5 text-[11px] font-semibold">
+                            Löschen
+                        </button>
+                    </div>
+                ) : null}
             </header>
 
-            <Breadcrumb />
+            {mainContent}
 
-            {!activeAreaId ? (
-                <AreaStep />
-            ) : activeTool ? (
-                <ToolWorkspace tool={activeTool} />
-            ) : needsToolPick ? (
-                <ToolPickForStory storyId={activeStoryId!} />
+            {paletteMode === 'workspace' ? (
+                <CommandPalette open={platform.paletteOpen} toolIds={workspaceToolIds} onClose={platform.closePalette} onSelectScenario={(tool) => platform.selectTool(tool.id)} />
             ) : (
-                <StoryPickStep areaId={activeAreaId} />
+                <GlobalActionPalette open={platform.paletteOpen} actions={globalActions} onClose={platform.closePalette} />
             )}
-
-            <CommandPalette
-                open={platform.paletteOpen}
-                onClose={platform.closePalette}
-                onSelectScenario={(tool) => platform.selectTool(tool.id)}
-            />
+            {editingWorkspaceId ? (
+                <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+                    <button type="button" className="absolute inset-0 bg-black/35 backdrop-blur-[4px]" onClick={() => setEditingWorkspaceId(null)} aria-label="Dialog schließen" />
+                    <section className="ms-animate-pop relative z-10 w-full max-w-[26rem] rounded-[16px] border-2 border-black bg-white p-4 shadow-brutal-lg">
+                        <h2 className="font-display text-[18px] font-bold">Arbeitsbereich umbenennen</h2>
+                        <input type="text" className="ms-input mt-3" value={workspaceNameDraft} onChange={(event) => setWorkspaceNameDraft(event.target.value)} autoFocus />
+                        <div className="mt-3 flex justify-end gap-2">
+                            <button type="button" className="ms-btn px-3 py-2 text-[12px]" onClick={() => setEditingWorkspaceId(null)}>
+                                Abbrechen
+                            </button>
+                            <button
+                                type="button"
+                                className="ms-btn-primary px-3 py-2 text-[12px]"
+                                onClick={() => {
+                                    const next = renameWorkspace(workspaceState, editingWorkspaceId, workspaceNameDraft);
+                                    updateState(next);
+                                    const updated = next.workspaces.find((workspace) => workspace.id === editingWorkspaceId);
+                                    if (updated && activeWorkspace?.id === updated.id) platform.goToWorkspace(updated.slug);
+                                    toast({ message: 'Arbeitsbereich umbenannt', variant: 'success' });
+                                    setEditingWorkspaceId(null);
+                                }}
+                            >
+                                Speichern
+                            </button>
+                        </div>
+                    </section>
+                </div>
+            ) : null}
+            {workspacePickerOpen && pendingToolForWorkspace ? (
+                <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+                    <button
+                        type="button"
+                        className="absolute inset-0 bg-black/35 backdrop-blur-[4px]"
+                        onClick={() => {
+                            setWorkspacePickerOpen(false);
+                            setPendingToolForWorkspace(null);
+                        }}
+                        aria-label="Arbeitsbereich-Auswahl schließen"
+                    />
+                    <section className="ms-animate-pop relative z-10 w-full max-w-[28rem] rounded-[16px] border-2 border-black bg-white p-4 shadow-brutal-lg">
+                        <h2 className="font-display text-[18px] font-bold">Zu welchem Arbeitsbereich?</h2>
+                        <p className="mt-1 text-[13px] text-[var(--color-ink-soft)]">
+                            „{pendingToolForWorkspace.shortTitle}" wird als Widget bereitgestellt.
+                        </p>
+                        <ul className="mt-3 space-y-2">
+                            {workspaces.map((workspace) => (
+                                <li key={workspace.id}>
+                                    <button
+                                        type="button"
+                                        className="ms-btn w-full justify-between px-3 py-2 text-[13px]"
+                                        onClick={() => {
+                                            addToolToWorkspace(workspace, pendingToolForWorkspace);
+                                            setWorkspacePickerOpen(false);
+                                            setPendingToolForWorkspace(null);
+                                        }}
+                                    >
+                                        <span>{workspace.name}</span>
+                                        {workspace.isDefault ? <span className="text-[11px] text-[var(--color-ink-soft)]">Standard</span> : null}
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                        <button
+                            type="button"
+                            className="ms-btn mt-3 w-full py-2 text-[12px]"
+                            onClick={() => {
+                                const created = createWorkspace(workspaceState);
+                                addToolToWorkspace(created.workspace, pendingToolForWorkspace, created.state);
+                                setWorkspacePickerOpen(false);
+                                setPendingToolForWorkspace(null);
+                            }}
+                        >
+                            Neuen Arbeitsbereich erstellen
+                        </button>
+                    </section>
+                </div>
+            ) : null}
             <footer className="mt-auto border-t-2 border-black bg-white px-4 py-4 text-center md:px-6">
                 <p className="text-[12px] text-[var(--color-ink-soft)]">
                     Dateien bleiben auf deinem Gerät · keine Registrierung · Open Source
                 </p>
                 <div className="mt-2 flex items-center justify-center gap-4 text-[11px] text-[var(--color-ink-muted)]">
+                    <Link
+                        to={favoritesPath()}
+                        className="ms-focus underline decoration-[var(--color-line)] underline-offset-2 hover:text-[var(--color-ink)]"
+                    >
+                        Favoriten
+                    </Link>
+                    <Link
+                        to={settingsPath()}
+                        className="ms-focus underline decoration-[var(--color-line)] underline-offset-2 hover:text-[var(--color-ink)]"
+                    >
+                        Einstellungen
+                    </Link>
                     <span>Datenschutz</span>
                     <span>Quelltext</span>
                     <span>Impressum</span>

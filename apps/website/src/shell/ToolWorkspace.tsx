@@ -1,15 +1,17 @@
 import { areas, maturityLabel, type Tool } from '../data/catalog';
-import { usePlatform } from '../context/PlatformContext';
+import { usePlatformNav } from '../routing/usePlatformNav';
 import { Icon } from './Icon';
-import { TrustBadge } from './components/Primitives';
+import { BackButton } from './components/Primitives';
 import { ToolBody } from './tools';
 
 type ToolWorkspaceProps = {
     tool: Tool;
+    onAddToWorkspace?: () => void;
+    addToWorkspaceLabel?: string;
 };
 
-export function ToolWorkspace({ tool }: ToolWorkspaceProps) {
-    const { activeAreaId, goToSituation, toggleFavorite, isFavorite } = usePlatform();
+export function ToolWorkspace({ tool, onAddToWorkspace, addToWorkspaceLabel = 'Zu Arbeitsbereich hinzufügen' }: ToolWorkspaceProps) {
+    const { activeAreaId, toggleFavorite, isFavorite } = usePlatformNav();
     const area = areas[activeAreaId ?? tool.areas[0]];
     const favorite = isFavorite(tool.id);
 
@@ -18,16 +20,7 @@ export function ToolWorkspace({ tool }: ToolWorkspaceProps) {
             <main className="mx-auto w-full max-w-[1040px] px-4 pt-8 md:px-6">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                     <div className="min-w-0 flex-1 space-y-3">
-                        <button
-                            type="button"
-                            onClick={goToSituation}
-                            className="ms-focus inline-flex items-center gap-2 font-display text-[14px] font-bold hover:underline"
-                        >
-                            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.4">
-                                <path d="M15 5l-7 7 7 7" />
-                            </svg>
-                            Zurück zu {area.label}
-                        </button>
+                        <BackButton />
                         <div className="flex items-start gap-3">
                             <span
                                 className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] border-2 border-black"
@@ -36,16 +29,26 @@ export function ToolWorkspace({ tool }: ToolWorkspaceProps) {
                                 <Icon svg={area.icon} size={22} />
                             </span>
                             <div className="min-w-0">
-                                <h1 className="font-display text-[32px] leading-[1.05] font-bold tracking-[-0.02em]">
-                                    {tool.title}
-                                </h1>
+                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                    <span className="ms-badge shrink-0 bg-[var(--color-chip)]">{maturityLabel(tool.maturity)}</span>
+                                    <h1 className="font-display text-[32px] leading-[1.05] font-bold tracking-[-0.02em]">
+                                        {tool.title}
+                                    </h1>
+                                </div>
                                 <p className="mt-1 max-w-[60ch] text-[15px] text-[var(--color-ink-soft)]">{tool.sub}</p>
                             </div>
                         </div>
-                        <TrustBadge label={tool.trust} />
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
-                        <span className="ms-badge bg-[var(--color-chip)]">{maturityLabel(tool.maturity)}</span>
+                        {onAddToWorkspace ? (
+                            <button
+                                type="button"
+                                onClick={onAddToWorkspace}
+                                className="ms-btn px-3 py-2 text-[12px] font-semibold"
+                            >
+                                {addToWorkspaceLabel}
+                            </button>
+                        ) : null}
                         <button
                             type="button"
                             aria-label={favorite ? 'Favorit entfernen' : 'Als Favorit markieren'}

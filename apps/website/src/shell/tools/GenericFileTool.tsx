@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import type { Tool } from '../../data/catalog';
 import { copyToClipboard } from '../../lib/format';
-import { ProgressBar, ResultCard, StateHint, useToast } from './_shared';
+import { ProgressBar, ResultCard, StateHint } from './_shared';
+import { useToast } from '../toast';
 
 type GenericFileToolProps = {
     tool: Tool;
@@ -57,7 +58,7 @@ export function GenericFileTool({ tool }: GenericFileToolProps) {
     const [working, setWorking] = useState(false);
     const [progress, setProgress] = useState(0);
     const [done, setDone] = useState(false);
-    const { node, show } = useToast();
+    const { toast } = useToast();
 
     const cta = useMemo(() => ctaForTool(tool.id), [tool.id]);
 
@@ -147,7 +148,11 @@ export function GenericFileTool({ tool }: GenericFileToolProps) {
                         className="ms-btn-primary"
                         onClick={async () => {
                             const ok = await copyToClipboard(copyTextForTool(tool.id));
-                            show(ok ? 'In Zwischenablage kopiert.' : 'Kopieren war leider nicht möglich.');
+                            toast(
+                                ok
+                                    ? { message: 'In Zwischenablage kopiert.', variant: 'success' }
+                                    : { message: 'Kopieren war leider nicht möglich.', variant: 'error' },
+                            );
                         }}
                     >
                         Kopieren
@@ -156,7 +161,6 @@ export function GenericFileTool({ tool }: GenericFileToolProps) {
             ) : null}
 
             <StateHint>Reihenfolge per Drag-and-Drop anpassen.</StateHint>
-            {node}
         </div>
     );
 }

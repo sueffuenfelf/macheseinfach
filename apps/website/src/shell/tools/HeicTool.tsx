@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react';
 import type { Tool } from '../../data/catalog';
 import { useFileDrop } from '../../hooks/useFileDrop';
-import { ProgressBar, ResultCard, StateHint, useToast } from './_shared';
+import { ProgressBar, ResultCard, StateHint } from './_shared';
+import { useToast } from '../toast';
 
 type HeicToolProps = {
     tool: Tool;
@@ -16,7 +17,7 @@ export function HeicTool({ tool }: HeicToolProps) {
     const [doneCount, setDoneCount] = useState(0);
     const [progress, setProgress] = useState(0);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
-    const { node, show } = useToast();
+    const { toast } = useToast();
 
     function appendFiles(list: FileList) {
         const names = Array.from(list).map((file) => file.name);
@@ -113,7 +114,7 @@ export function HeicTool({ tool }: HeicToolProps) {
 
             {!working && doneCount > 0 ? (
                 <ResultCard tone="success" heading={`Fertig: ${doneCount} Dateien konvertiert`}>
-                    <button type="button" className="ms-btn-primary" onClick={() => show('Download gestartet (Demo)')}>
+                    <button type="button" className="ms-btn-primary" onClick={() => toast('Download gestartet (Demo)')}>
                         Herunterladen (Demo)
                     </button>
                 </ResultCard>
@@ -124,7 +125,6 @@ export function HeicTool({ tool }: HeicToolProps) {
             </button>
 
             <StateHint>Ziel-Format: {target.toUpperCase()} · Demo-Vorschau.</StateHint>
-            {node}
         </div>
     );
 }

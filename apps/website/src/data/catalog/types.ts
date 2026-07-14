@@ -48,6 +48,8 @@ export type ToolTheme = {
 /** Bereich = Gruppe von User Stories (z. B. Buchhaltung, SEO) */
 export type AreaDefinition = {
     readonly id: AreaId;
+    /** URL-Segment unter /bereich/:slug */
+    readonly slug: string;
     readonly label: string;
     readonly shortLabel: string;
     readonly description: string;
@@ -61,6 +63,8 @@ export type AreaDefinition = {
 /** User Story — UX-Einstieg; kann in mehreren Bereichen sichtbar sein */
 export type UserStory = {
     readonly id: StoryId;
+    /** URL-Segment unter /bereich/:areaSlug/:slug */
+    readonly slug: string;
     /** Primärer Bereich + optionale Querverweise (z. B. gleiche Story in Buchhaltung & Dokumente) */
     readonly areaIds: readonly AreaId[];
     readonly role: string;
@@ -75,6 +79,8 @@ export type UserStory = {
 /** Tool — kann in mehreren Bereichen vorkommen (areas[]) */
 export type ToolDefinition = {
     readonly id: ToolId;
+    /** URL-Segment unter …/:toolSlug oder /tool/:slug */
+    readonly slug: string;
     readonly shortTitle: string;
     readonly title: string;
     readonly sub: string;

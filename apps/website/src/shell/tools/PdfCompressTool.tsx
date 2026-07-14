@@ -1,19 +1,20 @@
 import { useMemo, useRef, useState } from 'react';
 import type { Tool } from '../../data/catalog';
-import { usePlatform } from '../../context/PlatformContext';
+import { usePlatformNav } from '../../routing/usePlatformNav';
 import { useFileDrop, FILE_ACCEPT } from '../../hooks/useFileDrop';
 import { deterministicSeed, formatBytes } from '../../lib/format';
-import { ResultCard, StateHint, useToast } from './_shared';
+import { ResultCard, StateHint } from './_shared';
+import { useToast } from '../toast';
 
 type PdfCompressToolProps = {
     tool: Tool;
 };
 
 export function PdfCompressTool({ tool }: PdfCompressToolProps) {
-    const { file, ingestFiles, clearFile } = usePlatform();
+    const { file, ingestFiles, clearFile } = usePlatformNav();
     const [quality, setQuality] = useState(62);
     const inputRef = useRef<HTMLInputElement | null>(null);
-    const { node, show } = useToast();
+    const { toast } = useToast();
 
     const { dragOver, onDragLeave, onDragOver, onDrop } = useFileDrop((files) => {
         ingestFiles(files);
@@ -123,14 +124,13 @@ export function PdfCompressTool({ tool }: PdfCompressToolProps) {
                     <button
                         type="button"
                         className="ms-btn-primary w-full"
-                        onClick={() => show('Download gestartet (Demo)')}
+                        onClick={() => toast('Download gestartet (Demo)')}
                     >
                         Verkleinertes PDF herunterladen
                     </button>
                 </>
             )}
             <StateHint>Demo-Vorschau — echte Komprimierung folgt in v0.2.</StateHint>
-            {node}
         </div>
     );
 }

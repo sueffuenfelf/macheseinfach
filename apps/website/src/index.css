@@ -1,5 +1,7 @@
 @import "tailwindcss";
 @import "@macheseinfach/ui/theme.css";
+@import "react-grid-layout/css/styles.css";
+@import "react-resizable/css/styles.css";
 @source "./**/*.{ts,tsx}";
 @source "../../../packages/ui/src/**/*.{ts,tsx}";
 
@@ -302,6 +304,21 @@ select {
 .ms-stagger > *:nth-child(6) { animation-delay: 0.22s; }
 .ms-stagger > *:nth-child(7) { animation-delay: 0.26s; }
 .ms-stagger > *:nth-child(8) { animation-delay: 0.3s; }
+
+.workspace-grid-layout .react-grid-item > .react-resizable-handle {
+  right: 3px;
+  bottom: 3px;
+  z-index: 20;
+  pointer-events: auto;
+}
+
+.workspace-grid-layout .react-grid-item.react-draggable-dragging {
+  z-index: 40;
+}
+
+.workspace-grid-layout .react-grid-item.react-resizable-resizing {
+  z-index: 40;
+}
 
 /* ---------- Accessibility ---------- */
 

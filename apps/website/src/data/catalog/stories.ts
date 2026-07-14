@@ -3,6 +3,7 @@ import type { UserStory } from './types';
 export const stories = {
     'story-elster-pdf-limit': {
         id: 'story-elster-pdf-limit',
+        slug: 'elster-pdf',
         areaIds: ['behoerden'],
         role: 'Bei Elster',
         want: 'ist mein PDF zu groß für den Upload',
@@ -14,6 +15,7 @@ export const stories = {
     },
     'story-vermieter-gehalt-schwaarzen': {
         id: 'story-vermieter-gehalt-schwaarzen',
+        slug: 'gehalt-schwaerzen',
         areaIds: ['behoerden'],
         role: 'Für den Vermieter',
         want: 'will ich meinen Gehaltsnachweis schwärzen',
@@ -25,6 +27,7 @@ export const stories = {
     },
     'story-freelancer-girocode': {
         id: 'story-freelancer-girocode',
+        slug: 'rechnung',
         areaIds: ['buchhaltung'],
         role: 'Als Freelancer:in',
         want: 'will ich, dass Kund:innen meine Rechnung mit einem Scan bezahlen',
@@ -36,6 +39,7 @@ export const stories = {
     },
     'story-iban-vor-ueberweisung': {
         id: 'story-iban-vor-ueberweisung',
+        slug: 'iban-pruefen',
         areaIds: ['buchhaltung'],
         role: 'Als Zahlende:r',
         want: 'will ich eine IBAN vor der großen Überweisung prüfen',
@@ -47,6 +51,7 @@ export const stories = {
     },
     'story-iban-aus-rechnung': {
         id: 'story-iban-aus-rechnung',
+        slug: 'iban-aus-rechnung',
         areaIds: ['buchhaltung', 'dokumente'],
         role: 'Als Empfänger:in',
         want: 'will ich die IBAN direkt von einer Rechnung übernehmen',
@@ -58,6 +63,7 @@ export const stories = {
     },
     'story-heic-portal': {
         id: 'story-heic-portal',
+        slug: 'heic-konvertieren',
         areaIds: ['dokumente'],
         role: 'Fürs Portal',
         want: 'muss ich mein iPhone-Foto (HEIC) umwandeln',
@@ -69,6 +75,7 @@ export const stories = {
     },
     'story-bewerbung-eine-pdf': {
         id: 'story-bewerbung-eine-pdf',
+        slug: 'pdf-zusammenfuegen',
         areaIds: ['dokumente'],
         role: 'Für die Bewerbung',
         want: 'will ich alle Unterlagen bündeln',
@@ -80,6 +87,7 @@ export const stories = {
     },
     'story-vertrag-unterschreiben': {
         id: 'story-vertrag-unterschreiben',
+        slug: 'pdf-unterschreiben',
         areaIds: ['dokumente'],
         role: 'Für den Vertrag',
         want: 'will ich digital unterschreiben',
@@ -91,6 +99,7 @@ export const stories = {
     },
     'story-scan-text-kopieren': {
         id: 'story-scan-text-kopieren',
+        slug: 'ocr-scan',
         areaIds: ['dokumente'],
         role: 'Aus einem Scan',
         want: 'will ich den Text herauskopieren',
@@ -102,6 +111,7 @@ export const stories = {
     },
     'story-leak-email-passwort': {
         id: 'story-leak-email-passwort',
+        slug: 'leak-check',
         areaIds: ['security'],
         role: 'Nach einem Datenleak',
         want: 'bin ich unsicher, ob ich betroffen bin',
@@ -113,6 +123,7 @@ export const stories = {
     },
     'story-seo-meta-preview': {
         id: 'story-seo-meta-preview',
+        slug: 'meta-preview',
         areaIds: ['seo'],
         role: 'Für meine Website',
         want: 'will ich die Google-Vorschau prüfen',
@@ -124,6 +135,7 @@ export const stories = {
     },
     'story-seo-sitemap': {
         id: 'story-seo-sitemap',
+        slug: 'sitemap-check',
         areaIds: ['seo'],
         role: 'Für meine Website',
         want: 'will ich Sitemap-Fehler finden',

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 
 type ResultTone = 'success' | 'warn' | 'danger' | 'info';
 
@@ -79,25 +79,4 @@ export function StateHint({ children }: { children: ReactNode }) {
             <span>{children}</span>
         </p>
     );
-}
-
-export function useToast() {
-    const [message, setMessage] = useState<string | null>(null);
-
-    useEffect(() => {
-        if (!message) return;
-        const timer = window.setTimeout(() => setMessage(null), 2200);
-        return () => window.clearTimeout(timer);
-    }, [message]);
-
-    return {
-        show: (msg: string) => setMessage(msg),
-        node: message ? (
-            <div className="pointer-events-none fixed inset-x-0 bottom-4 z-40 flex justify-center px-4">
-                <div className="ms-animate-slide rounded-md border-2 border-black bg-black px-4 py-2 text-[14px] font-semibold text-white shadow-brutal">
-                    {message}
-                </div>
-            </div>
-        ) : null,
-    };
 }

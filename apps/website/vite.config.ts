@@ -4,5 +4,15 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
     plugins: [react(), tailwindcss()],
+    define: {
+        'process.env': {},
+    },
+    optimizeDeps: {
+        esbuildOptions: {
+            define: {
+                'process.env': '{}',
+            },
+        },
+    },
     server: { port: 5173 },
 });

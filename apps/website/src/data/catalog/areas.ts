@@ -15,6 +15,7 @@ const ICONS = {
 export const areas = {
     buchhaltung: {
         id: 'buchhaltung',
+        slug: 'buchhaltung',
         label: 'Buchhaltung',
         shortLabel: 'Buchhaltung',
         description: 'Zahlungen und Rechnungen im Alltag — GiroCode, IBAN prüfen, IBAN auslesen.',
@@ -24,6 +25,7 @@ export const areas = {
     },
     behoerden: {
         id: 'behoerden',
+        slug: 'behoerden',
         label: 'Behörden & Formulare',
         shortLabel: 'Behörden',
         description: 'Portal-Uploads und Nachweise — PDFs unter Größenlimits bringen, schwärzen.',
@@ -33,6 +35,7 @@ export const areas = {
     },
     dokumente: {
         id: 'dokumente',
+        slug: 'dokumente',
         label: 'Dokumente',
         shortLabel: 'Dokumente',
         description: 'PDFs, Fotos und Scans — umwandeln, zusammenfügen, unterschreiben, auslesen.',
@@ -48,6 +51,7 @@ export const areas = {
     },
     security: {
         id: 'security',
+        slug: 'security',
         label: 'Security',
         shortLabel: 'Security',
         description: 'Prüfungen ohne preisgegebene Passwörter — bin ich von einem Leak betroffen?',
@@ -57,6 +61,7 @@ export const areas = {
     },
     seo: {
         id: 'seo',
+        slug: 'seo',
         label: 'SEO',
         shortLabel: 'SEO',
         description: 'Für kleine Websites — Snippet-Vorschau und Sitemap-Prüfung. Kommt bald.',

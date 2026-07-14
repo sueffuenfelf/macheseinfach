@@ -1,5 +1,5 @@
 import { areaOrder, areas, getTool, toolsInArea } from '../data/catalog';
-import { usePlatform } from '../context/PlatformContext';
+import { usePlatformNav } from '../routing/usePlatformNav';
 import { Icon } from './Icon';
 
 function toolCountLabel(count: number, planned: boolean): string {
@@ -9,7 +9,7 @@ function toolCountLabel(count: number, planned: boolean): string {
 }
 
 export function AreaStep() {
-    const { selectArea, selectTool, recentTools, activeAreaId } = usePlatform();
+    const { selectArea, selectTool, recentTools, activeAreaId } = usePlatformNav();
     const showRecent = !activeAreaId && recentTools.length > 0;
 
     return (

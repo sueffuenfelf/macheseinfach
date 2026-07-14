@@ -1,5 +1,6 @@
 import { areas } from './areas';
 import { stories } from './stories';
+import { catalogTags } from './tags';
 import { tools } from './tools';
 import type { AreaId, CatalogValidationIssue, CatalogValidationResult, StoryId, ToolId } from './types';
 
@@ -10,6 +11,30 @@ function issue(code: string, message: string): CatalogValidationIssue {
 /** Laufzeit-Validierung — ergänzt TypeScript satisfies; in Tests & CI */
 export function validateCatalog(): CatalogValidationResult {
     const issues: CatalogValidationIssue[] = [];
+
+    const areaSlugs = new Set<string>();
+    for (const area of Object.values(areas)) {
+        if (areaSlugs.has(area.slug)) {
+            issues.push(issue('DUPLICATE_AREA_SLUG', `Doppelter Bereichs-Slug „${area.slug}“`));
+        }
+        areaSlugs.add(area.slug);
+    }
+
+    const storySlugs = new Set<string>();
+    for (const story of Object.values(stories)) {
+        if (storySlugs.has(story.slug)) {
+            issues.push(issue('DUPLICATE_STORY_SLUG', `Doppelter Story-Slug „${story.slug}“`));
+        }
+        storySlugs.add(story.slug);
+    }
+
+    const toolSlugs = new Set<string>();
+    for (const tool of Object.values(tools)) {
+        if (toolSlugs.has(tool.slug)) {
+            issues.push(issue('DUPLICATE_TOOL_SLUG', `Doppelter Tool-Slug „${tool.slug}“`));
+        }
+        toolSlugs.add(tool.slug);
+    }
 
     for (const area of Object.values(areas)) {
         for (const storyId of area.storyIds) {
@@ -61,6 +86,12 @@ export function validateCatalog(): CatalogValidationResult {
     }
 
     for (const tool of Object.values(tools)) {
+        for (const tag of tool.tags) {
+            if (!catalogTags[tag as keyof typeof catalogTags]) {
+                issues.push(issue('TOOL_UNKNOWN_TAG', `Tool ${tool.id} nutzt unregistrierten Tag „${tag}“`));
+            }
+        }
+
         if (tool.areas.length === 0) {
             issues.push(issue('TOOL_NO_AREAS', `Tool ${tool.id} hat keine areas`));
         }

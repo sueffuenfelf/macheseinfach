@@ -3,6 +3,7 @@ import type { ToolDefinition } from './types';
 export const tools = {
     'pdf-compress': {
         id: 'pdf-compress',
+        slug: 'pdf-compress',
         shortTitle: 'PDF verkleinern',
         title: 'PDF verkleinern',
         sub: 'Bring dein PDF unter das Größenlimit von Elster & Co. — ohne Qualität zu verschenken.',
@@ -21,6 +22,7 @@ export const tools = {
     },
     'pdf-redact': {
         id: 'pdf-redact',
+        slug: 'pdf-redact',
         shortTitle: 'PDF schwärzen',
         title: 'PDF schwärzen',
         sub: 'Markier sensible Zeilen — die Schwärzung wird fest ins PDF eingebrannt.',
@@ -39,6 +41,7 @@ export const tools = {
     },
     'girocode-gen': {
         id: 'girocode-gen',
+        slug: 'girocode-gen',
         shortTitle: 'GiroCode',
         title: 'GiroCode erzeugen',
         sub: 'Gib die Zahlungsdaten ein — der QR-Code entsteht direkt in deinem Browser.',
@@ -58,6 +61,7 @@ export const tools = {
     },
     'iban-validate': {
         id: 'iban-validate',
+        slug: 'iban-validate',
         shortTitle: 'IBAN prüfen',
         title: 'IBAN prüfen',
         sub: 'Prüfsumme und Bankdaten werden offline anhand der Bankleitzahl-Tabelle geprüft.',
@@ -77,6 +81,7 @@ export const tools = {
     },
     'epc-read': {
         id: 'epc-read',
+        slug: 'epc-read',
         shortTitle: 'IBAN auslesen',
         title: 'IBAN auslesen',
         sub: 'Zieh eine Rechnung her — wir finden die IBAN und du übernimmst sie mit einem Klick.',
@@ -96,6 +101,7 @@ export const tools = {
     },
     'heic-convert': {
         id: 'heic-convert',
+        slug: 'heic-convert',
         shortTitle: 'HEIC → JPG',
         title: 'HEIC umwandeln',
         sub: 'Mach aus iPhone-Fotos ein Format, das jedes Portal akzeptiert.',
@@ -114,6 +120,7 @@ export const tools = {
     },
     'pdf-merge': {
         id: 'pdf-merge',
+        slug: 'pdf-merge',
         shortTitle: 'PDFs mergen',
         title: 'PDFs zusammenfügen',
         sub: 'Zieh deine Dateien in die richtige Reihenfolge und füge sie zu einer PDF zusammen.',
@@ -132,6 +139,7 @@ export const tools = {
     },
     'pdf-sign': {
         id: 'pdf-sign',
+        slug: 'pdf-sign',
         shortTitle: 'Signieren',
         title: 'PDF unterschreiben',
         sub: 'Setz deine Unterschrift an die richtige Stelle im Dokument.',
@@ -150,6 +158,7 @@ export const tools = {
     },
     'ocr-local': {
         id: 'ocr-local',
+        slug: 'ocr-local',
         shortTitle: 'OCR',
         title: 'Text aus Scan kopieren',
         sub: 'Erkenn den Text aus einem gescannten Dokument und kopier ihn heraus.',
@@ -168,6 +177,7 @@ export const tools = {
     },
     'pwned-check': {
         id: 'pwned-check',
+        slug: 'pwned-check',
         shortTitle: 'Leak-Check',
         title: 'Leak-Check',
         sub: 'Prüf, ob deine Daten in bekannten Leaks auftauchen — ohne Passwort preiszugeben.',
