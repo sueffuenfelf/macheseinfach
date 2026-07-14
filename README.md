@@ -6,20 +6,35 @@ Monorepo for creator-commerce tooling — Bun workspaces, Gumroad-inspired UI, S
 
 ```bash
 bun install
-bun run dev          # website (design system showcase)
-bun run dev:cli      # local CLI stub
+bun run dev              # marketing website
+bun run storybook        # UI kit (port 6006)
+bun run --filter @macheseinfach/cli dev   # CLI help
+
+# or via CLI from anywhere in the repo:
+bun run apps/cli/src/index.ts dev website
+bun run apps/cli/src/index.ts dev storybook
+bun run apps/cli/src/index.ts env check
 bun test
 ```
+
+## CLI (`macheseinfach`)
+
+| Command | Description |
+| --- | --- |
+| `macheseinfach dev <app>` | Start `website`, `storybook`, `ocr-service`, … |
+| `macheseinfach env check` | Verify sops, age-keygen, local age key |
+| `macheseinfach env decrypt` | `.kounds/secrets.env` → `.env` |
+| `macheseinfach env encrypt` | `.env` → `.kounds/secrets.env` |
 
 ## Structure
 
 | Path | Purpose |
 | --- | --- |
-| `apps/website` | Marketing / UI showcase |
+| `apps/website` | Marketing site |
 | `apps/cli` | Local dev & project management CLI |
 | `apps/ocr-service` | OCR pipeline stub (future Gemma/local model) |
 | `apps/beispiele` | Example integrations |
-| `packages/ui` | Gumroad-style design system (Tailwind v4) |
+| `packages/ui` | Gumroad-style design system + **Storybook** |
 
 ## Secrets (SOPS + age)
 

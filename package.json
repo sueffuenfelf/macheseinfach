@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "bun run --filter @macheseinfach/website dev",
     "dev:cli": "bun run --filter @macheseinfach/cli dev",
+    "storybook": "bun run --filter @macheseinfach/ui storybook",
     "build": "bun run --filter '*' build",
+    "build-storybook": "bun run --filter @macheseinfach/ui build-storybook",
     "test": "bun test",
     "lint": "biome lint .",
     "format": "biome format --write .",

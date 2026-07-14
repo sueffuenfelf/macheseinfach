@@ -2,7 +2,7 @@
   "root": true,
   "$schema": "https://biomejs.dev/schemas/2.5.3/schema.json",
   "files": {
-    "includes": ["**", "!**/dist", "!**/node_modules"]
+    "includes": ["**", "!**/dist", "!**/node_modules", "!**/storybook-static"]
   },
   "linter": {
     "enabled": true,

@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "bun run src/index.ts --help",
+    "test": "bun test src",
     "build": "tsc --noEmit -p tsconfig.json"
   },
   "devDependencies": {
