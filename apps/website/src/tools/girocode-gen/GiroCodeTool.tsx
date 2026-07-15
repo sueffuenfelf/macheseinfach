@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { Tool } from '../../data/catalog';
+import type { ToolDefinition as Tool } from '../../data/catalog/types';
+import { validateIban } from '../../lib/iban';
 import { downloadDataUrl, parseGermanNumber } from '../../lib/format';
 import { buildEpcPayload, generateQrDataUrl, type GiroCodeData } from '../../lib/qr';
-import { validateIban } from '../../lib/iban';
-import { useToast } from '../toast';
+import { useToast } from '../../shell/toast';
 
 type GiroCodeToolProps = {
     tool: Tool;

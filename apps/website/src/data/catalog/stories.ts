@@ -59,7 +59,7 @@ export const stories = {
         situation: '22 Stellen abtippen ist fehleranfällig.',
         outcome: 'IBAN aus PDF, Scan oder Eingabe auslesen',
         toolIds: ['epc-read'],
-        status: 'ready',
+        status: 'planned',
     },
     'story-heic-portal': {
         id: 'story-heic-portal',
@@ -107,7 +107,7 @@ export const stories = {
         situation: 'Die PDF ist nur ein Bild — nichts markierbar.',
         outcome: 'Texterkennung aus Bild-PDFs und Scans',
         toolIds: ['ocr-local'],
-        status: 'ready',
+        status: 'planned',
     },
     'story-leak-email-passwort': {
         id: 'story-leak-email-passwort',
@@ -119,7 +119,7 @@ export const stories = {
         situation: 'Nach einem Datenleck bin ich unsicher — ohne Passwort zu senden.',
         outcome: 'Prüfen, ob E-Mail oder Passwort in Leaks vorkommt',
         toolIds: ['pwned-check'],
-        status: 'ready',
+        status: 'planned',
     },
     'story-seo-meta-preview': {
         id: 'story-seo-meta-preview',

@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { useSettings } from '../context/SettingsContext';
+import { requestNotificationPermission } from './toast';
 import { BackButton } from './components/Primitives';
 
 type BrutalistToggleProps = {
@@ -39,7 +41,28 @@ function BrutalistToggle({ id, label, description, checked, onChange }: Brutalis
 }
 
 export function SettingsPage() {
-    const { settings, setAutoCopyCommandResults } = useSettings();
+    const { settings, setAutoCopyCommandResults, setAdvancedWidgetLinking, updateSettings } = useSettings();
+    const [notifHint, setNotifHint] = useState<string | null>(null);
+
+    async function toggleBackgroundNotifications(enabled: boolean) {
+        if (!enabled) {
+            updateSettings({ backgroundNotifications: false });
+            setNotifHint(null);
+            return;
+        }
+        const permission = await requestNotificationPermission();
+        if (permission === 'granted') {
+            updateSettings({ backgroundNotifications: true });
+            setNotifHint(null);
+            return;
+        }
+        updateSettings({ backgroundNotifications: false });
+        setNotifHint(
+            permission === 'denied'
+                ? 'Benachrichtigungen sind im Browser blockiert. Erlaube sie in den Systemeinstellungen.'
+                : 'Benachrichtigungen wurden nicht freigegeben.',
+        );
+    }
 
     return (
         <main className="mx-auto w-full max-w-[640px] px-4 py-8 md:px-6">
@@ -62,6 +85,37 @@ export function SettingsPage() {
                     description="Nach einem Slash-Befehl wird das Ergebnis direkt in die Zwischenablage gelegt. Ausgeschaltet: du kopierst manuell über „Kopieren“."
                     checked={settings.autoCopyCommandResults}
                     onChange={setAutoCopyCommandResults}
+                />
+            </section>
+
+            <section className="mt-8 space-y-4" aria-label="Hintergrund">
+                <h2 className="font-display text-[12px] font-bold tracking-[0.05em] uppercase text-[var(--color-ink-muted)]">
+                    Hintergrund
+                </h2>
+                <BrutalistToggle
+                    id="background-notifications"
+                    label="System-Benachrichtigungen"
+                    description="Wenn der Tab im Hintergrund läuft, erscheinen Fortschritt und Abschluss auch als macOS-/Windows-Benachrichtigung — mit Link zurück zum Tool."
+                    checked={settings.backgroundNotifications}
+                    onChange={toggleBackgroundNotifications}
+                />
+                {notifHint ? (
+                    <p className="rounded-[10px] border-2 border-[var(--color-danger)] bg-[#fff5f5] px-3 py-2 text-[13px] text-[var(--color-ink-soft)]">
+                        {notifHint}
+                    </p>
+                ) : null}
+            </section>
+
+            <section className="mt-8 space-y-4" aria-label="Arbeitsbereiche">
+                <h2 className="font-display text-[12px] font-bold tracking-[0.05em] uppercase text-[var(--color-ink-muted)]">
+                    Arbeitsbereiche
+                </h2>
+                <BrutalistToggle
+                    id="advanced-widget-linking"
+                    label="Erweiterte Widget-Verknüpfungen"
+                    description="Erlaubt Eingänge und Ausgänge zwischen Widgets (mehrere Quellen pro Widget möglich). Ausgeschaltet bleibt nur die gemeinsame Eingabe aktiv."
+                    checked={settings.advancedWidgetLinking}
+                    onChange={setAdvancedWidgetLinking}
                 />
             </section>
         </main>

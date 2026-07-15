@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useSettings } from '../context/SettingsContext';
 import { getTool } from '../data/catalog';
 import { usePlatformNav } from '../routing/usePlatformNav';
 import { favoritesPath, homePath, settingsPath, workspacePath } from '../routing/paths';
+import { BrandLogo } from './BrandLogo';
 import { AreaStep } from './AreaStep';
 import { CommandPalette } from './CommandPalette';
 import { FavoritesPage } from './FavoritesPage';
@@ -14,7 +16,7 @@ import { WorkspaceDashboard } from './WorkspaceDashboard';
 import { getToolWidget } from './widgets/registry';
 import {
     addToolToWorkspaceStaging,
-    addWidgetToWorkspace,
+    addWidgetToWorkspaceStaging,
     createWorkspace,
     defaultWorkspace,
     deleteWorkspace,
@@ -28,6 +30,8 @@ import {
     setDefaultWorkspace,
     setWorkspaceLayout,
     setWorkspaceSharedInput,
+    setWorkspaceToolsMembership,
+    setWidgetInputLinks,
     setWidgetPasswordOptions,
     setWidgetUseSharedInput,
     toggleWorkspaceTool,
@@ -35,16 +39,22 @@ import {
     type WorkspaceState,
 } from './workspaces/model';
 import { useToast } from './toast';
+import { useDismissLayer } from './useDismissLayer';
 
 export function ToolShell() {
     const platform = usePlatformNav();
+    const { settings } = useSettings();
     const { toast } = useToast();
     const [workspaceState, setWorkspaceState] = useState<WorkspaceState>(() => loadWorkspaceState());
-    const [editingWorkspaceId, setEditingWorkspaceId] = useState<string | null>(null);
-    const [workspaceNameDraft, setWorkspaceNameDraft] = useState('');
+    const [renameRequestId, setRenameRequestId] = useState(0);
     const [workspacePickerOpen, setWorkspacePickerOpen] = useState(false);
     const [pendingToolForWorkspace, setPendingToolForWorkspace] = useState<ReturnType<typeof getTool> | null>(null);
     const [layoutEditMode, setLayoutEditMode] = useState(false);
+
+    useDismissLayer(Boolean(workspacePickerOpen && pendingToolForWorkspace), () => {
+        setWorkspacePickerOpen(false);
+        setPendingToolForWorkspace(null);
+    });
 
     const { page, activeAreaId, activeStoryId, activeTool, activeWorkspaceId } = platform;
     const workspaces = workspaceState.workspaces;
@@ -115,6 +125,15 @@ export function ToolShell() {
         toast({ message: `Arbeitsbereich „${activeWorkspace.name}" gelöscht`, variant: 'info' });
     }
 
+    function renameActiveWorkspace(name: string) {
+        if (!activeWorkspace) return;
+        const next = renameWorkspace(workspaceState, activeWorkspace.id, name);
+        updateState(next);
+        const updated = next.workspaces.find((workspace) => workspace.id === activeWorkspace.id);
+        if (updated && updated.slug !== activeWorkspace.slug) platform.goToWorkspace(updated.slug);
+        toast({ message: 'Arbeitsbereich umbenannt', variant: 'success' });
+    }
+
     function moveActiveWorkspace(direction: -1 | 1) {
         if (!activeWorkspace) return;
         const currentIndex = workspaces.findIndex((workspace) => workspace.id === activeWorkspace.id);
@@ -173,11 +192,7 @@ export function ToolShell() {
                 id: 'rename-workspace',
                 label: 'Aktiven Arbeitsbereich umbenennen',
                 hint: 'Rename',
-                run: () => {
-                    if (!activeWorkspace) return;
-                    setWorkspaceNameDraft(activeWorkspace.name);
-                    setEditingWorkspaceId(activeWorkspace.id);
-                },
+                run: () => setRenameRequestId((current) => current + 1),
             },
             {
                 id: 'default-workspace',
@@ -228,9 +243,29 @@ export function ToolShell() {
                     onWidgetPasswordOptionsChange={(widgetId, options) => {
                         updateState(setWidgetPasswordOptions(workspaceState, activeWorkspace.id, widgetId, options));
                     }}
+                    advancedWidgetLinkingEnabled={settings.advancedWidgetLinking}
+                    widgetLinks={activeWorkspace.widgetLinks}
+                    onWidgetLinksChange={(widgetId, links) => {
+                        updateState(setWidgetInputLinks(workspaceState, activeWorkspace.id, widgetId, links));
+                    }}
                     onAddWidget={(widgetId) => {
-                        updateState(addWidgetToWorkspace(workspaceState, activeWorkspace.id, widgetId));
-                        toast({ message: 'Widget hinzugefügt', variant: 'success' });
+                        const workspace = activeWorkspace;
+                        if (workspace.widgetIds.includes(widgetId)) {
+                            toast({ message: 'Widget ist bereits platziert', variant: 'info' });
+                            return;
+                        }
+                        if (workspace.stagedWidgetIds.includes(widgetId)) {
+                            toast({ message: 'Widget wartet bereits auf Platzierung', variant: 'info' });
+                            return;
+                        }
+                        updateState(addWidgetToWorkspaceStaging(workspaceState, activeWorkspace.id, widgetId));
+                        const widget = getToolWidget(widgetId);
+                        toast({
+                            message: widget
+                                ? `„${widget.title}" wartet auf Platzierung — ziehe es auf das Dashboard`
+                                : 'Widget wartet auf Platzierung',
+                            variant: 'success',
+                        });
                     }}
                     onRemoveWidget={(widgetId) => {
                         updateState(removeWidgetFromWorkspace(workspaceState, activeWorkspace.id, widgetId));
@@ -248,8 +283,14 @@ export function ToolShell() {
                         updateState(toggleWorkspaceTool(workspaceState, activeWorkspace.id, toolId));
                         toast({ message: 'Tool-Set aktualisiert', variant: 'success' });
                     }}
+                    onSetWorkspaceToolsMembership={(toolIds, enabled) => {
+                        updateState(setWorkspaceToolsMembership(workspaceState, activeWorkspace.id, toolIds, enabled));
+                        toast({ message: 'Tool-Set aktualisiert', variant: 'success' });
+                    }}
                     onOpenTool={(toolId) => platform.selectTool(toolId)}
                     onOpenCatalog={platform.goHome}
+                    onRenameWorkspace={renameActiveWorkspace}
+                    renameRequestId={renameRequestId}
                 />
             ) : null
         ) : !activeAreaId ? (
@@ -268,13 +309,8 @@ export function ToolShell() {
         <div className="flex min-h-screen flex-col bg-[var(--color-canvas)] text-[var(--color-ink)]" data-shell="brutalist">
             <header className="sticky top-0 z-30 border-b-2 border-black bg-white">
                 <div className="mx-auto flex w-full max-w-[1040px] items-center justify-between gap-4 px-4 py-3 md:px-6">
-                    <Link to={homePath()} onClick={platform.goHome} className="ms-focus inline-flex items-center gap-2 text-left" aria-label="Zur Startseite">
-                        <span className="inline-flex h-[26px] w-[26px] items-center justify-center rounded-[7px] border-2 border-black bg-[#ff90e8] font-display text-[16px] font-bold text-white shadow-[2px_2px_0_#000]">
-                            m
-                        </span>
-                        <span className="font-display text-[19px] font-bold tracking-[-0.02em] text-[var(--color-ink)]">
-                            macheseinfa<span className="text-[var(--color-brand)]">.ch</span>
-                        </span>
+                    <Link to={homePath()} onClick={platform.goHome} className="ms-focus text-left" aria-label="Zur Startseite">
+                        <BrandLogo />
                     </Link>
                     <div className="flex items-center gap-2">
                         <Link to={favoritesPath()} className="ms-focus inline-flex h-10 items-center gap-1.5 rounded-[8px] border-2 border-black bg-white px-3 font-display text-[13px] font-semibold shadow-[2px_2px_0_#000] transition hover:-translate-x-[2px] hover:-translate-y-[2px] hover:shadow-brutal active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0_#000]">
@@ -334,10 +370,7 @@ export function ToolShell() {
                         <button type="button" onClick={() => createNewWorkspace()} className="ms-focus shrink-0 rounded-[8px] border-2 border-black bg-white px-3 py-1.5 font-display text-[12px] font-semibold">
                             + Neu
                         </button>
-                        <button type="button" onClick={() => { setWorkspaceNameDraft(activeWorkspace.name); setEditingWorkspaceId(activeWorkspace.id); }} className="ms-focus ml-auto shrink-0 rounded-[8px] border-2 border-black bg-white px-3 py-1.5 text-[11px] font-semibold">
-                            Umbenennen
-                        </button>
-                        <button type="button" onClick={duplicateActiveWorkspace} className="ms-focus shrink-0 rounded-[8px] border-2 border-black bg-white px-3 py-1.5 text-[11px] font-semibold">
+                        <button type="button" onClick={duplicateActiveWorkspace} className="ms-focus ml-auto shrink-0 rounded-[8px] border-2 border-black bg-white px-3 py-1.5 text-[11px] font-semibold">
                             Duplizieren
                         </button>
                         <button type="button" onClick={() => updateState(setDefaultWorkspace(workspaceState, activeWorkspace.id))} className="ms-focus shrink-0 rounded-[8px] border-2 border-black bg-white px-3 py-1.5 text-[11px] font-semibold">
@@ -363,34 +396,6 @@ export function ToolShell() {
             ) : (
                 <GlobalActionPalette open={platform.paletteOpen} actions={globalActions} onClose={platform.closePalette} />
             )}
-            {editingWorkspaceId ? (
-                <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-                    <button type="button" className="absolute inset-0 bg-black/35 backdrop-blur-[4px]" onClick={() => setEditingWorkspaceId(null)} aria-label="Dialog schließen" />
-                    <section className="ms-animate-pop relative z-10 w-full max-w-[26rem] rounded-[16px] border-2 border-black bg-white p-4 shadow-brutal-lg">
-                        <h2 className="font-display text-[18px] font-bold">Arbeitsbereich umbenennen</h2>
-                        <input type="text" className="ms-input mt-3" value={workspaceNameDraft} onChange={(event) => setWorkspaceNameDraft(event.target.value)} autoFocus />
-                        <div className="mt-3 flex justify-end gap-2">
-                            <button type="button" className="ms-btn px-3 py-2 text-[12px]" onClick={() => setEditingWorkspaceId(null)}>
-                                Abbrechen
-                            </button>
-                            <button
-                                type="button"
-                                className="ms-btn-primary px-3 py-2 text-[12px]"
-                                onClick={() => {
-                                    const next = renameWorkspace(workspaceState, editingWorkspaceId, workspaceNameDraft);
-                                    updateState(next);
-                                    const updated = next.workspaces.find((workspace) => workspace.id === editingWorkspaceId);
-                                    if (updated && activeWorkspace?.id === updated.id) platform.goToWorkspace(updated.slug);
-                                    toast({ message: 'Arbeitsbereich umbenannt', variant: 'success' });
-                                    setEditingWorkspaceId(null);
-                                }}
-                            >
-                                Speichern
-                            </button>
-                        </div>
-                    </section>
-                </div>
-            ) : null}
             {workspacePickerOpen && pendingToolForWorkspace ? (
                 <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
                     <button

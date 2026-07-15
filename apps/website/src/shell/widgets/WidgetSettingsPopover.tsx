@@ -2,7 +2,9 @@ import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from
 import { createPortal } from 'react-dom';
 import type { WidgetPasswordOptions } from '../workspaces/model';
 import { SettingsToggleRow } from './SettingsToggleRow';
-import type { ToolWidgetDef } from './types';
+import type { ToolWidgetDef, WidgetValuePort } from './types';
+import type { WorkspaceWidgetLinkInput } from '../workspaces/model';
+import { useDismissLayer } from '../useDismissLayer';
 
 const PASSWORD_WIDGET_ID = 'widget-password-mini';
 const PASSWORD_MIN_LENGTH = 8;
@@ -19,6 +21,14 @@ type WidgetSettingsPopoverProps = {
     onPasswordOptionsChange?: (options: WidgetPasswordOptions) => void;
     useSharedInput?: boolean;
     onUseSharedInputChange?: (value: boolean) => void;
+    advancedLinkingEnabled?: boolean;
+    sourceWidgets?: {
+        id: string;
+        title: string;
+        ports: readonly { id: WidgetValuePort; label: string }[];
+    }[];
+    selectedLinks?: WorkspaceWidgetLinkInput[];
+    onSelectedLinksChange?: (links: WorkspaceWidgetLinkInput[]) => void;
 };
 
 type PopoverPosition = {
@@ -178,12 +188,33 @@ function WidgetSettingsPanel({
     onPasswordOptionsChange,
     useSharedInput,
     onUseSharedInputChange,
+    advancedLinkingEnabled,
+    sourceWidgets = [],
+    selectedLinks = [],
+    onSelectedLinksChange,
 }: Omit<WidgetSettingsPopoverProps, 'open' | 'onOpenChange'>) {
     const isPassword = widget.id === PASSWORD_WIDGET_ID;
     const supportsShared = Boolean(widget.supportsSharedInput);
+    const supportsLinkedInput = Boolean(widget.supportsLinkedInput);
 
-    if (!isPassword && !supportsShared) {
+    if (!isPassword && !supportsShared && !(advancedLinkingEnabled && supportsLinkedInput)) {
         return <p className="widget-settings__empty">Für dieses Widget gibt es noch keine Einstellungen.</p>;
+    }
+
+    function updateLink(index: number, patch: Partial<WorkspaceWidgetLinkInput>) {
+        const next = selectedLinks.map((entry, current) => (current === index ? { ...entry, ...patch } : entry));
+        onSelectedLinksChange?.(next);
+    }
+
+    function removeLink(index: number) {
+        onSelectedLinksChange?.(selectedLinks.filter((_, current) => current !== index));
+    }
+
+    function addLink() {
+        const firstWidget = sourceWidgets[0];
+        const firstPort = firstWidget?.ports[0];
+        if (!firstWidget || !firstPort) return;
+        onSelectedLinksChange?.([...selectedLinks, { sourceWidgetId: firstWidget.id, sourcePort: firstPort.id }]);
     }
 
     return (
@@ -206,6 +237,66 @@ function WidgetSettingsPanel({
                     onChange={onUseSharedInputChange}
                 />
             ) : null}
+            {advancedLinkingEnabled && supportsLinkedInput && onSelectedLinksChange ? (
+                <fieldset className="widget-settings__fieldset">
+                    <legend className="widget-settings__legend">Verknüpfte Eingänge</legend>
+                    <p className="text-[11px] leading-[1.4] text-[var(--color-ink-soft)]">
+                        Mehrere Quellen werden als kombinierter Text an dieses Widget übergeben.
+                    </p>
+                    <div className="mt-2 space-y-2">
+                        {selectedLinks.map((link, index) => {
+                            const sourceWidget = sourceWidgets.find((entry) => entry.id === link.sourceWidgetId) ?? sourceWidgets[0];
+                            const ports = sourceWidget?.ports ?? [];
+                            return (
+                                <div key={`${link.sourceWidgetId}:${link.sourcePort}:${index}`} className="rounded-[8px] border-2 border-black bg-white p-2">
+                                    <label className="block text-[10px] font-semibold uppercase text-[var(--color-ink-muted)]">
+                                        Quelle
+                                    </label>
+                                    <select
+                                        className="ms-input mt-1 text-[12px]"
+                                        value={sourceWidget?.id ?? ''}
+                                        onChange={(event) => {
+                                            const nextWidget = sourceWidgets.find((entry) => entry.id === event.target.value);
+                                            updateLink(index, {
+                                                sourceWidgetId: event.target.value,
+                                                sourcePort: nextWidget?.ports[0]?.id ?? 'value',
+                                            });
+                                        }}
+                                    >
+                                        {sourceWidgets.map((entry) => (
+                                            <option key={entry.id} value={entry.id}>
+                                                {entry.title}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <label className="mt-2 block text-[10px] font-semibold uppercase text-[var(--color-ink-muted)]">
+                                        Ausgang
+                                    </label>
+                                    <div className="mt-1 flex gap-2">
+                                        <select
+                                            className="ms-input text-[12px]"
+                                            value={link.sourcePort}
+                                            onChange={(event) => updateLink(index, { sourcePort: event.target.value as WidgetValuePort })}
+                                        >
+                                            {ports.map((port) => (
+                                                <option key={port.id} value={port.id}>
+                                                    {port.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <button type="button" className="ms-btn px-2 py-1 text-[11px]" onClick={() => removeLink(index)}>
+                                            Entfernen
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                        <button type="button" className="ms-btn w-full py-1 text-[12px]" disabled={sourceWidgets.length === 0} onClick={addLink}>
+                            Quelle hinzufügen
+                        </button>
+                    </div>
+                </fieldset>
+            ) : null}
         </div>
     );
 }
@@ -218,11 +309,17 @@ export function WidgetSettingsPopover({
     onPasswordOptionsChange,
     useSharedInput,
     onUseSharedInputChange,
+    advancedLinkingEnabled,
+    sourceWidgets,
+    selectedLinks,
+    onSelectedLinksChange,
 }: WidgetSettingsPopoverProps) {
     const panelId = useId();
     const anchorRef = useRef<HTMLButtonElement>(null);
     const popoverRef = useRef<HTMLDivElement>(null);
     const [position, setPosition] = useState<PopoverPosition>({ top: 0, left: 0 });
+
+    useDismissLayer(open, () => onOpenChange(false));
 
     const updatePosition = useCallback(() => {
         const anchor = anchorRef.current;
@@ -234,13 +331,10 @@ export function WidgetSettingsPopover({
     useLayoutEffect(() => {
         if (!open) return;
         updatePosition();
-    }, [open, updatePosition, passwordOptions, useSharedInput, widget.id]);
+    }, [open, updatePosition, passwordOptions, useSharedInput, widget.id, selectedLinks, advancedLinkingEnabled]);
 
     useEffect(() => {
         if (!open) return;
-        function onKeyDown(event: KeyboardEvent) {
-            if (event.key === 'Escape') onOpenChange(false);
-        }
         function onPointerDown(event: MouseEvent) {
             const target = event.target as Node;
             if (anchorRef.current?.contains(target)) return;
@@ -250,12 +344,10 @@ export function WidgetSettingsPopover({
         function onViewportChange() {
             updatePosition();
         }
-        window.addEventListener('keydown', onKeyDown);
         window.addEventListener('mousedown', onPointerDown);
         window.addEventListener('resize', onViewportChange);
         window.addEventListener('scroll', onViewportChange, true);
         return () => {
-            window.removeEventListener('keydown', onKeyDown);
             window.removeEventListener('mousedown', onPointerDown);
             window.removeEventListener('resize', onViewportChange);
             window.removeEventListener('scroll', onViewportChange, true);
@@ -312,6 +404,10 @@ export function WidgetSettingsPopover({
                               onPasswordOptionsChange={onPasswordOptionsChange}
                               useSharedInput={useSharedInput}
                               onUseSharedInputChange={onUseSharedInputChange}
+                              advancedLinkingEnabled={advancedLinkingEnabled}
+                              sourceWidgets={sourceWidgets}
+                              selectedLinks={selectedLinks}
+                              onSelectedLinksChange={onSelectedLinksChange}
                           />
                       </div>,
                       document.body,

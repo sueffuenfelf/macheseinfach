@@ -2,6 +2,7 @@ import { areas } from './areas';
 import { stories } from './stories';
 import { catalogTags } from './tags';
 import { tools } from './tools';
+import { listDiscoveredWidgets } from '../../tools/discover';
 import type { AreaId, CatalogValidationIssue, CatalogValidationResult, StoryId, ToolId } from './types';
 
 function issue(code: string, message: string): CatalogValidationIssue {
@@ -113,6 +114,16 @@ export function validateCatalog(): CatalogValidationResult {
                     issue('TOOL_STORY_MISMATCH', `Story ${storyId} listet Tool ${tool.id} nicht in toolIds`),
                 );
             }
+        }
+    }
+
+    const widgets = listDiscoveredWidgets();
+    for (const tool of Object.values(tools)) {
+        const count = widgets.filter((widget) => widget.toolId === tool.id).length;
+        if (count === 0) {
+            issues.push(
+                issue('TOOL_NO_WIDGETS', `Tool ${tool.id} hat keine registrierten Widgets (tools/${tool.id}/config.ts)`),
+            );
         }
     }
 

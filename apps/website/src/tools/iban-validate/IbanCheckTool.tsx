@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import type { Tool } from '../../data/catalog';
+import type { ToolDefinition as Tool } from '../../data/catalog/types';
 import { formatIban, ibanCountryName, validateIban, type IbanResult } from '../../lib/iban';
-import { InfoGrid, ResultCard } from './_shared';
+import { InfoGrid, ResultCard } from '../_shared/_shared';
 
 type IbanCheckToolProps = {
     tool: Tool;

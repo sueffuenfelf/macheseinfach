@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useState, type DragEvent } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type DragEvent } from 'react';
 import { allTools, getTool, searchTools, type ToolId } from '../data/catalog';
 import { getToolWidget, listToolWidgets } from './widgets/registry';
+import type { WidgetValuePort } from './widgets/types';
+import { SettingsToggleRow } from './widgets/SettingsToggleRow';
 import { WidgetSettingsPopover } from './widgets/WidgetSettingsPopover';
 import {
     resolvePasswordOptions,
@@ -8,9 +10,14 @@ import {
     type Workspace,
     type WorkspaceLayoutItem,
     type WorkspaceLayoutSet,
+    type WorkspaceWidgetLink,
+    type WorkspaceWidgetLinkInput,
     type WidgetPasswordOptions,
 } from './workspaces/model';
 import { useDragAutoScroll } from './useDragAutoScroll';
+import { useDismissLayer } from './useDismissLayer';
+import { useFullscreenTarget } from './useFullscreen';
+import { WorkspaceTitleEditor } from './WorkspaceTitleEditor';
 import GridLayout, { useContainerWidth } from 'react-grid-layout';
 
 const STAGED_WIDGET_DRAG_MIME = 'application/x-macheseinfach-widget-id';
@@ -25,6 +32,9 @@ type WorkspaceDashboardProps = {
     onSharedInputChange: (value: string) => void;
     onToggleWidgetUseSharedInput: (widgetId: string, useSharedInput: boolean) => void;
     onWidgetPasswordOptionsChange: (widgetId: string, options: WidgetPasswordOptions) => void;
+    advancedWidgetLinkingEnabled: boolean;
+    widgetLinks: WorkspaceWidgetLink[];
+    onWidgetLinksChange: (widgetId: string, links: WorkspaceWidgetLinkInput[]) => void;
     onAddWidget: (widgetId: string) => void;
     onRemoveWidget: (widgetId: string) => void;
     onRemoveStagedWidget: (widgetId: string) => void;
@@ -34,8 +44,11 @@ type WorkspaceDashboardProps = {
         breakpoint: keyof WorkspaceLayoutSet,
     ) => void;
     onToggleWorkspaceTool: (toolId: ToolId) => void;
+    onSetWorkspaceToolsMembership: (toolIds: readonly ToolId[], enabled: boolean) => void;
     onOpenTool: (toolId: ReturnType<typeof getTool>['id']) => void;
     onOpenCatalog: () => void;
+    onRenameWorkspace: (name: string) => void;
+    renameRequestId?: number;
 };
 
 export function WorkspaceDashboard({
@@ -48,14 +61,23 @@ export function WorkspaceDashboard({
     onSharedInputChange,
     onToggleWidgetUseSharedInput,
     onWidgetPasswordOptionsChange,
+    advancedWidgetLinkingEnabled,
+    widgetLinks,
+    onWidgetLinksChange,
     onAddWidget,
     onRemoveWidget,
     onRemoveStagedWidget,
     onPlaceStagedWidget,
     onToggleWorkspaceTool,
+    onSetWorkspaceToolsMembership,
     onOpenTool,
     onOpenCatalog,
+    onRenameWorkspace,
+    renameRequestId,
 }: WorkspaceDashboardProps) {
+    const rootRef = useRef<HTMLElement>(null);
+    const pickerSearchRef = useRef<HTMLInputElement>(null);
+    const { isFullscreen, toggleFullscreen, exitFullscreen } = useFullscreenTarget(rootRef);
     const [pickerOpen, setPickerOpen] = useState(false);
     const [pickerMode, setPickerMode] = useState<'widgets' | 'tools'>('widgets');
     const [query, setQuery] = useState('');
@@ -63,10 +85,21 @@ export function WorkspaceDashboard({
     const [draggingStagedWidgetId, setDraggingStagedWidgetId] = useState<string | null>(null);
     const [gridInteracting, setGridInteracting] = useState(false);
     const [openSettingsWidgetId, setOpenSettingsWidgetId] = useState<string | null>(null);
+    const [linkValues, setLinkValues] = useState<Record<string, Partial<Record<WidgetValuePort, string>>>>({});
     const { width: gridWidth, containerRef: gridContainerRef, mounted: gridMounted } = useContainerWidth({
         initialWidth: 1168,
     });
     const { beginDragAutoScroll, endDragAutoScroll, trackDragPointer } = useDragAutoScroll();
+
+    useDismissLayer(pickerOpen, () => setPickerOpen(false));
+
+    useLayoutEffect(() => {
+        if (!pickerOpen) return;
+        const frame = requestAnimationFrame(() => {
+            pickerSearchRef.current?.focus({ preventScroll: true });
+        });
+        return () => cancelAnimationFrame(frame);
+    }, [pickerOpen]);
 
     useEffect(() => {
         if (!draggingStagedWidgetId) return;
@@ -93,7 +126,12 @@ export function WorkspaceDashboard({
 
     useEffect(() => {
         setOpenSettingsWidgetId(null);
+        setLinkValues({});
     }, [workspace.id]);
+
+    useEffect(() => {
+        void exitFullscreen();
+    }, [workspace.id, exitFullscreen]);
 
     const currentBreakpoint = gridWidth >= 1200 ? 'lg' : gridWidth >= 996 ? 'md' : gridWidth >= 768 ? 'sm' : gridWidth >= 480 ? 'xs' : 'xxs';
     const cols = currentBreakpoint === 'lg' ? 12 : currentBreakpoint === 'md' ? 10 : currentBreakpoint === 'sm' ? 6 : currentBreakpoint === 'xs' ? 4 : 2;
@@ -112,6 +150,51 @@ export function WorkspaceDashboard({
         () => workspace.widgetIds.map((widgetId) => getToolWidget(widgetId)).filter((widget) => Boolean(widget)),
         [workspace.widgetIds],
     );
+    const linkSourceWidgets = useMemo(
+        () =>
+            widgets
+                .filter((widget) => Array.isArray(widget.outputPorts) && widget.outputPorts.length > 0)
+                .map((widget) => ({
+                    id: widget.id,
+                    title: widget.title,
+                    ports: widget.outputPorts ?? [],
+                })),
+        [widgets],
+    );
+    const linksByTarget = useMemo(() => {
+        const map = new Map<string, WorkspaceWidgetLinkInput[]>();
+        for (const link of widgetLinks) {
+            const bucket = map.get(link.targetWidgetId) ?? [];
+            bucket.push({ sourceWidgetId: link.sourceWidgetId, sourcePort: link.sourcePort });
+            map.set(link.targetWidgetId, bucket);
+        }
+        return map;
+    }, [widgetLinks]);
+    const linkedInputByWidget = useMemo(() => {
+        const values = new Map<string, { value: string; label: string }>();
+        if (!advancedWidgetLinkingEnabled) return values;
+        for (const widget of widgets) {
+            const links = linksByTarget.get(widget.id) ?? [];
+            if (links.length === 0) continue;
+            const parts: string[] = [];
+            const labels: string[] = [];
+            for (const link of links) {
+                const sourceWidget = getToolWidget(link.sourceWidgetId);
+                const sourceValue = linkValues[link.sourceWidgetId]?.[link.sourcePort];
+                if (!sourceWidget || !sourceValue?.trim()) continue;
+                parts.push(sourceValue.trim());
+                const portLabel =
+                    sourceWidget.outputPorts?.find((entry) => entry.id === link.sourcePort)?.label ?? link.sourcePort;
+                labels.push(`${sourceWidget.title} · ${portLabel}`);
+            }
+            if (parts.length === 0) continue;
+            values.set(widget.id, {
+                value: parts.join('\n'),
+                label: labels.join(', '),
+            });
+        }
+        return values;
+    }, [advancedWidgetLinkingEnabled, linkValues, linksByTarget, widgets]);
     const availableWidgets = useMemo(
         () =>
             listToolWidgets().filter(
@@ -138,6 +221,11 @@ export function WorkspaceDashboard({
         if (!query.trim()) return allTools;
         return searchTools(query);
     }, [query]);
+
+    const allFilteredToolsEnabled = useMemo(
+        () => filteredTools.length > 0 && filteredTools.every((tool) => workspace.toolIds.includes(tool.id)),
+        [filteredTools, workspace.toolIds],
+    );
 
     const suggestedWidgets = useMemo(
         () => listToolWidgets().filter((widget) => ['widget-iban-quick', 'widget-girocode-quick', 'widget-leak-check'].includes(widget.id)),
@@ -199,6 +287,25 @@ export function WorkspaceDashboard({
         endDragAutoScroll();
     }
 
+    function handleAddWidget(widgetId: string) {
+        onAddWidget(widgetId);
+        setStagingOpen(true);
+    }
+
+    function handleEmitLinkValue(widgetId: string, port: WidgetValuePort, value: string) {
+        setLinkValues((prev) => {
+            const prevWidget = prev[widgetId] ?? {};
+            if (prevWidget[port] === value) return prev;
+            return {
+                ...prev,
+                [widgetId]: {
+                    ...prevWidget,
+                    [port]: value,
+                },
+            };
+        });
+    }
+
     function handleDrop(
         _layout: readonly WorkspaceLayoutItem[],
         item: WorkspaceLayoutItem | undefined,
@@ -227,10 +334,13 @@ export function WorkspaceDashboard({
     }
 
     return (
-        <main className="mx-auto w-full max-w-[1200px] px-4 py-6 md:px-6">
+        <main
+            ref={rootRef}
+            className={`workspace-dashboard mx-auto w-full max-w-[1200px] px-4 py-6 md:px-6 ${isFullscreen ? 'workspace-dashboard--fullscreen' : ''}`}
+        >
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <div>
-                    <h1 className="font-display text-[30px] font-bold tracking-[-0.02em]">{workspace.name}</h1>
+                    <WorkspaceTitleEditor name={workspace.name} onRename={onRenameWorkspace} renameRequestId={renameRequestId} />
                     <p className="text-[14px] text-[var(--color-ink-soft)]">
                         {layoutEditMode
                             ? 'Layout bearbeiten aktiv: Ziehen und Skalieren ist verfügbar, Inhalte sind pausiert.'
@@ -238,6 +348,26 @@ export function WorkspaceDashboard({
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
+                    <button
+                        type="button"
+                        className={`ms-btn px-3 py-2 text-[13px] ${isFullscreen ? 'bg-[#ff90e8]' : ''}`}
+                        onClick={() => void toggleFullscreen()}
+                        aria-pressed={isFullscreen}
+                        aria-label={isFullscreen ? 'Vollbild beenden' : 'Vollbild'}
+                        title={isFullscreen ? 'Vollbild beenden (Esc)' : 'Vollbild'}
+                    >
+                        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+                            {isFullscreen ? (
+                                <>
+                                    <path d="M9 9H5V5M15 9h4V5M9 15H5v4M15 15h4v4" />
+                                </>
+                            ) : (
+                                <>
+                                    <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
+                                </>
+                            )}
+                        </svg>
+                    </button>
                     <button
                         type="button"
                         className={`ms-btn px-3 py-2 text-[13px] ${layoutEditMode ? 'bg-[#fff8b8]' : ''}`}
@@ -258,7 +388,6 @@ export function WorkspaceDashboard({
                                 </>
                             )}
                         </svg>
-                        {layoutEditMode ? 'Entsperrt' : 'Gesperrt'}
                     </button>
                     <button type="button" className="ms-btn px-3 py-2 text-[13px]" onClick={() => setPickerOpen(true)}>
                         Widget hinzufügen
@@ -302,7 +431,7 @@ export function WorkspaceDashboard({
                                             draggingStagedWidgetId === widget.id ? 'opacity-60' : ''
                                         }`}
                                     >
-                                        <div className="widget-drag-handle flex items-start justify-between gap-2">
+                                        <div className="widget-drag-handle flex items-start justify-between gap-2 border">
                                             <div className="min-w-0">
                                                 <p className="font-display text-[13px] font-bold">{widget.title}</p>
                                                 <p className="mt-0.5 text-[11px] text-[var(--color-ink-soft)]">{widget.description}</p>
@@ -353,7 +482,7 @@ export function WorkspaceDashboard({
                                 key={widget.id}
                                 type="button"
                                 className="ms-btn px-2.5 py-1 text-[12px]"
-                                onClick={() => onAddWidget(widget.id)}
+                                onClick={() => handleAddWidget(widget.id)}
                             >
                                 + {widget.title}
                             </button>
@@ -366,8 +495,12 @@ export function WorkspaceDashboard({
             ) : (
                 <div
                     ref={gridContainerRef}
-                    className={`workspace-canvas overflow-hidden rounded-[12px] border-2 border-dashed border-black/35 p-1 ${
-                        draggingStagedWidgetId ? 'bg-[#e8f7ff]' : 'bg-transparent'
+                    className={`workspace-canvas rounded-[12px] p-1 ${
+                        layoutEditMode
+                            ? `workspace-canvas--edit border-2 border-dashed border-black/35${
+                                  draggingStagedWidgetId ? ' bg-[#e8f7ff]' : ''
+                              }`
+                            : ''
                     }`}
                 >
                     {widgets.length === 0 ? (
@@ -444,19 +577,51 @@ export function WorkspaceDashboard({
                             const layoutItem = layoutConfigByWidgetId.get(widget.id);
                             const useSharedInput = resolveUseSharedInput(widget.id, layoutItem?.useSharedInput);
                             const passwordOptions = resolvePasswordOptions(layoutItem?.passwordOptions);
+                            const linkedInput = linkedInputByWidget.get(widget.id);
+                            const usesLinkedInput = Boolean(linkedInput);
+                            const showLinkedIndicator = advancedWidgetLinkingEnabled && widget.supportsLinkedInput && usesLinkedInput;
                             return (
                                 <div
                                     key={widget.id}
-                                    className={`flex h-full min-h-0 flex-col overflow-hidden rounded-[12px] border-2 border-black bg-[var(--color-chip)] shadow-brutal-sm ${
+                                    className={`flex h-full min-h-0 flex-col rounded-[12px] border-2 border-black bg-[var(--color-chip)] shadow-brutal-sm ${
                                         layoutEditMode ? 'border-dashed' : ''
                                     }`}
                                 >
                                     <div
-                                        className={`widget-drag-handle relative z-10 flex items-center justify-between overflow-visible border-b-2 border-black bg-white px-3 py-2 ${
+                                        className={`widget-drag-handle rounded-t-[12px] relative z-10 flex items-center justify-between overflow-visible border-b-2 border-black bg-white px-3 py-2 ${
                                             layoutEditMode ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'
                                         }`}
                                     >
                                         <div className="flex min-w-0 items-center gap-1.5">
+                                            {showLinkedIndicator ? (
+                                                <span className="ms-shared-input-indicator ms-info-tip">
+                                                    <button
+                                                        type="button"
+                                                        className="ms-shared-input-indicator__trigger"
+                                                        aria-label="Widget-Verknüpfung aktiv"
+                                                        aria-describedby={`${widget.id}-linked-input-desc`}
+                                                        tabIndex={0}
+                                                    >
+                                                        <svg
+                                                            viewBox="0 0 24 24"
+                                                            fill="none"
+                                                            stroke="currentColor"
+                                                            strokeWidth="2.5"
+                                                            aria-hidden
+                                                        >
+                                                            <path d="M4 12h16" />
+                                                            <path d="M14 6l6 6-6 6" />
+                                                        </svg>
+                                                    </button>
+                                                    <span
+                                                        id={`${widget.id}-linked-input-desc`}
+                                                        role="tooltip"
+                                                        className="ms-info-tip__bubble"
+                                                    >
+                                                        Nutzt verknüpfte Eingaben von {linkedInput?.label}.
+                                                    </span>
+                                                </span>
+                                            ) : null}
                                             {useSharedInput && widget.supportsSharedInput ? (
                                                 <span className="ms-shared-input-indicator ms-info-tip">
                                                     <button
@@ -489,13 +654,23 @@ export function WorkspaceDashboard({
                                             {layoutEditMode ? (
                                                 <span className="truncate font-display text-[12px] font-bold">{widget.title}</span>
                                             ) : (
-                                                <button
-                                                    type="button"
-                                                    className="truncate font-display text-[12px] font-bold underline decoration-dotted underline-offset-2"
-                                                    onClick={() => onOpenTool(tool.id)}
-                                                >
-                                                    {widget.title}
-                                                </button>
+                                                <span className="ms-info-tip min-w-0">
+                                                    <button
+                                                        type="button"
+                                                        className="max-w-full truncate font-display text-[12px] font-bold underline decoration-dotted underline-offset-2"
+                                                        onClick={() => onOpenTool(tool.id)}
+                                                        aria-describedby={`${widget.id}-title-desc`}
+                                                    >
+                                                        {widget.title}
+                                                    </button>
+                                                    <span
+                                                        id={`${widget.id}-title-desc`}
+                                                        role="tooltip"
+                                                        className="ms-info-tip__bubble"
+                                                    >
+                                                        {widget.description}
+                                                    </span>
+                                                </span>
                                             )}
                                         </div>
                                         <div className="widget-no-drag flex items-center gap-1">
@@ -511,6 +686,10 @@ export function WorkspaceDashboard({
                                                 onUseSharedInputChange={(value) =>
                                                     onToggleWidgetUseSharedInput(widget.id, value)
                                                 }
+                                                advancedLinkingEnabled={advancedWidgetLinkingEnabled}
+                                                sourceWidgets={linkSourceWidgets.filter((entry) => entry.id !== widget.id)}
+                                                selectedLinks={linksByTarget.get(widget.id) ?? []}
+                                                onSelectedLinksChange={(links) => onWidgetLinksChange(widget.id, links)}
                                             />
                                             {layoutEditMode ? (
                                                 <button
@@ -537,6 +716,11 @@ export function WorkspaceDashboard({
                                                     embedded
                                                     sharedInput={workspace.sharedInput}
                                                     useSharedInput={useSharedInput}
+                                                    linkedInput={linkedInput?.value}
+                                                    linkedSourceLabel={linkedInput?.label}
+                                                    onEmitLinkValue={(port, value) =>
+                                                        handleEmitLinkValue(widget.id, port, value)
+                                                    }
                                                     passwordOptions={passwordOptions}
                                                     onPasswordOptionsChange={(options) =>
                                                         onWidgetPasswordOptionsChange(widget.id, options)
@@ -563,7 +747,7 @@ export function WorkspaceDashboard({
                         onClick={() => setPickerOpen(false)}
                         aria-label="Widget-Auswahl schließen"
                     />
-                    <section className="ms-animate-pop relative z-10 w-full max-w-[44rem] rounded-[16px] border-2 border-black bg-white shadow-brutal-lg">
+                    <section className="ms-animate-pop relative z-10 w-full max-w-[44rem] overflow-visible rounded-[16px] border-2 border-black bg-white shadow-brutal-lg">
                         <header className="border-b-2 border-black px-4 py-4">
                             <div className="flex items-center justify-between">
                                 <h2 className="font-display text-[18px] font-bold">Widget hinzufügen</h2>
@@ -591,6 +775,7 @@ export function WorkspaceDashboard({
                                     Tool-Set
                                 </button>
                                 <input
+                                    ref={pickerSearchRef}
                                     type="search"
                                     className="ms-input ml-auto max-w-[18rem] py-2 text-[12px]"
                                     placeholder="Suchen …"
@@ -599,7 +784,13 @@ export function WorkspaceDashboard({
                                 />
                             </div>
                         </header>
-                        <div className="max-h-[56vh] overflow-y-auto p-4">
+                        <div
+                            className={
+                                pickerMode === 'tools'
+                                    ? 'flex max-h-[56vh] flex-col overflow-visible p-4'
+                                    : 'max-h-[56vh] overflow-y-auto p-4'
+                            }
+                        >
                             {pickerMode === 'widgets' ? (
                                 filteredWidgets.length > 0 ? (
                                     <ul className="grid gap-2 sm:grid-cols-2">
@@ -620,7 +811,7 @@ export function WorkspaceDashboard({
                                                 <button
                                                     type="button"
                                                     className="ms-btn mt-2 w-full py-1 text-[12px]"
-                                                    onClick={() => onAddWidget(widget.id)}
+                                                    onClick={() => handleAddWidget(widget.id)}
                                                 >
                                                     Hinzufügen
                                                 </button>
@@ -631,27 +822,53 @@ export function WorkspaceDashboard({
                                     <p className="text-[14px] text-[var(--color-ink-soft)]">Keine Widgets gefunden.</p>
                                 )
                             ) : (
-                                <ul className="space-y-2">
-                                    {filteredTools.map((tool) => {
-                                        const active = workspace.toolIds.includes(tool.id);
-                                        return (
-                                            <li key={tool.id} className="rounded-[10px] border-2 border-black bg-white p-3">
-                                                <label className="flex cursor-pointer items-start gap-3">
-                                                    <input
-                                                        type="checkbox"
+                                <div className="flex min-h-0 flex-1 flex-col overflow-visible rounded-[12px] border-2 border-black bg-white">
+                                    <div className="shrink-0 border-b-2 border-black px-4 py-3">
+                                        <div className="ml-auto max-w-[14rem]">
+                                            <SettingsToggleRow
+                                                id="workspace-tool-set-all"
+                                                title="Alle"
+                                                description={
+                                                    query.trim()
+                                                        ? 'Alle gefilterten Tools im Tool-Set ein- oder ausblenden.'
+                                                        : 'Alle Tools im Tool-Set ein- oder ausblenden.'
+                                                }
+                                                checked={allFilteredToolsEnabled}
+                                                disabled={filteredTools.length === 0}
+                                                variant="plain"
+                                                onChange={(enabled) =>
+                                                    onSetWorkspaceToolsMembership(
+                                                        filteredTools.map((tool) => tool.id),
+                                                        enabled,
+                                                    )
+                                                }
+                                            />
+                                        </div>
+                                    </div>
+                                    <ul className="min-h-0 flex-1 overflow-y-auto">
+                                        {filteredTools.map((tool, index) => {
+                                            const active = workspace.toolIds.includes(tool.id);
+                                            const isLast = index === filteredTools.length - 1;
+                                            return (
+                                                <li
+                                                    key={tool.id}
+                                                    className={`px-4 py-3 ${isLast ? '' : 'border-b-2 border-black'}`}
+                                                >
+                                                    <SettingsToggleRow
+                                                        id={`workspace-tool-set-${tool.id}`}
+                                                        title={tool.shortTitle}
+                                                        description={tool.sub}
                                                         checked={active}
-                                                        onChange={() => onToggleWorkspaceTool(tool.id)}
-                                                        className="mt-1"
+                                                        variant="plain"
+                                                        onChange={(checked) => {
+                                                            if (checked !== active) onToggleWorkspaceTool(tool.id);
+                                                        }}
                                                     />
-                                                    <span className="min-w-0">
-                                                        <span className="font-display text-[14px] font-bold">{tool.shortTitle}</span>
-                                                        <span className="mt-1 block text-[12px] text-[var(--color-ink-soft)]">{tool.sub}</span>
-                                                    </span>
-                                                </label>
-                                            </li>
-                                        );
-                                    })}
-                                </ul>
+                                                </li>
+                                            );
+                                        })}
+                                    </ul>
+                                </div>
                             )}
                         </div>
                     </section>

@@ -11,15 +11,22 @@ const STORAGE_KEY = 'macheseinfa.settings';
 
 export type MacheseinfaSettings = {
     autoCopyCommandResults: boolean;
+    /** OS notifications when the tab is in the background */
+    backgroundNotifications: boolean;
+    /** Enables per-widget source/target links in dashboard settings. */
+    advancedWidgetLinking: boolean;
 };
 
 const DEFAULT_SETTINGS: MacheseinfaSettings = {
     autoCopyCommandResults: true,
+    backgroundNotifications: false,
+    advancedWidgetLinking: false,
 };
 
 type SettingsContextValue = {
     settings: MacheseinfaSettings;
     setAutoCopyCommandResults: (value: boolean) => void;
+    setAdvancedWidgetLinking: (value: boolean) => void;
     updateSettings: (patch: Partial<MacheseinfaSettings>) => void;
 };
 
@@ -35,6 +42,14 @@ function readSettings(): MacheseinfaSettings {
                 typeof parsed.autoCopyCommandResults === 'boolean'
                     ? parsed.autoCopyCommandResults
                     : DEFAULT_SETTINGS.autoCopyCommandResults,
+            backgroundNotifications:
+                typeof parsed.backgroundNotifications === 'boolean'
+                    ? parsed.backgroundNotifications
+                    : DEFAULT_SETTINGS.backgroundNotifications,
+            advancedWidgetLinking:
+                typeof parsed.advancedWidgetLinking === 'boolean'
+                    ? parsed.advancedWidgetLinking
+                    : DEFAULT_SETTINGS.advancedWidgetLinking,
         };
     } catch {
         return DEFAULT_SETTINGS;
@@ -64,10 +79,14 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         (value: boolean) => updateSettings({ autoCopyCommandResults: value }),
         [updateSettings],
     );
+    const setAdvancedWidgetLinking = useCallback(
+        (value: boolean) => updateSettings({ advancedWidgetLinking: value }),
+        [updateSettings],
+    );
 
     const value = useMemo(
-        () => ({ settings, setAutoCopyCommandResults, updateSettings }),
-        [settings, setAutoCopyCommandResults, updateSettings],
+        () => ({ settings, setAutoCopyCommandResults, setAdvancedWidgetLinking, updateSettings }),
+        [settings, setAutoCopyCommandResults, setAdvancedWidgetLinking, updateSettings],
     );
 
     return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;

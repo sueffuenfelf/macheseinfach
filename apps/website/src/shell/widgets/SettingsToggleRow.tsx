@@ -5,6 +5,8 @@ type SettingsToggleRowProps = {
     onChange: (checked: boolean) => void;
     disabled?: boolean;
     id?: string;
+    /** `boxed` = bordered chip (settings popover). `plain` = row inside a shared list. */
+    variant?: 'boxed' | 'plain';
 };
 
 export function SettingsToggleRow({
@@ -14,16 +16,19 @@ export function SettingsToggleRow({
     onChange,
     disabled = false,
     id,
+    variant = 'boxed',
 }: SettingsToggleRowProps) {
     const switchId = id ?? title;
 
     return (
-        <div className={`ms-settings-row ${disabled ? 'ms-settings-row--disabled' : ''}`}>
+        <div
+            className={`ms-settings-row ${variant === 'plain' ? 'ms-settings-row--plain' : ''} ${disabled ? 'ms-settings-row--disabled' : ''}`}
+        >
             <div className="ms-settings-row__label-group">
                 <span className="ms-settings-row__title" id={`${switchId}-label`}>
                     {title}
                 </span>
-                <span className="ms-info-tip">
+                <span className={`ms-info-tip ${variant === 'plain' ? 'ms-info-tip--below' : ''}`}>
                     <button
                         type="button"
                         className="ms-info-tip__trigger"

@@ -1,5 +1,6 @@
 import type { ToolId } from '../../data/catalog';
 import { getPreferredWidgetForTool, getToolWidget, listToolWidgets } from '../widgets/registry';
+import type { WidgetValuePort } from '../widgets/types';
 
 const WORKSPACE_STATE_KEY = 'msf.workspaces.state.v2';
 const LEGACY_WORKSPACES_KEY = 'msf.workspaces.v1';
@@ -28,23 +29,22 @@ export type Workspace = {
     stagedWidgetIds: string[];
     /** Workspace-wide text reused by widgets that opt in via layout item config. */
     sharedInput: string;
+    /** Directed value links between widget ports (advanced mode toggle in settings). */
+    widgetLinks: WorkspaceWidgetLink[];
 };
 
-export type WidgetPasswordOptions = {
-    length: number;
-    uppercase: boolean;
-    lowercase: boolean;
-    numbers: boolean;
-    symbols: boolean;
+export type WorkspaceWidgetLink = {
+    id: string;
+    sourceWidgetId: string;
+    sourcePort: WidgetValuePort;
+    targetWidgetId: string;
+    targetPort: 'input';
 };
 
-export const DEFAULT_WIDGET_PASSWORD_OPTIONS: WidgetPasswordOptions = {
-    length: 16,
-    uppercase: true,
-    lowercase: true,
-    numbers: true,
-    symbols: true,
-};
+export type { WidgetPasswordOptions } from './password-options';
+export { DEFAULT_WIDGET_PASSWORD_OPTIONS } from './password-options';
+import type { WidgetPasswordOptions } from './password-options';
+import { DEFAULT_WIDGET_PASSWORD_OPTIONS } from './password-options';
 
 export type WorkspaceLayoutItem = {
     i: string;
@@ -66,7 +66,7 @@ export type WorkspaceLayoutSet = Partial<Record<Breakpoint, WorkspaceLayoutItem[
 export type WorkspaceLayouts = Record<string, WorkspaceLayoutSet>;
 
 export type WorkspaceState = {
-    version: 2;
+    version: 3;
     workspaces: Workspace[];
     layouts: WorkspaceLayouts;
 };
@@ -82,6 +82,14 @@ export function createWorkspaceId(): string {
         return crypto.randomUUID();
     } catch {
         return `ws-${Math.random().toString(36).slice(2, 11)}`;
+    }
+}
+
+export function createWorkspaceWidgetLinkId(): string {
+    try {
+        return crypto.randomUUID();
+    } catch {
+        return `wl-${Math.random().toString(36).slice(2, 11)}`;
     }
 }
 
@@ -110,6 +118,29 @@ function toolIdsFromWidgets(widgetIds: readonly string[]): ToolId[] {
         if (toolId) ids.add(toolId);
     }
     return [...ids];
+}
+
+function normalizeWidgetLinks(widgetIds: readonly string[], links: readonly WorkspaceWidgetLink[] | undefined): WorkspaceWidgetLink[] {
+    if (!links?.length) return [];
+    const widgetSet = new Set(widgetIds);
+    const linkIds = new Set<string>();
+    const normalized: WorkspaceWidgetLink[] = [];
+    for (const link of links) {
+        if (!widgetSet.has(link.sourceWidgetId)) continue;
+        if (!widgetSet.has(link.targetWidgetId)) continue;
+        if (link.targetWidgetId === link.sourceWidgetId) continue;
+        const id = typeof link.id === 'string' && link.id.trim() ? link.id : createWorkspaceWidgetLinkId();
+        if (linkIds.has(id)) continue;
+        linkIds.add(id);
+        normalized.push({
+            id,
+            sourceWidgetId: link.sourceWidgetId,
+            sourcePort: link.sourcePort,
+            targetWidgetId: link.targetWidgetId,
+            targetPort: 'input',
+        });
+    }
+    return normalized;
 }
 
 const PASSWORD_WIDGET_ID = 'widget-password-mini';
@@ -218,6 +249,7 @@ function createDefaultWorkspace(): Workspace {
         toolIds: toolIdsFromWidgets(defaultWidgetIds),
         stagedWidgetIds: [],
         sharedInput: '',
+        widgetLinks: [],
     };
 }
 
@@ -235,6 +267,7 @@ function normalizeState(workspaces: Workspace[], layouts: WorkspaceLayouts): Wor
             (widgetId) => Boolean(getToolWidget(widgetId)) && !widgetIds.includes(widgetId),
         );
         const toolIds = [...new Set([...workspace.toolIds, ...toolIdsFromWidgets(widgetIds), ...toolIdsFromWidgets(stagedWidgetIds)])];
+        const widgetLinks = normalizeWidgetLinks(widgetIds, workspace.widgetLinks);
         const createdAt = workspace.createdAt || new Date().toISOString();
         const updatedAt = workspace.updatedAt || createdAt;
         const isDefault = workspace.isDefault && !sawDefault;
@@ -250,6 +283,7 @@ function normalizeState(workspaces: Workspace[], layouts: WorkspaceLayouts): Wor
             updatedAt,
             isDefault,
             sharedInput: workspace.sharedInput ?? '',
+            widgetLinks,
         };
     });
 
@@ -261,7 +295,7 @@ function normalizeState(workspaces: Workspace[], layouts: WorkspaceLayouts): Wor
     for (const workspace of normalized) {
         nextLayouts[workspace.id] = ensureLayoutSet(workspace, layouts[workspace.id]);
     }
-    return { version: 2, workspaces: normalized, layouts: nextLayouts };
+    return { version: 3, workspaces: normalized, layouts: nextLayouts };
 }
 
 function migrateLegacyState(): WorkspaceState {
@@ -318,6 +352,7 @@ function migrateLegacyState(): WorkspaceState {
             toolIds: toolIdsFromWidgets(widgetIds),
             stagedWidgetIds: [],
             sharedInput: '',
+            widgetLinks: [],
         };
     });
 
@@ -337,10 +372,11 @@ export function loadWorkspaceState(): WorkspaceState {
     try {
         const raw = localStorage.getItem(WORKSPACE_STATE_KEY);
         if (!raw) return migrateLegacyState();
-        const parsed = JSON.parse(raw) as Partial<WorkspaceState>;
-        if (parsed.version !== 2 || !Array.isArray(parsed.workspaces) || typeof parsed.layouts !== 'object') {
+        const parsed = JSON.parse(raw) as Partial<WorkspaceState> & { version?: number };
+        if (!Array.isArray(parsed.workspaces) || typeof parsed.layouts !== 'object') {
             return migrateLegacyState();
         }
+        if (parsed.version !== 3 && parsed.version !== 2) return migrateLegacyState();
         return normalizeState(parsed.workspaces as Workspace[], parsed.layouts as WorkspaceLayouts);
     } catch {
         return migrateLegacyState();
@@ -376,6 +412,7 @@ export function createWorkspace(
         toolIds: source?.toolIds ?? toolIdsFromWidgets(source?.widgetIds ?? []),
         stagedWidgetIds: source?.stagedWidgetIds ?? [],
         sharedInput: source?.sharedInput ?? '',
+        widgetLinks: source?.widgetLinks ?? [],
     };
     const nextState = normalizeState(
         [...state.workspaces, workspace],
@@ -604,6 +641,30 @@ export function toggleWorkspaceTool(state: WorkspaceState, workspaceId: string, 
     return normalizeState(nextWorkspaces, state.layouts);
 }
 
+/** Enable or disable multiple tools in a workspace tool-set (e.g. picker “select all”). */
+export function setWorkspaceToolsMembership(
+    state: WorkspaceState,
+    workspaceId: string,
+    toolIds: readonly ToolId[],
+    enabled: boolean,
+): WorkspaceState {
+    if (toolIds.length === 0) return state;
+    const nextWorkspaces = state.workspaces.map((workspace) => {
+        if (workspace.id !== workspaceId) return workspace;
+        const set = new Set(workspace.toolIds);
+        for (const toolId of toolIds) {
+            if (enabled) set.add(toolId);
+            else set.delete(toolId);
+        }
+        return {
+            ...workspace,
+            updatedAt: new Date().toISOString(),
+            toolIds: [...set],
+        };
+    });
+    return normalizeState(nextWorkspaces, state.layouts);
+}
+
 export function setWorkspaceLayout(
     state: WorkspaceState,
     workspaceId: string,
@@ -644,6 +705,48 @@ export function setWidgetUseSharedInput(
         );
     }
     return normalizeState(state.workspaces, { ...state.layouts, [workspaceId]: nextLayoutSet });
+}
+
+export type WorkspaceWidgetLinkInput = {
+    sourceWidgetId: string;
+    sourcePort: WidgetValuePort;
+};
+
+export function setWidgetInputLinks(
+    state: WorkspaceState,
+    workspaceId: string,
+    targetWidgetId: string,
+    links: readonly WorkspaceWidgetLinkInput[],
+): WorkspaceState {
+    const nextWorkspaces = state.workspaces.map((workspace) => {
+        if (workspace.id !== workspaceId) return workspace;
+        const targetExists = workspace.widgetIds.includes(targetWidgetId);
+        if (!targetExists) return workspace;
+        const widgetSet = new Set(workspace.widgetIds);
+        const preserved = workspace.widgetLinks.filter((link) => link.targetWidgetId !== targetWidgetId);
+        const nextLinks: WorkspaceWidgetLink[] = [];
+        const seen = new Set<string>();
+        for (const link of links) {
+            if (!widgetSet.has(link.sourceWidgetId)) continue;
+            if (link.sourceWidgetId === targetWidgetId) continue;
+            const key = `${link.sourceWidgetId}:${link.sourcePort}`;
+            if (seen.has(key)) continue;
+            seen.add(key);
+            nextLinks.push({
+                id: createWorkspaceWidgetLinkId(),
+                sourceWidgetId: link.sourceWidgetId,
+                sourcePort: link.sourcePort,
+                targetWidgetId,
+                targetPort: 'input',
+            });
+        }
+        return {
+            ...workspace,
+            updatedAt: new Date().toISOString(),
+            widgetLinks: [...preserved, ...nextLinks],
+        };
+    });
+    return normalizeState(nextWorkspaces, state.layouts);
 }
 
 export function setWidgetPasswordOptions(

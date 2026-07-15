@@ -6,6 +6,7 @@ import {
     toolsForStory,
     toolsInArea,
     type AreaId,
+    type ToolDefinition,
     type ToolId,
     type UserStory,
 } from '../data/catalog';
@@ -27,12 +28,22 @@ export function storyMatchesQuery(story: UserStory, normalizedQuery: string): bo
     if (!normalizedQuery) return true;
     const firstTool = toolsForStory(story.id)[0];
     const toolTag = firstTool?.shortTitle ?? 'geplant';
-    const haystack = `${story.role} ${story.want} ${story.outcome} ${toolTag}`.toLowerCase();
+    const haystack =
+        `${story.title} ${story.role} ${story.want} ${story.situation} ${story.outcome} ${toolTag}`.toLowerCase();
     if (haystack.includes(normalizedQuery)) return true;
-    return toolsForStory(story.id).some(
-        (tool) =>
-            tool.shortTitle.toLowerCase().includes(normalizedQuery) ||
-            tool.tags.some((tag) => tag.toLowerCase().includes(normalizedQuery)),
+    return toolsForStory(story.id).some((tool) => toolMatchesQuery(tool, normalizedQuery));
+}
+
+export function toolMatchesQuery(tool: ToolDefinition, normalizedQuery: string): boolean {
+    if (!normalizedQuery) return true;
+    return (
+        tool.shortTitle.toLowerCase().includes(normalizedQuery) ||
+        tool.title.toLowerCase().includes(normalizedQuery) ||
+        tool.sub.toLowerCase().includes(normalizedQuery) ||
+        tool.pain.toLowerCase().includes(normalizedQuery) ||
+        tool.solution.toLowerCase().includes(normalizedQuery) ||
+        tool.tags.some((tag) => tag.toLowerCase().includes(normalizedQuery)) ||
+        tool.keywords.some((keyword) => keyword.includes(normalizedQuery))
     );
 }
 
@@ -83,10 +94,7 @@ export function filterRecentTools(
         const tool = getTool(toolId);
         if (!toolMatchesTags(tool, activeTags)) return false;
         if (!normalizedQuery) return true;
-        return (
-            tool.shortTitle.toLowerCase().includes(normalizedQuery) ||
-            tool.tags.some((tag) => tag.toLowerCase().includes(normalizedQuery))
-        );
+        return toolMatchesQuery(tool, normalizedQuery);
     });
 }
 
@@ -99,10 +107,6 @@ export function filterToolsForStory(
     return toolsForStory(storyId).filter((tool) => {
         if (!toolMatchesTags(tool, activeTags)) return false;
         if (!normalizedQuery) return true;
-        return (
-            tool.shortTitle.toLowerCase().includes(normalizedQuery) ||
-            tool.sub.toLowerCase().includes(normalizedQuery) ||
-            tool.tags.some((tag) => tag.toLowerCase().includes(normalizedQuery))
-        );
+        return toolMatchesQuery(tool, normalizedQuery);
     });
 }

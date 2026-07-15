@@ -264,6 +264,63 @@ select {
   }
 }
 
+@keyframes ms-splash-exit {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-100%);
+  }
+}
+
+@keyframes ms-app-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ms-session-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-canvas);
+  will-change: transform;
+}
+
+.ms-session-splash--exit {
+  animation: ms-splash-exit 0.52s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  pointer-events: none;
+}
+
+.ms-session-splash__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  text-align: center;
+}
+
+.ms-session-splash__logo {
+  animation: ms-pop 0.35s ease-out both;
+}
+
+.ms-app-shell {
+  min-height: 100vh;
+}
+
+.ms-app-shell--enter {
+  animation: ms-app-enter 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: 0.08s;
+}
+
 .ms-animate-pop {
   animation: ms-pop 0.18s ease-out both;
 }
@@ -320,7 +377,7 @@ body.workspace-grid-interacting * {
 }
 
 .workspace-grid-layout .react-grid-item {
-  overflow: hidden;
+  overflow: visible;
 }
 
 .workspace-grid-layout .react-grid-item > .react-resizable-handle {
@@ -354,6 +411,7 @@ body.workspace-grid-interacting * {
   min-height: 0;
   padding: clamp(0.35rem, 2.5cqi, 0.75rem);
   gap: clamp(0.35rem, 2cqi, 0.65rem);
+  --widget-row-h: 2.35rem;
 }
 
 @container (min-width: 280px) {
@@ -362,19 +420,47 @@ body.workspace-grid-interacting * {
   }
 }
 
-/* ---------- IBAN widget ---------- */
+/* ---------- IBAN widget (container queries) ---------- */
 
 .widget-iban {
+  container-type: size;
+  container-name: iban;
   display: flex;
   flex: 1;
   flex-direction: column;
-  gap: clamp(0.35rem, 2cqi, 0.65rem);
+  width: 100%;
   height: 100%;
   min-height: 0;
 }
 
+.widget-iban__rows {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: clamp(0.35rem, 2cqi, 0.65rem);
+  min-height: 0;
+}
+
+.widget-iban__row {
+  display: flex;
+  align-items: stretch;
+  min-height: 0;
+  min-width: 0;
+}
+
+.widget-iban__row--input {
+  flex: 0 0 var(--widget-row-h);
+  max-height: var(--widget-row-h);
+}
+
+.widget-iban__row--status {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
 .widget-iban__input {
-  flex-shrink: 0;
+  flex: 1;
+  min-width: 0;
   padding: clamp(0.25rem, 1.5cqi, 0.45rem) clamp(0.35rem, 2cqi, 0.55rem);
   font-size: clamp(0.68rem, 2.5cqi, 0.78rem);
   line-height: 1.25;
@@ -391,9 +477,66 @@ body.workspace-grid-interacting * {
   color: var(--color-ink-soft);
 }
 
-@container (min-width: 280px) {
-  .widget-iban {
+.widget-iban__status--ok {
+  color: var(--color-ink);
+  font-weight: 600;
+}
+
+.widget-iban__status--bad {
+  color: #000;
+  font-weight: 700;
+  background: #ffb3b3;
+  border: 2px solid #000;
+  border-radius: var(--radius-md);
+  padding: clamp(0.2rem, 1.5cqi, 0.35rem) clamp(0.35rem, 2cqi, 0.55rem);
+  box-shadow: 1px 1px 0 #000;
+}
+
+/* Tier 2: hide idle hint until there is vertical room */
+.widget-iban__status--decorative {
+  display: none;
+}
+
+.widget-iban--linked .widget-iban__row--status {
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
+}
+
+@container iban (min-width: 240px) {
+  .widget-iban__status--decorative {
+    display: flex;
+  }
+}
+
+/* Tier 3: input + status side-by-side when container is wide enough */
+@container iban (min-width: 280px) {
+  .widget-iban__rows {
+    flex-direction: row;
+    align-items: stretch;
     gap: clamp(0.5rem, 2.5cqi, 0.85rem);
+  }
+
+  .widget-iban__row--input {
+    flex: 1 1 0;
+    max-height: none;
+  }
+
+  .widget-iban__row--status {
+    flex: 0 1 38%;
+    align-items: center;
+  }
+
+  .widget-iban__status--bad {
+    align-self: stretch;
+    align-items: center;
+  }
+}
+
+/* Tall tiles: center status vertically in its row */
+@container iban (min-height: 100px) {
+  .widget-iban__row--status {
+    align-items: center;
   }
 }
 
@@ -807,6 +950,18 @@ body.workspace-grid-interacting * {
   opacity: 0.72;
 }
 
+.ms-settings-row--plain {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.ms-settings-row--plain .ms-settings-row__title {
+  font-size: 0.82rem;
+}
+
 .ms-settings-row__label-group {
   display: flex;
   align-items: center;
@@ -909,7 +1064,7 @@ body.workspace-grid-interacting * {
   position: absolute;
   bottom: calc(100% + 6px);
   left: 50%;
-  z-index: 1;
+  z-index: 60;
   width: max-content;
   max-width: 11rem;
   padding: 0.35rem 0.45rem;
@@ -927,9 +1082,32 @@ body.workspace-grid-interacting * {
   transition: opacity 0.12s ease, transform 0.12s ease;
 }
 
+.ms-info-tip--below .ms-info-tip__bubble {
+  bottom: auto;
+  top: calc(100% + 6px);
+  transform: translateX(-50%) translateY(-2px);
+}
+
 .ms-info-tip:hover .ms-info-tip__bubble,
 .ms-info-tip:focus-within .ms-info-tip__bubble {
   opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.ms-info-tip--below:hover .ms-info-tip__bubble,
+.ms-info-tip--below:focus-within .ms-info-tip__bubble {
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Widget headers sit inside overflow-clipped grid tiles — show tips below. */
+.widget-drag-handle .ms-info-tip__bubble {
+  bottom: auto;
+  top: calc(100% + 6px);
+  transform: translateX(-50%) translateY(-2px);
+}
+
+.widget-drag-handle .ms-info-tip:hover .ms-info-tip__bubble,
+.widget-drag-handle .ms-info-tip:focus-within .ms-info-tip__bubble {
   transform: translateX(-50%) translateY(0);
 }
 
@@ -968,7 +1146,7 @@ body.workspace-grid-interacting * {
 /* ---------- QR widget (container queries) ---------- */
 
 .widget-qr {
-  container-type: inline-size;
+  container-type: size;
   container-name: qr;
   display: flex;
   flex: 1;
@@ -978,7 +1156,7 @@ body.workspace-grid-interacting * {
   min-height: 0;
 }
 
-.widget-qr__main {
+.widget-qr__rows {
   display: flex;
   flex: 1;
   flex-direction: column;
@@ -986,9 +1164,26 @@ body.workspace-grid-interacting * {
   min-height: 0;
 }
 
+.widget-qr__row {
+  display: flex;
+  align-items: stretch;
+  min-height: 0;
+  min-width: 0;
+}
+
+.widget-qr__row--controls {
+  flex: 0 0 var(--widget-row-h);
+  max-height: var(--widget-row-h);
+}
+
+.widget-qr__row--preview {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
 .widget-qr__controls {
   display: flex;
-  flex-shrink: 0;
+  flex: 1;
   align-items: stretch;
   gap: clamp(0.35rem, 2cqi, 0.65rem);
   min-width: 0;
@@ -1048,17 +1243,17 @@ body.workspace-grid-interacting * {
   color: var(--color-ink-muted, #666);
 }
 
-/* Tier 2: hide decorative empty-state copy before dropping layout chrome */
+/* Tier 2: hide decorative empty-state copy until there is room */
 .widget-qr__placeholder--decorative {
   display: none;
 }
 
-.widget-qr--linked .widget-qr__main {
+.widget-qr--linked .widget-qr__rows {
   flex-direction: row;
 }
 
-.widget-qr--linked .widget-qr__preview {
-  flex: 1;
+.widget-qr--linked .widget-qr__row--preview {
+  flex: 1 1 0;
 }
 
 /* Tier 1: full generate label when container is comfortably wide */
@@ -1079,20 +1274,26 @@ body.workspace-grid-interacting * {
   }
 }
 
-/* Tier 3: side-by-side layout when container is wide enough */
+/* Tier 3: controls column + preview side-by-side when container is wide enough */
 @container qr (min-width: 280px) {
-  .widget-qr__main {
+  .widget-qr__rows {
     flex-direction: row;
     align-items: stretch;
     gap: clamp(0.5rem, 2.5cqi, 0.85rem);
   }
 
-  .widget-qr__controls {
-    flex-direction: column;
-    justify-content: center;
+  .widget-qr__row--controls {
+    flex: 0 0 auto;
+    max-height: none;
     width: auto;
     min-width: 7.5rem;
     max-width: 46%;
+  }
+
+  .widget-qr__controls {
+    flex-direction: column;
+    justify-content: center;
+    width: 100%;
     gap: clamp(0.5rem, 2.5cqi, 0.75rem);
   }
 
@@ -1100,10 +1301,187 @@ body.workspace-grid-interacting * {
     width: 100%;
   }
 
-  .widget-qr__preview {
-    flex: 1;
+  .widget-qr__row--preview {
+    flex: 1 1 0;
     min-width: 0;
   }
+}
+
+/* ---------- Generic file task widget ---------- */
+
+.widget-file-task {
+  container-type: size;
+  container-name: filetask;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.widget-file-task__rows {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: clamp(0.35rem, 2cqi, 0.65rem);
+  min-height: 0;
+}
+
+.widget-file-task__row {
+  min-width: 0;
+}
+
+.widget-file-task__row--drop {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  justify-content: center;
+  border: 2px dashed #000;
+  border-radius: var(--radius-md);
+  background: #fff;
+  padding: clamp(0.35rem, 2cqi, 0.6rem);
+  cursor: pointer;
+}
+
+.widget-file-task__drop-title {
+  font-size: clamp(0.66rem, 2.2cqi, 0.78rem);
+  font-weight: 700;
+}
+
+.widget-file-task__drop-sub {
+  margin-top: 0.15rem;
+  font-size: clamp(0.6rem, 2cqi, 0.7rem);
+  color: var(--color-ink-soft);
+}
+
+.widget-file-task__row--meta {
+  flex: 1;
+  min-height: 0;
+}
+
+.widget-file-task__hint,
+.widget-file-task__footer {
+  margin: 0;
+  font-size: clamp(0.62rem, 2.1cqi, 0.74rem);
+  color: var(--color-ink-soft);
+}
+
+.widget-file-task__meta {
+  display: grid;
+  gap: 0.1rem;
+}
+
+.widget-file-task__meta-main {
+  margin: 0;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.widget-file-task__meta-sub {
+  margin: 0;
+  font-size: 0.68rem;
+  color: var(--color-ink-soft);
+}
+
+.widget-file-task__meta-list {
+  margin: 0;
+  font-size: 0.62rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.widget-file-task__row--actions {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.widget-file-task__open {
+  width: 100%;
+  padding: 0.2rem 0.45rem;
+  font-size: 0.7rem;
+}
+
+@container filetask (min-width: 320px) {
+  .widget-file-task__rows {
+    display: grid;
+    grid-template-columns: minmax(10rem, 1fr) minmax(8rem, 0.9fr);
+    grid-template-rows: auto auto;
+    gap: clamp(0.45rem, 2.4cqi, 0.8rem);
+  }
+
+  .widget-file-task__row--drop {
+    grid-column: 1 / 2;
+    grid-row: 1 / 3;
+  }
+
+  .widget-file-task__row--meta {
+    grid-column: 2 / 3;
+    grid-row: 1 / 2;
+  }
+
+  .widget-file-task__row--actions {
+    grid-column: 2 / 3;
+    grid-row: 2 / 3;
+    align-content: end;
+  }
+}
+
+/* ---------- Primitive widgets ---------- */
+
+.widget-primitive-text,
+.widget-primitive-file {
+  container-type: size;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.widget-primitive-text__rows,
+.widget-primitive-file__rows {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: clamp(0.35rem, 2cqi, 0.65rem);
+  min-height: 0;
+}
+
+.widget-primitive-text__row--input {
+  flex: 1;
+  min-height: 0;
+}
+
+.widget-primitive-text__input {
+  min-height: 100%;
+  resize: none;
+  font-size: 0.76rem;
+}
+
+.widget-primitive-text__meta,
+.widget-primitive-file__meta,
+.widget-primitive-file__status {
+  margin: 0;
+  font-size: 0.68rem;
+  color: var(--color-ink-soft);
+}
+
+.widget-primitive-file__row--drop {
+  border: 2px dashed #000;
+  border-radius: var(--radius-md);
+  background: #fff;
+  padding: 0.45rem;
+  cursor: pointer;
+}
+
+.widget-primitive-file__title {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.widget-primitive-file__sub {
+  display: block;
+  margin-top: 0.1rem;
+  font-size: 0.62rem;
+  color: var(--color-ink-soft);
 }
 
 /* ---------- Accessibility ---------- */
@@ -1120,6 +1498,145 @@ body.workspace-grid-interacting * {
   border: 0;
 }
 
+/* ---------- Session splash ---------- */
+
+.ms-app-shell {
+  min-height: 100vh;
+}
+
+.ms-app-shell--enter {
+  animation: ms-app-enter 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes ms-app-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ms-session-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-canvas);
+  transition: transform 520ms cubic-bezier(0.55, 0, 0.15, 1);
+  will-change: transform;
+}
+
+.ms-session-splash--exit {
+  transform: translateY(-100%);
+  pointer-events: none;
+}
+
+.ms-session-splash__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2rem;
+}
+
+.ms-session-splash__logo {
+  filter: drop-shadow(4px 4px 0 #000);
+}
+
+/* Stroke-draw logo — durations mirror splashDraw.ts SPLASH_DRAW */
+.ms-logo-draw .ms-logo-draw__m-stroke {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: ms-logo-stroke-draw 800ms cubic-bezier(0.45, 0, 0.25, 1) forwards;
+}
+
+.ms-logo-draw .ms-logo-draw__m-fill {
+  opacity: 0;
+  animation: ms-logo-fill-in 350ms ease forwards 520ms;
+}
+
+.ms-logo-draw .ms-logo-draw__check-inner,
+.ms-logo-draw .ms-logo-draw__check-stroke {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: ms-logo-stroke-draw 420ms cubic-bezier(0.45, 0, 0.25, 1) forwards 780ms;
+}
+
+@keyframes ms-logo-stroke-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes ms-logo-fill-in {
+  to {
+    opacity: 1;
+  }
+}
+
+
+/* ---------- Pick list search ---------- */
+
+.pick-list-search {
+  padding: 0.65rem 0.85rem;
+  border: 2px solid #000;
+  border-radius: var(--radius-lg);
+  background: #fff;
+  box-shadow: var(--shadow-brutal-sm);
+}
+
+.pick-list-search--attached {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: var(--color-chip);
+}
+
+.pick-list-search__label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.pick-list-search__input {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.pick-list-row--selected {
+  background: #ff90e8;
+  box-shadow: inset 0 0 0 2px #000;
+}
+
+/* ---------- Workspace fullscreen ---------- */
+
+.workspace-dashboard:fullscreen,
+.workspace-dashboard--fullscreen:fullscreen {
+  max-width: none;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow-y: auto;
+  background: var(--color-canvas);
+  box-sizing: border-box;
+}
+
+.workspace-dashboard:fullscreen .workspace-canvas,
+.workspace-dashboard--fullscreen:fullscreen .workspace-canvas {
+  min-height: calc(100vh - 12rem);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -1134,7 +1651,12 @@ body.workspace-grid-interacting * {
   .ms-input:focus {
     transform: none;
   }
-  .ms-progress-stripes {
-    animation: none;
+  .ms-logo-draw .ms-logo-draw__m-stroke,
+  .ms-logo-draw .ms-logo-draw__check-inner,
+  .ms-logo-draw .ms-logo-draw__check-stroke {
+    stroke-dashoffset: 0;
+  }
+  .ms-logo-draw .ms-logo-draw__m-fill {
+    opacity: 1;
   }
 }

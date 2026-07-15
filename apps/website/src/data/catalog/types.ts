@@ -2,20 +2,7 @@
 export const AREA_IDS = ['buchhaltung', 'behoerden', 'dokumente', 'security', 'seo'] as const;
 
 export type AreaId = (typeof AREA_IDS)[number];
-export const TOOL_IDS = [
-    'pdf-compress',
-    'pdf-redact',
-    'heic-convert',
-    'pdf-merge',
-    'pdf-sign',
-    'ocr-local',
-    'epc-read',
-    'girocode-gen',
-    'iban-validate',
-    'pwned-check',
-] as const;
-
-export type ToolId = (typeof TOOL_IDS)[number];
+export type ToolId = string;
 
 /** User-Story-IDs — kategorisiert über areaId */
 export const STORY_IDS = [

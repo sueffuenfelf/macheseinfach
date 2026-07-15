@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Badge, SectionLabel } from './components/Primitives';
+import { useDismissLayer } from './useDismissLayer';
 
 export type GlobalAction = {
     id: string;
@@ -17,6 +18,9 @@ type GlobalActionPaletteProps = {
 export function GlobalActionPalette({ open, actions, onClose }: GlobalActionPaletteProps) {
     const [query, setQuery] = useState('');
     const [activeIndex, setActiveIndex] = useState(0);
+
+    useDismissLayer(open, onClose);
+
     const filtered = useMemo(() => {
         const normalized = query.trim().toLowerCase();
         if (!normalized) return [...actions];
@@ -39,10 +43,6 @@ export function GlobalActionPalette({ open, actions, onClose }: GlobalActionPale
     useEffect(() => {
         if (!open) return;
         const onKey = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') {
-                onClose();
-                return;
-            }
             if (event.key === 'ArrowDown') {
                 event.preventDefault();
                 setActiveIndex((prev) => (filtered.length === 0 ? 0 : (prev + 1) % filtered.length));

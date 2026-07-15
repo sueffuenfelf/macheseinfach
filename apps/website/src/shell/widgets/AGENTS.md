@@ -10,7 +10,7 @@ Widgets expose a compact slice of a tool (quick check, mini generator, launcher)
 
 ## Grid constraints
 
-Each widget declares size bounds in `builtin.tsx` (or via `registerToolWidget`):
+Each widget declares size bounds in its tool folder config (`src/tools/<tool-id>/config.ts`):
 
 | Field | Meaning |
 | --- | --- |
@@ -195,7 +195,9 @@ Reference: `WidgetSettingsPopover.tsx`, `setWidgetPasswordOptions` / `setWidgetU
 
 | File | Role |
 | --- | --- |
-| `src/shell/widgets/builtin.tsx` | Widget components + registry entries |
+| `src/tools/<tool-id>/widgets/*` | Tool-specific widget components |
+| `src/tools/<tool-id>/config.ts` | Tool module (catalog + page + widgets metadata) |
+| `src/tools/discover.ts` | Auto-discovery + widget registration source |
 | `src/shell/widgets/types.ts` | `ToolWidgetDef`, `WidgetComponentProps` |
 | `src/shell/widgets/WidgetSettingsPopover.tsx` | Gear trigger + settings popover |
 | `src/shell/widgets/registry.ts` | Registration helpers |
@@ -205,8 +207,8 @@ Reference: `WidgetSettingsPopover.tsx`, `setWidgetPasswordOptions` / `setWidgetU
 
 ## Adding a new widget
 
-1. Implement component in `builtin.tsx` (or separate file imported there).
-2. Add `ToolWidgetDef` with realistic min/default/max sizes.
+1. Implement the widget component in `src/tools/<tool-id>/widgets/`.
+2. Add the widget metadata to `src/tools/<tool-id>/config.ts` (`widgets` array).
 3. Add `.widget-<name>` styles with container queries in `index.css`.
 4. Test in the dashboard at min, default, and max sizes.
 5. If text-driven, enable `supportsSharedInput` and handle the `linked` state.

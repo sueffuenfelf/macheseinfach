@@ -14,8 +14,6 @@ import type {
 } from './types';
 import { assertCatalogValid } from './validate';
 
-assertCatalogValid();
-
 export type {
     AreaDefinition,
     AreaId,

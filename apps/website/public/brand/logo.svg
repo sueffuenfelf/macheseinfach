@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" role="img" aria-label="macheseinfach Logo">
+  <path
+    d="M14 48V24c0-5.5 4.5-10 10-10 3.2 0 6 1.5 7.8 3.9V48c0-4.4 3.6-8 8-8s8 3.6 8 8V24c0-5.5 4.5-10 10-10s10 4.5 10 10v24"
+    fill="#ff90e8"
+    stroke="#000"
+    stroke-width="3.5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M18 40 L28 50 L50 18"
+    fill="none"
+    stroke="#fff"
+    stroke-width="9"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M18 40 L28 50 L50 18"
+    fill="none"
+    stroke="#000"
+    stroke-width="3.5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>

@@ -27,7 +27,6 @@ export type PlatformFile = {
     bytes: number;
 };
 
-export type SituationVariant = 'grid' | 'cards' | 'list';
 export type ShellView = 'main' | 'settings';
 
 export type RouteSnapshot = {
@@ -50,7 +49,6 @@ type PlatformContextValue = {
     activeScenario: Tool | null;
     file: PlatformFile | null;
     paletteOpen: boolean;
-    variant: SituationVariant;
     query: string;
     /** Leer = alle Tags neutral (kein Filter); sonst AND-Filter über ausgewählte Tags */
     activeTags: readonly string[];
@@ -69,7 +67,6 @@ type PlatformContextValue = {
     setFile: (file: PlatformFile | null) => void;
     openPalette: () => void;
     closePalette: () => void;
-    setVariant: (v: SituationVariant) => void;
     setQuery: (q: string) => void;
     /** Multi-Select: Tag an-/abwählen */
     toggleTag: (tag: string) => void;
@@ -118,7 +115,6 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
     const [activeTool, setActiveTool] = useState<Tool | null>(null);
     const [file, setFileState] = useState<PlatformFile | null>(null);
     const [paletteOpen, setPaletteOpen] = useState(false);
-    const [variant, setVariantState] = useState<SituationVariant>('grid');
     const [query, setQueryState] = useState('');
     const [activeTags, setActiveTags] = useState<string[]>([]);
     const [recentTools, setRecentTools] = useState<ToolId[]>(() => readStored(RECENT_KEY));
@@ -292,7 +288,6 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
             activeScenario: activeTool,
             file,
             paletteOpen,
-            variant,
             query,
             activeTags,
             recentTools,
@@ -310,7 +305,6 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
             setFile,
             openPalette: () => setPaletteOpen(true),
             closePalette: () => setPaletteOpen(false),
-            setVariant: (v) => setVariantState(v),
             setQuery: (q) => setQueryState(q),
             toggleTag,
             clearTagFilter,
@@ -329,7 +323,6 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
             activeTool,
             file,
             paletteOpen,
-            variant,
             query,
             activeTags,
             recentTools,

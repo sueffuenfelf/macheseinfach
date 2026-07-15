@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSettings } from '../context/SettingsContext';
 import { getTool, searchTools, type Tool, type ToolId } from '../data/catalog';
 import { copyToClipboard } from '../lib/format';
 import { useToast } from './toast';
+import { useDismissLayer } from './useDismissLayer';
 import {
     executeSlashInput,
     filterSlashCommands,
@@ -28,6 +29,16 @@ export function CommandPalette({ open, toolIds, onClose, onSelectScenario }: Com
     const [activeIndex, setActiveIndex] = useState(0);
     const [result, setResult] = useState<CommandResult | null>(null);
     const [running, setRunning] = useState(false);
+    const resultRef = useRef(result);
+    resultRef.current = result;
+
+    useDismissLayer(open, () => {
+        if (resultRef.current) {
+            setResult(null);
+            return;
+        }
+        onClose();
+    });
 
     const commandMode = isCommandMode(localQuery);
     const workspaceTools = useMemo(
@@ -122,14 +133,6 @@ export function CommandPalette({ open, toolIds, onClose, onSelectScenario }: Com
     useEffect(() => {
         if (!open) return;
         const onKey = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') {
-                if (result) {
-                    setResult(null);
-                    return;
-                }
-                onClose();
-                return;
-            }
             if (result) {
                 if (e.key === 'Enter') {
                     e.preventDefault();

@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import type { Tool } from '../../data/catalog';
+import type { ToolDefinition as Tool } from '../../data/catalog/types';
+import { useToast } from '../../shell/toast';
 import { ResultCard } from './_shared';
-import { useToast } from '../toast';
 
 type PlannedToolProps = {
     tool: Tool;
