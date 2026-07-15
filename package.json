@@ -1,22 +1,25 @@
 {
-  "name": "macheseinfach",
-  "version": "0.1.0",
-  "private": true,
-  "workspaces": ["apps/*", "packages/*"],
-  "scripts": {
-    "dev": "bun run --filter @macheseinfach/website dev",
-    "dev:cli": "bun run --filter @macheseinfach/cli dev",
-    "storybook": "bun run --filter @macheseinfach/ui storybook",
-    "build": "bun run --filter '*' build",
-    "build-storybook": "bun run --filter @macheseinfach/ui build-storybook",
-    "test": "bun test",
-    "lint": "biome lint .",
-    "format": "biome format --write .",
-    "env:decrypt": "sops -d .kounds/secrets.env > .env",
-    "env:encrypt": "sops -e .env > .kounds/secrets.env"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "^2.4.13",
-    "typescript": "^5.9.3"
-  }
+    "name": "macheseinfach",
+    "version": "0.1.0",
+    "private": true,
+    "workspaces": [
+        "apps/*",
+        "packages/*"
+    ],
+    "scripts": {
+        "dev": "bun run --filter @macheseinfach/website dev",
+        "dev:cli": "bun run --filter @macheseinfach/cli dev",
+        "storybook": "bun run --filter @macheseinfach/ui storybook",
+        "build": "bun run --filter '*' build",
+        "build-storybook": "bun run --filter @macheseinfach/ui build-storybook",
+        "test": "bun test",
+        "lint": "biome lint .",
+        "format": "biome format --write .",
+        "env:decrypt": "sops -d .kounds/secrets.env > .env",
+        "env:encrypt": "sops -e .env > .kounds/secrets.env"
+    },
+    "devDependencies": {
+        "@biomejs/biome": "^2.4.13",
+        "typescript": "^5.9.3"
+    }
 }

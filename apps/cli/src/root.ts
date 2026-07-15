@@ -11,7 +11,9 @@ export function findRepoRoot(startDir = process.cwd()): string {
         }
         const parent = join(dir, '..');
         if (parent === dir) {
-            throw new Error('Could not find macheseinfach monorepo root (no workspaces in package.json).');
+            throw new Error(
+                'Could not find macheseinfach monorepo root (no workspaces in package.json).',
+            );
         }
         dir = parent;
     }

@@ -56,7 +56,9 @@ export function ToastViewport() {
                             {item.context?.toolSlug ? (
                                 <p className="mt-1 font-mono text-[10px] text-[var(--color-ink-muted)]">
                                     {item.context.toolSlug}
-                                    {item.context.jobId ? ` · ${item.context.jobId.slice(0, 8)}` : ''}
+                                    {item.context.jobId
+                                        ? ` · ${item.context.jobId.slice(0, 8)}`
+                                        : ''}
                                 </p>
                             ) : null}
                         </div>

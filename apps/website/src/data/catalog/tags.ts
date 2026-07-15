@@ -17,6 +17,9 @@ export type CatalogTagDefinition = {
 export const catalogTags = {
     PDF: { id: 'PDF', label: 'PDF', group: 'format' },
     HEIC: { id: 'HEIC', label: 'HEIC', group: 'format' },
+    PNG: { id: 'PNG', label: 'PNG', group: 'format' },
+    JPG: { id: 'JPG', label: 'JPG', group: 'format' },
+    WebP: { id: 'WebP', label: 'WebP', group: 'format' },
     QR: { id: 'QR', label: 'QR', group: 'format' },
     Upload: { id: 'Upload', label: 'Upload', group: 'aktion' },
     Merge: { id: 'Merge', label: 'Merge', group: 'aktion' },

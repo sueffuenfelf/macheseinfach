@@ -62,7 +62,10 @@ export function GiroCodeTool({ tool }: GiroCodeToolProps) {
         <div className="ms-animate-fade mx-auto grid w-full max-w-3xl gap-5 px-4 py-6 md:grid-cols-[1.2fr_1fr] md:px-6">
             <section className="space-y-3">
                 <div>
-                    <label htmlFor="giro-name" className="mb-1 block font-display text-[12px] font-bold uppercase tracking-[0.05em]">
+                    <label
+                        htmlFor="giro-name"
+                        className="mb-1 block font-display text-[12px] font-bold uppercase tracking-[0.05em]"
+                    >
                         Empfänger
                     </label>
                     <input
@@ -74,7 +77,10 @@ export function GiroCodeTool({ tool }: GiroCodeToolProps) {
                     />
                 </div>
                 <div>
-                    <label htmlFor="giro-iban" className="mb-1 block font-display text-[12px] font-bold uppercase tracking-[0.05em]">
+                    <label
+                        htmlFor="giro-iban"
+                        className="mb-1 block font-display text-[12px] font-bold uppercase tracking-[0.05em]"
+                    >
                         IBAN
                     </label>
                     <input
@@ -92,7 +98,10 @@ export function GiroCodeTool({ tool }: GiroCodeToolProps) {
                     ) : null}
                 </div>
                 <div>
-                    <label htmlFor="giro-amount" className="mb-1 block font-display text-[12px] font-bold uppercase tracking-[0.05em]">
+                    <label
+                        htmlFor="giro-amount"
+                        className="mb-1 block font-display text-[12px] font-bold uppercase tracking-[0.05em]"
+                    >
                         Betrag (€)
                     </label>
                     <input
@@ -104,7 +113,10 @@ export function GiroCodeTool({ tool }: GiroCodeToolProps) {
                     />
                 </div>
                 <div>
-                    <label htmlFor="giro-purpose" className="mb-1 block font-display text-[12px] font-bold uppercase tracking-[0.05em]">
+                    <label
+                        htmlFor="giro-purpose"
+                        className="mb-1 block font-display text-[12px] font-bold uppercase tracking-[0.05em]"
+                    >
                         Verwendungszweck
                     </label>
                     <input
@@ -117,17 +129,30 @@ export function GiroCodeTool({ tool }: GiroCodeToolProps) {
                 </div>
             </section>
 
-            <aside className="rounded-xl border-2 border-black bg-[#ff90e8] p-4 shadow-brutal-lg md:p-5" aria-busy={loadingQr}>
-                <p className="font-display text-[12px] font-bold uppercase tracking-[0.05em]">Live-Vorschau</p>
+            <aside
+                className="rounded-xl border-2 border-black bg-[#ff90e8] p-4 shadow-brutal-lg md:p-5"
+                aria-busy={loadingQr}
+            >
+                <p className="font-display text-[12px] font-bold uppercase tracking-[0.05em]">
+                    Live-Vorschau
+                </p>
                 <div className="mt-3 flex min-h-[300px] items-center justify-center rounded-lg border-2 border-black bg-white p-3">
                     {loadingQr ? (
-                        <div className="ms-pulse text-center text-[13px] font-semibold">QR-Code wird erzeugt …</div>
+                        <div className="ms-pulse text-center text-[13px] font-semibold">
+                            QR-Code wird erzeugt …
+                        </div>
                     ) : qrDataUrl ? (
-                        <img src={qrDataUrl} alt={`${tool.title} Vorschau`} className="h-[260px] w-[260px]" />
+                        <img
+                            src={qrDataUrl}
+                            alt={`${tool.title} Vorschau`}
+                            className="h-[260px] w-[260px]"
+                        />
                     ) : (
                         <div className="text-center">
                             <div className="mx-auto grid h-[220px] w-[220px] place-items-center rounded border-2 border-black bg-[var(--color-chip)]">
-                                <span className="font-display text-[13px] font-bold uppercase tracking-[0.05em]">Platzhalter-QR</span>
+                                <span className="font-display text-[13px] font-bold uppercase tracking-[0.05em]">
+                                    Platzhalter-QR
+                                </span>
                             </div>
                         </div>
                     )}

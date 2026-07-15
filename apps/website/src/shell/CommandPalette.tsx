@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useSettings } from '../context/SettingsContext';
-import { getTool, searchTools, type Tool, type ToolId } from '../data/catalog';
+import { getTool, type Tool, type ToolId } from '../data/catalog';
+import { resolveSearch, type ScoredResult } from '../search';
 import { copyToClipboard } from '../lib/format';
 import { useToast } from './toast';
 import { useDismissLayer } from './useDismissLayer';
@@ -20,15 +22,25 @@ type CommandPaletteProps = {
     toolIds?: readonly ToolId[];
     onClose: () => void;
     onSelectScenario: (tool: Tool) => void;
+    onSelectResult?: (result: ScoredResult) => void;
 };
 
-export function CommandPalette({ open, toolIds, onClose, onSelectScenario }: CommandPaletteProps) {
+export function CommandPalette({
+    open,
+    toolIds,
+    onClose,
+    onSelectScenario,
+    onSelectResult,
+}: CommandPaletteProps) {
+    const navigate = useNavigate();
     const { settings } = useSettings();
     const { toast } = useToast();
     const [localQuery, setLocalQuery] = useState('');
     const [activeIndex, setActiveIndex] = useState(0);
     const [result, setResult] = useState<CommandResult | null>(null);
     const [running, setRunning] = useState(false);
+    const [searchResults, setSearchResults] = useState<ScoredResult[]>([]);
+    const [searchLoading, setSearchLoading] = useState(false);
     const resultRef = useRef(result);
     resultRef.current = result;
 
@@ -45,22 +57,50 @@ export function CommandPalette({ open, toolIds, onClose, onSelectScenario }: Com
         () => (toolIds && toolIds.length > 0 ? toolIds.map((toolId) => getTool(toolId)) : null),
         [toolIds],
     );
-    const toolResults = useMemo(() => {
-        if (commandMode) return [];
-        const found = searchTools(localQuery);
-        if (!workspaceTools) return found;
-        const allowed = new Set(workspaceTools.map((tool) => tool.id));
-        return found.filter((tool) => allowed.has(tool.id));
-    }, [localQuery, commandMode, workspaceTools]);
+
+    useEffect(() => {
+        if (!open || commandMode) {
+            setSearchResults([]);
+            return;
+        }
+
+        let cancelled = false;
+        const timer = setTimeout(() => {
+            setSearchLoading(true);
+            void resolveSearch(localQuery, {
+                chromeAi: settings.chromeSearchAi,
+                limit: 12,
+            }).then((next) => {
+                if (cancelled) return;
+                let filtered = next;
+                if (workspaceTools) {
+                    const allowed = new Set(workspaceTools.map((tool) => tool.id));
+                    filtered = next.filter(
+                        (entry) =>
+                            entry.document.toolId && allowed.has(entry.document.toolId),
+                    );
+                }
+                setSearchResults(filtered);
+                setSearchLoading(false);
+            });
+        }, 150);
+
+        return () => {
+            cancelled = true;
+            clearTimeout(timer);
+        };
+    }, [localQuery, commandMode, open, settings.chromeSearchAi, workspaceTools]);
     const commandResults = useMemo(
         () => (commandMode ? filterSlashCommands(localQuery) : []),
         [localQuery, commandMode],
     );
 
     const parsed = useMemo(() => parseSlashInput(localQuery), [localQuery]);
-    const exactCommand = parsed?.commandName ? commandResults.find((c) => c.name === parsed.commandName) : undefined;
+    const exactCommand = parsed?.commandName
+        ? commandResults.find((c) => c.name === parsed.commandName)
+        : undefined;
 
-    const listItems = commandMode ? commandResults : toolResults;
+    const listItems = commandMode ? commandResults : searchResults;
 
     const resetState = useCallback(() => {
         setLocalQuery('');
@@ -90,7 +130,12 @@ export function CommandPalette({ open, toolIds, onClose, onSelectScenario }: Com
             if (ok) {
                 toast({
                     message: next.feedback ?? 'In Zwischenablage kopiert',
-                    variant: next.status === 'error' ? 'error' : next.status === 'info' ? 'info' : 'success',
+                    variant:
+                        next.status === 'error'
+                            ? 'error'
+                            : next.status === 'info'
+                              ? 'info'
+                              : 'success',
                 });
             } else {
                 toast({ message: 'Kopieren war leider nicht möglich.', variant: 'error' });
@@ -124,11 +169,14 @@ export function CommandPalette({ open, toolIds, onClose, onSelectScenario }: Com
         [copyResult, settings.autoCopyCommandResults, toast],
     );
 
-    const buildQueryForCommand = useCallback((cmd: SlashCommand) => {
-        const parsedInput = parseSlashInput(localQuery);
-        if (parsedInput?.args) return `/${cmd.name} ${parsedInput.args}`;
-        return `/${cmd.name}`;
-    }, [localQuery]);
+    const buildQueryForCommand = useCallback(
+        (cmd: SlashCommand) => {
+            const parsedInput = parseSlashInput(localQuery);
+            if (parsedInput?.args) return `/${cmd.name} ${parsedInput.args}`;
+            return `/${cmd.name}`;
+        },
+        [localQuery],
+    );
 
     useEffect(() => {
         if (!open) return;
@@ -142,7 +190,9 @@ export function CommandPalette({ open, toolIds, onClose, onSelectScenario }: Com
             }
             if (e.key === 'ArrowDown') {
                 e.preventDefault();
-                setActiveIndex((prev) => (listItems.length === 0 ? 0 : (prev + 1) % listItems.length));
+                setActiveIndex((prev) =>
+                    listItems.length === 0 ? 0 : (prev + 1) % listItems.length,
+                );
                 return;
             }
             if (e.key === 'ArrowUp') {
@@ -167,9 +217,15 @@ export function CommandPalette({ open, toolIds, onClose, onSelectScenario }: Com
                     void runCommand(localQuery);
                     return;
                 }
-                const tool = toolResults[activeIndex];
-                if (tool) {
-                    onSelectScenario(tool);
+                const entry = searchResults[activeIndex];
+                if (entry) {
+                    if (onSelectResult) {
+                        onSelectResult(entry);
+                    } else if (entry.document.toolId) {
+                        onSelectScenario(getTool(entry.document.toolId));
+                    } else {
+                        navigate(entry.document.href);
+                    }
                     onClose();
                 }
             }
@@ -189,7 +245,9 @@ export function CommandPalette({ open, toolIds, onClose, onSelectScenario }: Com
         open,
         result,
         runCommand,
-        toolResults,
+        searchResults,
+        navigate,
+        onSelectResult,
     ]);
 
     if (!open) return null;
@@ -200,7 +258,9 @@ export function CommandPalette({ open, toolIds, onClose, onSelectScenario }: Com
         info: 'bg-[var(--color-chip)]',
     };
 
-    const canCopy = Boolean(result && result.status !== 'error' && (result.copyText ?? result.output));
+    const canCopy = Boolean(
+        result && result.status !== 'error' && (result.copyText ?? result.output),
+    );
 
     return (
         <div className="fixed inset-0 z-50 flex items-end justify-center px-3 py-3 sm:items-start sm:px-4 sm:pt-[10vh] sm:pb-0">
@@ -218,9 +278,7 @@ export function CommandPalette({ open, toolIds, onClose, onSelectScenario }: Com
             >
                 <div className="border-b-2 border-black px-4 py-4">
                     <div className="flex items-center justify-between gap-3">
-                        <Badge className="text-[10px]">
-                            {commandMode ? 'Befehl' : 'Suche'}
-                        </Badge>
+                        <Badge className="text-[10px]">{commandMode ? 'Befehl' : 'Suche'}</Badge>
                         <span className="ms-kbd">Esc</span>
                     </div>
                     <div className="relative mt-2.5">
@@ -292,7 +350,9 @@ export function CommandPalette({ open, toolIds, onClose, onSelectScenario }: Com
                                         </button>
                                     ) : null}
                                     {running ? (
-                                        <span className="text-[11px] text-[var(--color-ink-muted)]">…</span>
+                                        <span className="text-[11px] text-[var(--color-ink-muted)]">
+                                            …
+                                        </span>
                                     ) : (
                                         <button
                                             type="button"
@@ -327,7 +387,9 @@ export function CommandPalette({ open, toolIds, onClose, onSelectScenario }: Com
                                                     ? 'bg-[var(--color-success)]'
                                                     : 'hover:bg-[var(--color-chip)]'
                                             }`}
-                                            onClick={() => void runCommand(buildQueryForCommand(cmd))}
+                                            onClick={() =>
+                                                void runCommand(buildQueryForCommand(cmd))
+                                            }
                                         >
                                             <span className="flex items-center justify-between gap-2">
                                                 <span className="font-display text-[14px] font-semibold text-[var(--color-ink)]">
@@ -343,17 +405,19 @@ export function CommandPalette({ open, toolIds, onClose, onSelectScenario }: Com
                             </ul>
                             {commandResults.length === 0 ? (
                                 <p className="px-3 py-4 text-sm text-[var(--color-ink-muted)]">
-                                    Kein passender Befehl. Tippe <span className="font-mono">/</span> für die
-                                    vollständige Liste.
+                                    Kein passender Befehl. Tippe{' '}
+                                    <span className="font-mono">/</span> für die vollständige Liste.
                                 </p>
                             ) : null}
                         </>
                     ) : (
                         <>
-                            <SectionLabel className="px-2 py-2">Tools</SectionLabel>
+                            <SectionLabel className="px-2 py-2">
+                                Tools{searchLoading ? ' …' : ''}
+                            </SectionLabel>
                             <ul>
-                                {toolResults.map((tool, index) => (
-                                    <li key={tool.id}>
+                                {searchResults.map((entry, index) => (
+                                    <li key={entry.document.id}>
                                         <button
                                             type="button"
                                             className={`ms-focus w-full rounded-[10px] px-3 py-2.5 text-left transition ${
@@ -362,36 +426,37 @@ export function CommandPalette({ open, toolIds, onClose, onSelectScenario }: Com
                                                     : 'hover:bg-[var(--color-chip)]'
                                             }`}
                                             onClick={() => {
-                                                onSelectScenario(tool);
+                                                if (onSelectResult) {
+                                                    onSelectResult(entry);
+                                                } else if (entry.document.toolId) {
+                                                    onSelectScenario(getTool(entry.document.toolId));
+                                                } else {
+                                                    navigate(entry.document.href);
+                                                }
                                                 onClose();
                                             }}
                                         >
                                             <span className="flex items-center justify-between gap-2">
                                                 <span className="font-display text-[14px] font-semibold text-[var(--color-ink)]">
-                                                    {tool.shortTitle}
+                                                    {entry.document.title}
                                                 </span>
-                                                <span className="font-mono text-[11px] text-[var(--color-ink-muted)]">
-                                                    {tool.command}
-                                                </span>
-                                            </span>
-                                            <span className="mt-1.5 flex flex-wrap gap-1.5">
-                                                {tool.tags.slice(0, 3).map((t) => (
-                                                    <span
-                                                        key={t}
-                                                        className="ms-badge border-black bg-[var(--color-chip)] text-[10px]"
-                                                    >
-                                                        {t}
+                                                {entry.document.toolId ? (
+                                                    <span className="font-mono text-[11px] text-[var(--color-ink-muted)]">
+                                                        {getTool(entry.document.toolId).command}
                                                     </span>
-                                                ))}
+                                                ) : null}
+                                            </span>
+                                            <span className="mt-1 block text-[12px] text-[var(--color-ink-soft)]">
+                                                {entry.document.subtitle}
                                             </span>
                                         </button>
                                     </li>
                                 ))}
                             </ul>
-                            {toolResults.length === 0 ? (
+                            {searchResults.length === 0 && !searchLoading ? (
                                 <p className="px-3 py-4 text-sm text-[var(--color-ink-muted)]">
-                                    Kein Tool gefunden. Für Schnellbefehle mit <span className="font-mono">/</span>{' '}
-                                    beginnen.
+                                    Kein Tool gefunden. Für Schnellbefehle mit{' '}
+                                    <span className="font-mono">/</span> beginnen.
                                 </p>
                             ) : null}
                         </>

@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react';
-import type { ToolDefinition } from '../data/catalog/types';
+import type { ToolDefinition, ToolId } from '../data/catalog/types';
 import type { ToolWidgetDef } from '../shell/widgets/types';
 
 export type ToolCatalogInput = ToolDefinition & { id: string };
@@ -8,10 +8,24 @@ export type ToolWidgetInput = Omit<ToolWidgetDef, 'toolId'> & {
     toolId?: string;
 };
 
+export type ToolVariant = {
+    id: string;
+    toolId: ToolId;
+    slug: string;
+    params: Record<string, string>;
+    seo: {
+        title: string;
+        description: string;
+        h1: string;
+        keywords: string[];
+    };
+};
+
 export type ToolModule = {
     catalog: ToolCatalogInput;
     page?: ComponentType<{ tool: ToolDefinition }>;
     widgets?: ToolWidgetInput[];
+    variants?: () => ToolVariant[];
 };
 
 export function defineTool(module: ToolModule, expectedId?: string): ToolModule {

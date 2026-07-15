@@ -62,7 +62,9 @@ export function PasswordMiniWidget({
                 <div className="widget-password__main">
                     <div className="widget-password__controls">
                         <div className="widget-password__stepper">
-                            <span className="widget-password__label widget-password__label--decorative">Länge</span>
+                            <span className="widget-password__label widget-password__label--decorative">
+                                Länge
+                            </span>
                             <div className="widget-password__stepper-group">
                                 <button
                                     type="button"
@@ -93,8 +95,13 @@ export function PasswordMiniWidget({
                             aria-label="Neues Passwort generieren"
                             onClick={() => regenerate()}
                         >
-                            <span className="widget-password__generate-label widget-password__generate-label--full">Neu</span>
-                            <span className="widget-password__generate-label widget-password__generate-label--short" aria-hidden>
+                            <span className="widget-password__generate-label widget-password__generate-label--full">
+                                Neu
+                            </span>
+                            <span
+                                className="widget-password__generate-label widget-password__generate-label--short"
+                                aria-hidden
+                            >
                                 ↻
                             </span>
                         </button>

@@ -69,11 +69,14 @@ export function PdfRedactTool({ tool }: PdfRedactToolProps) {
         const width = pageSize.width * BOX_WIDTH_RATIO;
         const height = BOX_HEIGHT_PT;
         const x = Math.max(0, Math.min(pageSize.width - width, relX * pageSize.width - width / 2));
-        const y = Math.max(0, Math.min(pageSize.height - height, pageSize.height - relY * pageSize.height - height / 2));
-        setBoxes((prev) => [
-            ...prev,
-            { id: crypto.randomUUID(), pageIndex, x, y, width, height },
-        ]);
+        const y = Math.max(
+            0,
+            Math.min(
+                pageSize.height - height,
+                pageSize.height - relY * pageSize.height - height / 2,
+            ),
+        );
+        setBoxes((prev) => [...prev, { id: crypto.randomUUID(), pageIndex, x, y, width, height }]);
     }
 
     function undoLast() {
@@ -184,12 +187,19 @@ export function PdfRedactTool({ tool }: PdfRedactToolProps) {
                     </section>
 
                     <aside className="rounded-xl border-2 border-black bg-[#ffd0f0] p-4 shadow-brutal-lg md:p-5">
-                        <p className="font-display text-[18px] font-bold tracking-[-0.02em]">Werkzeug</p>
+                        <p className="font-display text-[18px] font-bold tracking-[-0.02em]">
+                            Werkzeug
+                        </p>
                         <p className="mt-3 rounded-md border-2 border-black bg-white px-3 py-2 text-[14px] font-semibold">
                             Schwärzungen: {boxes.length}
                         </p>
                         <div className="mt-3 space-y-2">
-                            <button type="button" className="ms-btn w-full" disabled={boxes.length === 0} onClick={undoLast}>
+                            <button
+                                type="button"
+                                className="ms-btn w-full"
+                                disabled={boxes.length === 0}
+                                onClick={undoLast}
+                            >
                                 Letzte Schwärzung rückgängig
                             </button>
                             <button
@@ -203,7 +213,8 @@ export function PdfRedactTool({ tool }: PdfRedactToolProps) {
                         </div>
                         <div className="mt-3">
                             <StateHint>
-                                Schwärzung wird sichtbar eingebrannt — für rechtssichere Entfernung aus dem Inhaltsstrom folgt v0.2.
+                                Schwärzung wird sichtbar eingebrannt — für rechtssichere Entfernung
+                                aus dem Inhaltsstrom folgt v0.2.
                             </StateHint>
                         </div>
                     </aside>

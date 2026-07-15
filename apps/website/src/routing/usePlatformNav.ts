@@ -1,12 +1,21 @@
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { findToolsForFile, getTool, toolsForStory, type AreaId, type StoryId, type ToolId } from '../data/catalog';
+import {
+    findToolsForFile,
+    getTool,
+    toolsForStory,
+    type AreaId,
+    type StoryId,
+    type ToolId,
+} from '../data/catalog';
 import { usePlatform } from '../context/PlatformContext';
 import type { PlatformFile } from '../context/PlatformContext';
+import { isConversionHubStory } from './conversion-hub';
 import {
     areaPath,
     favoritesPath,
     homePath,
+    searchPath,
     settingsPath,
     storyPath,
     toolPath,
@@ -30,6 +39,13 @@ export function usePlatformNav() {
         navigate(settingsPath());
     }, [navigate]);
 
+    const goToSearch = useCallback(
+        (query?: string) => {
+            navigate(searchPath(query));
+        },
+        [navigate],
+    );
+
     const goToWorkspace = useCallback(
         (workspaceId: string) => {
             navigate(workspacePath(workspaceId));
@@ -49,7 +65,7 @@ export function usePlatformNav() {
             const areaId = platform.activeAreaId;
             if (!areaId) return;
             const storyTools = toolsForStory(storyId);
-            if (storyTools.length === 1) {
+            if (storyTools.length === 1 && !isConversionHubStory(storyId)) {
                 navigate(toolPath(areaId, storyId, storyTools[0].id));
                 return;
             }
@@ -137,6 +153,7 @@ export function usePlatformNav() {
         goHome,
         goToFavorites,
         goToSettings,
+        goToSearch,
         goToWorkspace,
         openSettings: goToSettings,
         closeSettings: goHome,

@@ -1,5 +1,13 @@
 import { useCallback, useMemo, useState } from 'react';
-import { areas, stories, toolsForStory, type AreaId, type StoryId, type ToolDefinition, type UserStory } from '../data/catalog';
+import {
+    areas,
+    stories,
+    toolsForStory,
+    type AreaId,
+    type StoryId,
+    type ToolDefinition,
+    type UserStory,
+} from '../data/catalog';
 import { usePlatformNav } from '../routing/usePlatformNav';
 import { filterToolsForStory, storiesForAreaFiltered } from './filtering';
 import { Icon } from './Icon';
@@ -40,10 +48,13 @@ export function StoryPickStep({ areaId }: StoryPickStepProps) {
                 >
                     <Icon svg={area.icon} size={22} />
                 </span>
-                <h1 className="font-display text-[28px] leading-[1.05] font-bold tracking-[-0.02em] sm:text-[34px]">{area.label}</h1>
+                <h1 className="font-display text-[28px] leading-[1.05] font-bold tracking-[-0.02em] sm:text-[34px]">
+                    {area.label}
+                </h1>
             </div>
             <p className="mt-3 max-w-[62ch] text-[15px] leading-relaxed text-[var(--color-ink-soft)] sm:text-[16px]">
-                Wähle die Situation, die zu deinem Vorhaben passt. Wenn nur ein Tool passt, öffnen wir es direkt.
+                Wähle die Situation, die zu deinem Vorhaben passt. Wenn nur ein Tool passt, öffnen
+                wir es direkt.
             </p>
 
             <section className="mt-7 max-w-[720px]">
@@ -60,7 +71,11 @@ export function StoryPickStep({ areaId }: StoryPickStepProps) {
                             Keine Situation gefunden — passe die Suche an.
                         </p>
                     ) : (
-                        <ul className="ms-stagger border-t-2 border-black" role="listbox" aria-label="Situationen">
+                        <ul
+                            className="ms-stagger border-t-2 border-black"
+                            role="listbox"
+                            aria-label="Situationen"
+                        >
                             {visibleStories.map((story, index) => (
                                 <li key={story.id} role="presentation">
                                     <StoryListRow
@@ -130,8 +145,12 @@ function StoryListRow({
                 {story.outcome.charAt(0).toUpperCase()}
             </span>
             <span className="min-w-0 flex-1">
-                <span className="block truncate font-display text-[16px] font-semibold">{story.outcome}</span>
-                <span className="block truncate text-[13.5px] text-[var(--color-ink-soft)]">{toolLabel}</span>
+                <span className="block truncate font-display text-[16px] font-semibold">
+                    {story.outcome}
+                </span>
+                <span className="block truncate text-[13.5px] text-[var(--color-ink-soft)]">
+                    {toolLabel}
+                </span>
             </span>
             {planned ? (
                 <span className="shrink-0 rounded-full border-2 border-black bg-[var(--color-chip)] px-2 py-0.5 font-display text-[11px] font-semibold">
@@ -182,7 +201,11 @@ export function ToolPickForStory({ storyId }: { storyId: StoryId }) {
                             Kein Tool gefunden — passe die Suche an.
                         </p>
                     ) : (
-                        <ul className="ms-stagger border-t-2 border-black grid gap-0" role="listbox" aria-label="Tools">
+                        <ul
+                            className="ms-stagger border-t-2 border-black grid gap-0"
+                            role="listbox"
+                            aria-label="Tools"
+                        >
                             {storyTools.map((tool, index) => (
                                 <li key={tool.id} role="presentation">
                                     <button
@@ -191,13 +214,17 @@ export function ToolPickForStory({ storyId }: { storyId: StoryId }) {
                                         aria-selected={selectedTool?.id === tool.id}
                                         onClick={() => selectTool(tool.id)}
                                         className={`ms-focus pick-list-row block w-full cursor-pointer px-5 py-4 text-left transition ${
-                                            index < storyTools.length - 1 ? 'border-b-2 border-black' : ''
+                                            index < storyTools.length - 1
+                                                ? 'border-b-2 border-black'
+                                                : ''
                                         } ${selectedTool?.id === tool.id ? 'pick-list-row--selected' : 'hover:bg-[var(--color-chip)]'}`}
                                     >
                                         <span className="font-display text-[18px] font-bold tracking-[-0.01em]">
                                             {tool.shortTitle}
                                         </span>
-                                        <span className="mt-1 block text-[14px] text-[var(--color-ink-soft)]">{tool.sub}</span>
+                                        <span className="mt-1 block text-[14px] text-[var(--color-ink-soft)]">
+                                            {tool.sub}
+                                        </span>
                                     </button>
                                 </li>
                             ))}

@@ -14,14 +14,18 @@ export function PdfCompressTool({ tool }: PdfCompressToolProps) {
     const [file, setFile] = useState<File | null>(null);
     const [quality, setQuality] = useState(62);
     const [working, setWorking] = useState(false);
-    const [result, setResult] = useState<{ bytes: Uint8Array; compressedSize: number } | null>(null);
+    const [result, setResult] = useState<{ bytes: Uint8Array; compressedSize: number } | null>(
+        null,
+    );
     const inputRef = useRef<HTMLInputElement | null>(null);
     const { toast } = useToast();
 
     const useObjectStreams = quality >= 40;
 
     const { dragOver, onDragLeave, onDragOver, onDrop } = useFileDrop((files) => {
-        const next = Array.from(files).find((f) => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf'));
+        const next = Array.from(files).find(
+            (f) => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf'),
+        );
         if (!next) {
             toast({ message: 'Bitte eine PDF-Datei wählen.', variant: 'error' });
             return;
@@ -31,7 +35,8 @@ export function PdfCompressTool({ tool }: PdfCompressToolProps) {
     });
 
     const underElsterLimit = useMemo(
-        () => result !== null && result.compressedSize > 0 && result.compressedSize < 2 * 1024 * 1024,
+        () =>
+            result !== null && result.compressedSize > 0 && result.compressedSize < 2 * 1024 * 1024,
         [result],
     );
 
@@ -56,7 +61,10 @@ export function PdfCompressTool({ tool }: PdfCompressToolProps) {
     }
 
     return (
-        <div className="ms-animate-fade mx-auto w-full max-w-2xl space-y-4 px-4 py-6 md:px-6" aria-busy={working}>
+        <div
+            className="ms-animate-fade mx-auto w-full max-w-2xl space-y-4 px-4 py-6 md:px-6"
+            aria-busy={working}
+        >
             {!file ? (
                 <section
                     className="ms-dropzone cursor-pointer rounded-xl p-8 text-center"
@@ -74,8 +82,12 @@ export function PdfCompressTool({ tool }: PdfCompressToolProps) {
                         }
                     }}
                 >
-                    <p className="font-display text-[20px] font-bold tracking-[-0.02em]">PDF hierher ziehen oder auswählen</p>
-                    <p className="mt-2 text-[14px] text-[var(--color-ink-soft)]">Ideal für Elster-, Behörden- und Portal-Uploads.</p>
+                    <p className="font-display text-[20px] font-bold tracking-[-0.02em]">
+                        PDF hierher ziehen oder auswählen
+                    </p>
+                    <p className="mt-2 text-[14px] text-[var(--color-ink-soft)]">
+                        Ideal für Elster-, Behörden- und Portal-Uploads.
+                    </p>
                     <input
                         ref={inputRef}
                         type="file"
@@ -94,7 +106,9 @@ export function PdfCompressTool({ tool }: PdfCompressToolProps) {
                 <>
                     <div className="flex items-center justify-between rounded-lg border-2 border-black bg-white px-3 py-2 shadow-brutal-sm">
                         <div>
-                            <p className="font-display text-[12px] font-bold uppercase tracking-[0.05em]">Geladene Datei</p>
+                            <p className="font-display text-[12px] font-bold uppercase tracking-[0.05em]">
+                                Geladene Datei
+                            </p>
                             <p className="text-[14px]">{file.name}</p>
                         </div>
                         <button
@@ -131,7 +145,12 @@ export function PdfCompressTool({ tool }: PdfCompressToolProps) {
                         />
                     </section>
 
-                    <button type="button" className="ms-btn-primary w-full" disabled={working} onClick={() => void compress()}>
+                    <button
+                        type="button"
+                        className="ms-btn-primary w-full"
+                        disabled={working}
+                        onClick={() => void compress()}
+                    >
                         {working ? 'Komprimiere …' : 'PDF komprimieren'}
                     </button>
 
@@ -142,13 +161,17 @@ export function PdfCompressTool({ tool }: PdfCompressToolProps) {
                                     <p className="font-display text-[11px] font-bold uppercase tracking-[0.05em] text-[var(--color-ink-soft)]">
                                         Original
                                     </p>
-                                    <p className="mt-1 text-[16px] font-bold">{formatBytes(file.size)}</p>
+                                    <p className="mt-1 text-[16px] font-bold">
+                                        {formatBytes(file.size)}
+                                    </p>
                                 </div>
                                 <div className="rounded-md border-2 border-black bg-white p-3">
                                     <p className="font-display text-[11px] font-bold uppercase tracking-[0.05em] text-[var(--color-ink-soft)]">
                                         Komprimiert
                                     </p>
-                                    <p className="mt-1 text-[16px] font-bold">{formatBytes(result.compressedSize)}</p>
+                                    <p className="mt-1 text-[16px] font-bold">
+                                        {formatBytes(result.compressedSize)}
+                                    </p>
                                 </div>
                             </div>
                             {underElsterLimit ? (
@@ -159,7 +182,11 @@ export function PdfCompressTool({ tool }: PdfCompressToolProps) {
                                     ✓ Unter Elster-Limit (2 MB)
                                 </span>
                             ) : null}
-                            <button type="button" className="ms-btn-primary w-full" onClick={download}>
+                            <button
+                                type="button"
+                                className="ms-btn-primary w-full"
+                                onClick={download}
+                            >
                                 Verkleinertes PDF herunterladen
                             </button>
                         </ResultCard>
@@ -167,7 +194,8 @@ export function PdfCompressTool({ tool }: PdfCompressToolProps) {
                 </>
             )}
             <StateHint>
-                Strukturelle PDF-Komprimierung im Browser — eingebettete Bilder werden in v0.2 separat optimiert.
+                Strukturelle PDF-Komprimierung im Browser — eingebettete Bilder werden in v0.2
+                separat optimiert.
             </StateHint>
         </div>
     );

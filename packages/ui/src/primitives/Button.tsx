@@ -12,8 +12,7 @@ const variantClass: Record<ButtonVariant, string> = {
         'bg-[var(--color-ink)] text-[var(--color-surface)] hover:bg-[#3a3a38] focus-visible:ring-[var(--color-accent)]',
     secondary:
         'bg-[var(--color-accent-soft)] text-[var(--color-ink)] border border-[var(--color-accent)] hover:bg-[var(--color-accent)] focus-visible:ring-[var(--color-accent-strong)]',
-    ghost:
-        'bg-transparent text-[var(--color-ink)] hover:bg-[var(--color-border)] focus-visible:ring-[var(--color-ink-muted)]',
+    ghost: 'bg-transparent text-[var(--color-ink)] hover:bg-[var(--color-border)] focus-visible:ring-[var(--color-ink-muted)]',
 };
 
 export function Button({ variant = 'primary', className = '', children, ...props }: ButtonProps) {

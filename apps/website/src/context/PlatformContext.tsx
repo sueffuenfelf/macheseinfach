@@ -156,22 +156,23 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
         setActiveTags([...tags]);
     }, []);
 
-    const selectArea = useCallback(
-        (areaId: AreaId) => {
-            setActiveAreaId(areaId);
-            setActiveStoryId(null);
-            setActiveTool(null);
-            setFileState(null);
-            setQueryState('');
-        },
-        [],
-    );
+    const selectArea = useCallback((areaId: AreaId) => {
+        setActiveAreaId(areaId);
+        setActiveStoryId(null);
+        setActiveTool(null);
+        setFileState(null);
+        setQueryState('');
+    }, []);
 
     const selectTool = useCallback(
         (toolId: ToolId) => {
             const tool = getTool(toolId);
-            setActiveAreaId((prev) => (prev && tool.areas.includes(prev) ? prev : (tool.areas[0] ?? null)));
-            setActiveStoryId((prev) => (prev && tool.storyIds.includes(prev) ? prev : (tool.storyIds[0] ?? null)));
+            setActiveAreaId((prev) =>
+                prev && tool.areas.includes(prev) ? prev : (tool.areas[0] ?? null),
+            );
+            setActiveStoryId((prev) =>
+                prev && tool.storyIds.includes(prev) ? prev : (tool.storyIds[0] ?? null),
+            );
             setActiveTool(tool);
             pushRecent(toolId);
         },
@@ -236,16 +237,16 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
     const clearFile = useCallback(() => setFileState(null), []);
 
     const ingestFiles = useCallback((files: FileList | null): PlatformFile | null => {
-            if (!files?.length) return null;
-            const f = files[0];
-            const info: PlatformFile = {
-                name: f.name,
-                sizeLabel: formatBytes(f.size),
-                bytes: f.size,
-            };
-            setFileState(info);
-            return info;
-        }, []);
+        if (!files?.length) return null;
+        const f = files[0];
+        const info: PlatformFile = {
+            name: f.name,
+            sizeLabel: formatBytes(f.size),
+            bytes: f.size,
+        };
+        setFileState(info);
+        return info;
+    }, []);
 
     useEffect(() => {
         const onKey = (e: KeyboardEvent) => {
@@ -262,7 +263,9 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
         (toolId: ToolId) => {
             const tool = getTool(toolId);
             const removing = favorites.includes(toolId);
-            const next = removing ? favorites.filter((id) => id !== toolId) : [toolId, ...favorites];
+            const next = removing
+                ? favorites.filter((id) => id !== toolId)
+                : [toolId, ...favorites];
             setFavorites(next);
             writeStored(FAV_KEY, next);
             toast({

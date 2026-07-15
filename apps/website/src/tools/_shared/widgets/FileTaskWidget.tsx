@@ -76,25 +76,40 @@ function FileTaskWidget({
                             multiple
                             onChange={(event) => applyFiles(Array.from(event.target.files ?? []))}
                         />
-                        <span className="widget-file-task__drop-title">Dateien ablegen oder klicken</span>
+                        <span className="widget-file-task__drop-title">
+                            Dateien ablegen oder klicken
+                        </span>
                         <span className="widget-file-task__drop-sub">{acceptLabel}</span>
                     </label>
-                    <div className="widget-file-task__row widget-file-task__row--meta" aria-live="polite">
+                    <div
+                        className="widget-file-task__row widget-file-task__row--meta"
+                        aria-live="polite"
+                    >
                         {files.length === 0 ? (
                             <p className="widget-file-task__hint">{emptyHint}</p>
                         ) : (
                             <div className="widget-file-task__meta">
-                                <p className="widget-file-task__meta-main">{files.length} Datei(en)</p>
-                                <p className="widget-file-task__meta-sub">{formatBytes(summary.totalBytes)}</p>
+                                <p className="widget-file-task__meta-main">
+                                    {files.length} Datei(en)
+                                </p>
+                                <p className="widget-file-task__meta-sub">
+                                    {formatBytes(summary.totalBytes)}
+                                </p>
                                 <p className="widget-file-task__meta-list">{summary.names}</p>
                             </div>
                         )}
                     </div>
                     <div className="widget-file-task__row widget-file-task__row--actions">
-                        <button type="button" className="ms-btn widget-file-task__open" onClick={openTool}>
+                        <button
+                            type="button"
+                            className="ms-btn widget-file-task__open"
+                            onClick={openTool}
+                        >
                             {openLabel}
                         </button>
-                        <p className="widget-file-task__footer">{files.length > 0 ? status : footerHint}</p>
+                        <p className="widget-file-task__footer">
+                            {files.length > 0 ? status : footerHint}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -102,7 +117,10 @@ function FileTaskWidget({
     );
 }
 
-export function createFileTaskWidget(catalog: ToolCatalogInput, options: FileTaskWidgetOptions): ToolWidgetInput {
+export function createFileTaskWidget(
+    catalog: ToolCatalogInput,
+    options: FileTaskWidgetOptions,
+): ToolWidgetInput {
     const title = options.title ?? catalog.shortTitle;
     return {
         id: options.widgetId,

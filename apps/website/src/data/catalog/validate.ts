@@ -3,7 +3,14 @@ import { stories } from './stories';
 import { catalogTags } from './tags';
 import { tools } from './tools';
 import { listDiscoveredWidgets } from '../../tools/discover';
-import type { AreaId, CatalogValidationIssue, CatalogValidationResult, StoryId, ToolId } from './types';
+import { getAllToolVariants } from '../../tools/variant-registry';
+import type {
+    AreaId,
+    CatalogValidationIssue,
+    CatalogValidationResult,
+    StoryId,
+    ToolId,
+} from './types';
 
 function issue(code: string, message: string): CatalogValidationIssue {
     return { code, message };
@@ -29,6 +36,25 @@ export function validateCatalog(): CatalogValidationResult {
         storySlugs.add(story.slug);
     }
 
+    for (const variant of getAllToolVariants()) {
+        if (storySlugs.has(variant.slug)) {
+            issues.push(
+                issue(
+                    'VARIANT_STORY_SLUG_CONFLICT',
+                    `Variant-Slug „${variant.slug}“ kollidiert mit Story-Slug`,
+                ),
+            );
+        }
+        if (!tools[variant.toolId as ToolId]) {
+            issues.push(
+                issue(
+                    'VARIANT_UNKNOWN_TOOL',
+                    `Variant „${variant.slug}“ referenziert unbekanntes Tool ${variant.toolId}`,
+                ),
+            );
+        }
+    }
+
     const toolSlugs = new Set<string>();
     for (const tool of Object.values(tools)) {
         if (toolSlugs.has(tool.slug)) {
@@ -41,7 +67,12 @@ export function validateCatalog(): CatalogValidationResult {
         for (const storyId of area.storyIds) {
             const story = stories[storyId as StoryId];
             if (!story) {
-                issues.push(issue('AREA_UNKNOWN_STORY', `Area ${area.id} referenziert unbekannte Story ${storyId}`));
+                issues.push(
+                    issue(
+                        'AREA_UNKNOWN_STORY',
+                        `Area ${area.id} referenziert unbekannte Story ${storyId}`,
+                    ),
+                );
                 continue;
             }
             if (!story.areaIds.includes(area.id)) {
@@ -59,7 +90,12 @@ export function validateCatalog(): CatalogValidationResult {
         for (const areaId of story.areaIds) {
             const area = areas[areaId as AreaId];
             if (!area) {
-                issues.push(issue('STORY_UNKNOWN_AREA', `Story ${story.id} referenziert unbekannten Bereich ${areaId}`));
+                issues.push(
+                    issue(
+                        'STORY_UNKNOWN_AREA',
+                        `Story ${story.id} referenziert unbekannten Bereich ${areaId}`,
+                    ),
+                );
                 continue;
             }
             if (!area.storyIds.includes(story.id)) {
@@ -75,12 +111,20 @@ export function validateCatalog(): CatalogValidationResult {
         for (const toolId of story.toolIds) {
             const tool = tools[toolId as ToolId];
             if (!tool) {
-                issues.push(issue('STORY_UNKNOWN_TOOL', `Story ${story.id} referenziert unbekanntes Tool ${toolId}`));
+                issues.push(
+                    issue(
+                        'STORY_UNKNOWN_TOOL',
+                        `Story ${story.id} referenziert unbekanntes Tool ${toolId}`,
+                    ),
+                );
                 continue;
             }
             if (!tool.storyIds.includes(story.id)) {
                 issues.push(
-                    issue('STORY_TOOL_MISMATCH', `Tool ${toolId} listet Story ${story.id} nicht in storyIds`),
+                    issue(
+                        'STORY_TOOL_MISMATCH',
+                        `Tool ${toolId} listet Story ${story.id} nicht in storyIds`,
+                    ),
                 );
             }
         }
@@ -89,7 +133,9 @@ export function validateCatalog(): CatalogValidationResult {
     for (const tool of Object.values(tools)) {
         for (const tag of tool.tags) {
             if (!catalogTags[tag as keyof typeof catalogTags]) {
-                issues.push(issue('TOOL_UNKNOWN_TAG', `Tool ${tool.id} nutzt unregistrierten Tag „${tag}“`));
+                issues.push(
+                    issue('TOOL_UNKNOWN_TAG', `Tool ${tool.id} nutzt unregistrierten Tag „${tag}“`),
+                );
             }
         }
 
@@ -99,19 +145,32 @@ export function validateCatalog(): CatalogValidationResult {
 
         for (const areaId of tool.areas) {
             if (!areas[areaId as AreaId]) {
-                issues.push(issue('TOOL_UNKNOWN_AREA', `Tool ${tool.id} referenziert unbekannten Bereich ${areaId}`));
+                issues.push(
+                    issue(
+                        'TOOL_UNKNOWN_AREA',
+                        `Tool ${tool.id} referenziert unbekannten Bereich ${areaId}`,
+                    ),
+                );
             }
         }
 
         for (const storyId of tool.storyIds) {
             const story = stories[storyId as StoryId];
             if (!story) {
-                issues.push(issue('TOOL_UNKNOWN_STORY', `Tool ${tool.id} referenziert unbekannte Story ${storyId}`));
+                issues.push(
+                    issue(
+                        'TOOL_UNKNOWN_STORY',
+                        `Tool ${tool.id} referenziert unbekannte Story ${storyId}`,
+                    ),
+                );
                 continue;
             }
             if (!story.toolIds.includes(tool.id)) {
                 issues.push(
-                    issue('TOOL_STORY_MISMATCH', `Story ${storyId} listet Tool ${tool.id} nicht in toolIds`),
+                    issue(
+                        'TOOL_STORY_MISMATCH',
+                        `Story ${storyId} listet Tool ${tool.id} nicht in toolIds`,
+                    ),
                 );
             }
         }
@@ -122,7 +181,10 @@ export function validateCatalog(): CatalogValidationResult {
         const count = widgets.filter((widget) => widget.toolId === tool.id).length;
         if (count === 0) {
             issues.push(
-                issue('TOOL_NO_WIDGETS', `Tool ${tool.id} hat keine registrierten Widgets (tools/${tool.id}/config.ts)`),
+                issue(
+                    'TOOL_NO_WIDGETS',
+                    `Tool ${tool.id} hat keine registrierten Widgets (tools/${tool.id}/config.ts)`,
+                ),
             );
         }
     }

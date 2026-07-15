@@ -12,7 +12,14 @@ export type ProductCardProps = {
     onAction?: () => void;
 };
 
-export function ProductCard({ title, creator, priceLabel, description, tag, onAction }: ProductCardProps) {
+export function ProductCard({
+    title,
+    creator,
+    priceLabel,
+    description,
+    tag,
+    onAction,
+}: ProductCardProps) {
     return (
         <Card className="flex flex-col gap-4">
             <div className="flex items-start justify-between gap-3">

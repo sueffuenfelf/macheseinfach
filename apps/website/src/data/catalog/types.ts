@@ -1,5 +1,12 @@
 /** Alle gültigen Bereichs-IDs — User-Story-Gruppen */
-export const AREA_IDS = ['buchhaltung', 'behoerden', 'dokumente', 'security', 'seo'] as const;
+export const AREA_IDS = [
+    'buchhaltung',
+    'behoerden',
+    'bilder',
+    'dokumente',
+    'security',
+    'seo',
+] as const;
 
 export type AreaId = (typeof AREA_IDS)[number];
 export type ToolId = string;
@@ -12,6 +19,11 @@ export const STORY_IDS = [
     'story-iban-vor-ueberweisung',
     'story-iban-aus-rechnung',
     'story-heic-portal',
+    'story-bild-format-aendern',
+    'story-bild-verkleinern',
+    'story-bild-ausrichten',
+    'story-bild-metadaten',
+    'story-bild-pipeline',
     'story-bewerbung-eine-pdf',
     'story-vertrag-unterschreiben',
     'story-scan-text-kopieren',

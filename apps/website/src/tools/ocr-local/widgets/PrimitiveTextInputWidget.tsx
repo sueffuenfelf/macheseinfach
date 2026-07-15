@@ -2,7 +2,11 @@ import { useEffect, useState } from 'react';
 import type { WidgetComponentProps } from '../../../shell/widgets/types';
 import { WidgetCard } from '../../_shared/widgets/WidgetCard';
 
-export function PrimitiveTextInputWidget({ embedded, linkedInput = '', onEmitLinkValue }: WidgetComponentProps) {
+export function PrimitiveTextInputWidget({
+    embedded,
+    linkedInput = '',
+    onEmitLinkValue,
+}: WidgetComponentProps) {
     const [value, setValue] = useState('');
     const linkedValue = linkedInput
         .split('\n')
@@ -31,7 +35,9 @@ export function PrimitiveTextInputWidget({ embedded, linkedInput = '', onEmitLin
                     </div>
                     <div className="widget-primitive-text__row widget-primitive-text__row--meta">
                         <p className="widget-primitive-text__meta">
-                            {linkedValue ? 'Eingang ist verknüpft.' : `${effectiveValue.length} Zeichen`}
+                            {linkedValue
+                                ? 'Eingang ist verknüpft.'
+                                : `${effectiveValue.length} Zeichen`}
                         </p>
                     </div>
                 </div>

@@ -44,7 +44,10 @@ export function IbanCheckTool({ tool }: IbanCheckToolProps) {
         <div className="ms-animate-fade mx-auto w-full max-w-2xl space-y-4 px-4 py-6 md:px-6">
             <form onSubmit={onSubmit} className="flex flex-col gap-2 sm:flex-row sm:items-end">
                 <div className="w-full">
-                    <label htmlFor={`${tool.id}-input`} className="mb-1 block font-display text-[12px] font-bold uppercase tracking-[0.05em]">
+                    <label
+                        htmlFor={`${tool.id}-input`}
+                        className="mb-1 block font-display text-[12px] font-bold uppercase tracking-[0.05em]"
+                    >
                         IBAN
                     </label>
                     <input
@@ -68,7 +71,13 @@ export function IbanCheckTool({ tool }: IbanCheckToolProps) {
                     tone="success"
                     heading={
                         <span className="inline-flex items-center gap-2">
-                            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="#000" strokeWidth="2.5">
+                            <svg
+                                viewBox="0 0 24 24"
+                                className="h-5 w-5"
+                                fill="none"
+                                stroke="#000"
+                                strokeWidth="2.5"
+                            >
                                 <path d="M5 13l4 4L19 7" />
                             </svg>
                             Gültige IBAN
@@ -92,7 +101,9 @@ export function IbanCheckTool({ tool }: IbanCheckToolProps) {
                     <p className="text-[14px]">
                         Geprüft: <span className="font-mono">{formatIban(result.iban)}</span>
                     </p>
-                    <p className="font-medium text-[var(--color-danger-ink)]">{ERROR_TEXT[result.reason]}</p>
+                    <p className="font-medium text-[var(--color-danger-ink)]">
+                        {ERROR_TEXT[result.reason]}
+                    </p>
                 </ResultCard>
             ) : null}
         </div>

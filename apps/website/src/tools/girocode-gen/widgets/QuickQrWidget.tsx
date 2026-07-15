@@ -36,11 +36,14 @@ export function QuickQrWidget({
             return;
         }
         let cancelled = false;
-        const timer = window.setTimeout(() => {
-            void generateQrDataUrl(value, 128).then((url) => {
-                if (!cancelled) setImage(url);
-            });
-        }, linked ? 0 : 280);
+        const timer = window.setTimeout(
+            () => {
+                void generateQrDataUrl(value, 128).then((url) => {
+                    if (!cancelled) setImage(url);
+                });
+            },
+            linked ? 0 : 280,
+        );
         return () => {
             cancelled = true;
             window.clearTimeout(timer);

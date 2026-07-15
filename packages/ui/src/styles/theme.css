@@ -5,41 +5,42 @@
  * Hard black borders, flat offset shadows, vibrant area colors.
  */
 @theme {
-  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "Space Grotesk", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+    --font-sans: "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif;
+    --font-mono: "Space Grotesk", ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  --color-canvas: #fdfcf9;
-  --color-surface: #ffffff;
-  --color-ink: #000000;
-  --color-ink-soft: #555555;
-  --color-ink-muted: #888888;
-  --color-line: #e8e5df;
-  --color-chip: #f0eee9;
+    --color-canvas: #fdfcf9;
+    --color-surface: #ffffff;
+    --color-ink: #000000;
+    --color-ink-soft: #555555;
+    --color-ink-muted: #888888;
+    --color-line: #e8e5df;
+    --color-chip: #f0eee9;
 
-  --color-area-buchhaltung: #ff90e8;
-  --color-area-behoerden: #ffc900;
-  --color-area-dokumente: #90a8ed;
-  --color-area-security: #23c9a0;
-  --color-area-seo: #c3aef0;
+    --color-area-buchhaltung: #ff90e8;
+    --color-area-behoerden: #ffc900;
+    --color-area-bilder: #f4a261;
+    --color-area-dokumente: #90a8ed;
+    --color-area-security: #23c9a0;
+    --color-area-seo: #c3aef0;
 
-  --color-accent: #ff90e8;
-  --color-brand: #e14fc4;
-  --color-success: #c6f2a8;
-  --color-success-ink: #1c8a3a;
-  --color-warn: #ffe8a3;
-  --color-danger: #ffb3b3;
-  --color-danger-ink: #b42318;
-  --color-info: #dfe6ff;
+    --color-accent: #ff90e8;
+    --color-brand: #e14fc4;
+    --color-success: #c6f2a8;
+    --color-success-ink: #1c8a3a;
+    --color-warn: #ffe8a3;
+    --color-danger: #ffb3b3;
+    --color-danger-ink: #b42318;
+    --color-info: #dfe6ff;
 
-  --radius-sm: 0.5rem;
-  --radius-md: 0.625rem;
-  --radius-lg: 0.875rem;
-  --radius-xl: 1.125rem;
-  --radius-pill: 9999px;
+    --radius-sm: 0.5rem;
+    --radius-md: 0.625rem;
+    --radius-lg: 0.875rem;
+    --radius-xl: 1.125rem;
+    --radius-pill: 9999px;
 
-  --shadow-brutal-sm: 2px 2px 0 #000;
-  --shadow-brutal: 4px 4px 0 #000;
-  --shadow-brutal-lg: 6px 6px 0 #000;
-  --shadow-brutal-xl: 8px 8px 0 #000;
+    --shadow-brutal-sm: 2px 2px 0 #000;
+    --shadow-brutal: 4px 4px 0 #000;
+    --shadow-brutal-lg: 6px 6px 0 #000;
+    --shadow-brutal-xl: 8px 8px 0 #000;
 }

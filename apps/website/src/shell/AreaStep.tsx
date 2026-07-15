@@ -1,5 +1,9 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { areaOrder, areas, getTool, toolsInArea } from '../data/catalog';
+import { searchPath } from '../routing/paths';
 import { usePlatformNav } from '../routing/usePlatformNav';
+import { BrutalInput } from './components/Primitives';
 import { Icon } from './Icon';
 
 function toolCountLabel(count: number, planned: boolean): string {
@@ -10,6 +14,8 @@ function toolCountLabel(count: number, planned: boolean): string {
 
 export function AreaStep() {
     const { selectArea, selectTool, recentTools, activeAreaId } = usePlatformNav();
+    const navigate = useNavigate();
+    const [searchQuery, setSearchQuery] = useState('');
     const showRecent = !activeAreaId && recentTools.length > 0;
 
     return (
@@ -18,9 +24,42 @@ export function AreaStep() {
                 Was willst du erledigen?
             </h1>
             <p className="mt-3 max-w-[52ch] text-[15px] leading-relaxed text-[var(--color-ink-soft)] sm:mt-4 sm:text-[17px]">
-                Wähle erst deinen Bereich. Danach zeigen wir dir passende Situationen und öffnen das richtige Tool
-                direkt.
+                Wähle erst deinen Bereich. Danach zeigen wir dir passende Situationen und öffnen das
+                richtige Tool direkt.
             </p>
+
+            <form
+                className="mt-6 max-w-[520px]"
+                onSubmit={(e) => {
+                    e.preventDefault();
+                    navigate(searchPath(searchQuery));
+                }}
+            >
+                <label htmlFor="home-search" className="sr-only">
+                    Globale Suche
+                </label>
+                <div className="relative">
+                    <svg
+                        viewBox="0 0 24 24"
+                        className="pointer-events-none absolute top-1/2 left-3.5 h-4.5 w-4.5 -translate-y-1/2 text-[var(--color-ink-soft)]"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.2"
+                        aria-hidden
+                    >
+                        <circle cx="11" cy="11" r="7" />
+                        <path d="M20 20l-4-4" />
+                    </svg>
+                    <BrutalInput
+                        id="home-search"
+                        type="search"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Oder direkt suchen: HEIC, PDF verkleinern, IBAN …"
+                        className="py-3 pr-3 pl-10"
+                    />
+                </div>
+            </form>
 
             <ul className="ms-stagger mt-8 grid grid-cols-1 gap-5 md:grid-cols-2">
                 {areaOrder.map((id) => {
@@ -41,7 +80,11 @@ export function AreaStep() {
                                     <span className="inline-flex h-[46px] w-[46px] items-center justify-center rounded-[11px] border-2 border-black bg-white">
                                         <Icon svg={area.icon} size={24} />
                                     </span>
-                                    {planned ? <span className="ms-badge bg-black text-white">Geplant</span> : null}
+                                    {planned ? (
+                                        <span className="ms-badge bg-black text-white">
+                                            Geplant
+                                        </span>
+                                    ) : null}
                                 </span>
                                 <span className="mt-3 block font-display text-[21px] leading-tight font-bold tracking-[-0.02em] sm:mt-4 sm:text-[24px]">
                                     {area.label}
@@ -72,7 +115,9 @@ export function AreaStep() {
 
             {showRecent ? (
                 <section className="mt-10">
-                    <h2 className="font-display text-[16px] font-semibold tracking-[-0.01em]">Zuletzt genutzt</h2>
+                    <h2 className="font-display text-[16px] font-semibold tracking-[-0.01em]">
+                        Zuletzt genutzt
+                    </h2>
                     <div className="mt-3 flex flex-wrap gap-2.5">
                         {recentTools.map((toolId) => {
                             const tool = getTool(toolId);

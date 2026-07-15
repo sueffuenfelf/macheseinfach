@@ -30,9 +30,12 @@ export function JobDock() {
                     >
                         <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0">
-                                <p className="truncate font-display text-[13px] font-bold">{job.context.label}</p>
+                                <p className="truncate font-display text-[13px] font-bold">
+                                    {job.context.label}
+                                </p>
                                 <p className="mt-0.5 text-[11px] text-[var(--color-ink-soft)]">
-                                    {isRunning ? 'Läuft' : isPaused ? 'Pausiert' : job.status} · {formatProgress(job)}
+                                    {isRunning ? 'Läuft' : isPaused ? 'Pausiert' : job.status} ·{' '}
+                                    {formatProgress(job)}
                                 </p>
                             </div>
                             <button

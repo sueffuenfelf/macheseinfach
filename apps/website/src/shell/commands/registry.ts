@@ -11,7 +11,11 @@ import {
     slugify,
 } from './utils';
 
-function ok(output: string, copyText = output, feedback = 'In Zwischenablage kopiert'): CommandResult {
+function ok(
+    output: string,
+    copyText = output,
+    feedback = 'In Zwischenablage kopiert',
+): CommandResult {
     return { status: 'success', output, copyText, feedback };
 }
 

@@ -1,9 +1,9 @@
 {
-  "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "rootDir": "src",
-    "types": ["bun-types"]
-  },
-  "include": ["src"],
-  "exclude": ["src/**/*.test.tsx", "src/**/*.stories.tsx", ".storybook"]
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "rootDir": "src",
+        "types": ["bun-types"]
+    },
+    "include": ["src"],
+    "exclude": ["src/**/*.test.tsx", "src/**/*.stories.tsx", ".storybook"]
 }

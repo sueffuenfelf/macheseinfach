@@ -10,7 +10,11 @@ type ToolWorkspaceProps = {
     addToWorkspaceLabel?: string;
 };
 
-export function ToolWorkspace({ tool, onAddToWorkspace, addToWorkspaceLabel = 'Zu Arbeitsbereich hinzufügen' }: ToolWorkspaceProps) {
+export function ToolWorkspace({
+    tool,
+    onAddToWorkspace,
+    addToWorkspaceLabel = 'Zu Arbeitsbereich hinzufügen',
+}: ToolWorkspaceProps) {
     const { activeAreaId, toggleFavorite, isFavorite } = usePlatformNav();
     const area = areas[activeAreaId ?? tool.areas[0]];
     const favorite = isFavorite(tool.id);
@@ -30,12 +34,16 @@ export function ToolWorkspace({ tool, onAddToWorkspace, addToWorkspaceLabel = 'Z
                             </span>
                             <div className="min-w-0">
                                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                    <span className="ms-badge shrink-0 bg-[var(--color-chip)]">{maturityLabel(tool.maturity)}</span>
+                                    <span className="ms-badge shrink-0 bg-[var(--color-chip)]">
+                                        {maturityLabel(tool.maturity)}
+                                    </span>
                                     <h1 className="font-display text-[26px] leading-[1.05] font-bold tracking-[-0.02em] sm:text-[32px]">
                                         {tool.title}
                                     </h1>
                                 </div>
-                                <p className="mt-1 max-w-[60ch] text-[14px] text-[var(--color-ink-soft)] sm:text-[15px]">{tool.sub}</p>
+                                <p className="mt-1 max-w-[60ch] text-[14px] text-[var(--color-ink-soft)] sm:text-[15px]">
+                                    {tool.sub}
+                                </p>
                             </div>
                         </div>
                     </div>

@@ -27,6 +27,8 @@ export function listWidgetsForTool(toolId: ToolId): ToolWidgetDef[] {
 export function getPreferredWidgetForTool(toolId: ToolId): ToolWidgetDef | undefined {
     const matches = listWidgetsForTool(toolId);
     if (matches.length === 0) return undefined;
-    const compact = matches.find((widget) => widget.id.includes('-quick') || widget.id.includes('-mini'));
+    const compact = matches.find(
+        (widget) => widget.id.includes('-quick') || widget.id.includes('-mini'),
+    );
     return compact ?? matches[0];
 }

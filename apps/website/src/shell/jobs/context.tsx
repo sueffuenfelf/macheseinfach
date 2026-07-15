@@ -75,7 +75,9 @@ export function JobQueueProvider({
     const updateJob = useCallback((next: JobRecord) => {
         setJobs((prev) => {
             const exists = prev.some((j) => j.id === next.id);
-            const merged = exists ? prev.map((j) => (j.id === next.id ? next : j)) : [...prev, next];
+            const merged = exists
+                ? prev.map((j) => (j.id === next.id ? next : j))
+                : [...prev, next];
             savePersistedJobs(merged);
             return merged;
         });
@@ -172,13 +174,10 @@ export function JobQueueProvider({
         [jobs, runJob],
     );
 
-    const pauseJob = useCallback(
-        (jobId: string) => {
-            const runner = runnersRef.current.get(jobId);
-            runner?.abort.abort();
-        },
-        [],
-    );
+    const pauseJob = useCallback((jobId: string) => {
+        const runner = runnersRef.current.get(jobId);
+        runner?.abort.abort();
+    }, []);
 
     const resumeJob = useCallback(
         (jobId: string) => {

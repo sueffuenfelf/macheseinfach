@@ -21,10 +21,7 @@ function isBackgroundNotificationsEnabled(settings: NotificationSettings): boole
     return settings.backgroundNotifications && typeof Notification !== 'undefined';
 }
 
-export function maybeShowSystemNotification(
-    item: ToastItem,
-    settings: NotificationSettings,
-): void {
+export function maybeShowSystemNotification(item: ToastItem, settings: NotificationSettings): void {
     if (!isBackgroundNotificationsEnabled(settings)) return;
     if (typeof document !== 'undefined' && !document.hidden) return;
     if (Notification.permission !== 'granted') return;

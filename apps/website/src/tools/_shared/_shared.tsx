@@ -72,7 +72,13 @@ export function ProgressBar({ value, max = 1 }: { value: number; max?: number })
 export function StateHint({ children }: { children: ReactNode }) {
     return (
         <p className="inline-flex items-center gap-2 text-[12.5px] text-[var(--color-ink-soft)]">
-            <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="#000" strokeWidth="2.2">
+            <svg
+                viewBox="0 0 24 24"
+                className="h-4 w-4 shrink-0"
+                fill="none"
+                stroke="#000"
+                strokeWidth="2.2"
+            >
                 <rect x="4" y="11" width="16" height="9" rx="2" />
                 <path d="M8 11V8a4 4 0 118 0v3" />
             </svg>

@@ -36,12 +36,7 @@ function BrandMarkSvg({ size = 64, className = '', animated = false }: SvgMarkPr
             className={rootClass}
             style={{ width: size, height: size }}
         >
-            <path
-                className="ms-logo-draw__m-fill"
-                d={LOGO_M_PATH}
-                fill={LOGO_PINK}
-                stroke="none"
-            />
+            <path className="ms-logo-draw__m-fill" d={LOGO_M_PATH} fill={LOGO_PINK} stroke="none" />
             <path
                 className="ms-logo-draw__m-stroke"
                 d={LOGO_M_PATH}
@@ -96,7 +91,13 @@ export function BrandMark({ size = 64, className = '' }: { size?: number; classN
 }
 
 /** Animated stroke-draw variant for session splash. */
-export function BrandMarkDraw({ size = 96, className = '' }: { size?: number; className?: string }) {
+export function BrandMarkDraw({
+    size = 96,
+    className = '',
+}: {
+    size?: number;
+    className?: string;
+}) {
     return <BrandMarkSvg size={size} className={className} animated />;
 }
 

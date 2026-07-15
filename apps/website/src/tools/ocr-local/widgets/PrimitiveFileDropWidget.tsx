@@ -40,20 +40,33 @@ export function PrimitiveFileDropWidget({ embedded, onEmitLinkValue }: WidgetCom
                             type="file"
                             multiple
                             className="ms-sr-only"
-                            onChange={(event) => void applyFiles(Array.from(event.target.files ?? []))}
+                            onChange={(event) =>
+                                void applyFiles(Array.from(event.target.files ?? []))
+                            }
                         />
-                        <span className="widget-primitive-file__title">Dateien hier fallen lassen</span>
-                        <span className="widget-primitive-file__sub">Textdateien werden als Port bereitgestellt.</span>
+                        <span className="widget-primitive-file__title">
+                            Dateien hier fallen lassen
+                        </span>
+                        <span className="widget-primitive-file__sub">
+                            Textdateien werden als Port bereitgestellt.
+                        </span>
                     </label>
-                    <div className="widget-primitive-file__row widget-primitive-file__row--meta" aria-live="polite">
+                    <div
+                        className="widget-primitive-file__row widget-primitive-file__row--meta"
+                        aria-live="polite"
+                    >
                         {files.length === 0 ? (
-                            <p className="widget-primitive-file__meta">Noch keine Datei ausgewählt.</p>
+                            <p className="widget-primitive-file__meta">
+                                Noch keine Datei ausgewählt.
+                            </p>
                         ) : (
                             <p className="widget-primitive-file__meta">{names.join(', ')}</p>
                         )}
                     </div>
                     <div className="widget-primitive-file__row widget-primitive-file__row--status">
-                        <p className="widget-primitive-file__status">{status || 'Bereit für Verknüpfungen.'}</p>
+                        <p className="widget-primitive-file__status">
+                            {status || 'Bereit für Verknüpfungen.'}
+                        </p>
                     </div>
                 </div>
             </div>

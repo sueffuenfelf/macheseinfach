@@ -45,12 +45,16 @@ export function GlobalActionPalette({ open, actions, onClose }: GlobalActionPale
         const onKey = (event: KeyboardEvent) => {
             if (event.key === 'ArrowDown') {
                 event.preventDefault();
-                setActiveIndex((prev) => (filtered.length === 0 ? 0 : (prev + 1) % filtered.length));
+                setActiveIndex((prev) =>
+                    filtered.length === 0 ? 0 : (prev + 1) % filtered.length,
+                );
                 return;
             }
             if (event.key === 'ArrowUp') {
                 event.preventDefault();
-                setActiveIndex((prev) => (filtered.length === 0 ? 0 : (prev - 1 + filtered.length) % filtered.length));
+                setActiveIndex((prev) =>
+                    filtered.length === 0 ? 0 : (prev - 1 + filtered.length) % filtered.length,
+                );
                 return;
             }
             if (event.key === 'Enter') {
@@ -115,7 +119,9 @@ export function GlobalActionPalette({ open, actions, onClose }: GlobalActionPale
                                 <button
                                     type="button"
                                     className={`ms-focus w-full rounded-[10px] px-3 py-2.5 text-left transition ${
-                                        index === activeIndex ? 'bg-[var(--color-success)]' : 'hover:bg-[var(--color-chip)]'
+                                        index === activeIndex
+                                            ? 'bg-[var(--color-success)]'
+                                            : 'hover:bg-[var(--color-chip)]'
                                     }`}
                                     onClick={() => {
                                         action.run();
@@ -137,7 +143,9 @@ export function GlobalActionPalette({ open, actions, onClose }: GlobalActionPale
                         ))}
                     </ul>
                     {filtered.length === 0 ? (
-                        <p className="px-3 py-4 text-sm text-[var(--color-ink-muted)]">Keine Aktion gefunden.</p>
+                        <p className="px-3 py-4 text-sm text-[var(--color-ink-muted)]">
+                            Keine Aktion gefunden.
+                        </p>
                     ) : null}
                 </div>
             </div>

@@ -13,7 +13,9 @@ export function FavoritesPage() {
 
             <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
                 <div>
-                    <h1 className="font-display text-[32px] leading-[1.02] font-bold tracking-[-0.03em] sm:text-[40px]">Favoriten</h1>
+                    <h1 className="font-display text-[32px] leading-[1.02] font-bold tracking-[-0.03em] sm:text-[40px]">
+                        Favoriten
+                    </h1>
                     <p className="mt-2 max-w-[48ch] text-[15px] leading-relaxed text-[var(--color-ink-soft)] sm:text-[16px]">
                         Deine gemerkten Tools — ein Klick und du bist direkt im Werkzeug.
                     </p>
@@ -28,11 +30,19 @@ export function FavoritesPage() {
             {favoriteTools.length === 0 ? (
                 <div className="mt-10 rounded-[16px] border-2 border-black bg-white p-8 text-center shadow-brutal md:p-12">
                     <span className="inline-flex h-14 w-14 items-center justify-center rounded-[12px] border-2 border-black bg-[var(--color-chip)]">
-                        <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="black" strokeWidth="2">
+                        <svg
+                            viewBox="0 0 24 24"
+                            className="h-7 w-7"
+                            fill="none"
+                            stroke="black"
+                            strokeWidth="2"
+                        >
                             <path d="M12 3.8l2.68 5.43 5.99.87-4.33 4.22 1.02 5.96L12 17.43l-5.36 2.83 1.02-5.96-4.33-4.22 5.99-.87z" />
                         </svg>
                     </span>
-                    <h2 className="mt-4 font-display text-[22px] font-bold tracking-[-0.02em]">Noch keine Favoriten</h2>
+                    <h2 className="mt-4 font-display text-[22px] font-bold tracking-[-0.02em]">
+                        Noch keine Favoriten
+                    </h2>
                     <p className="mx-auto mt-2 max-w-[40ch] text-[15px] text-[var(--color-ink-soft)]">
                         Markiere Tools mit dem Stern — sie erscheinen hier für schnellen Zugriff.
                     </p>
@@ -86,18 +96,30 @@ function FavoriteToolCard({
                 onClick={onOpen}
                 className="ms-focus flex flex-1 flex-col p-5 text-left"
             >
-                <span className="font-display text-[20px] font-bold tracking-[-0.02em]">{title}</span>
-                <span className="mt-2 line-clamp-2 text-[14px] leading-relaxed text-[var(--color-ink-soft)]">{sub}</span>
+                <span className="font-display text-[20px] font-bold tracking-[-0.02em]">
+                    {title}
+                </span>
+                <span className="mt-2 line-clamp-2 text-[14px] leading-relaxed text-[var(--color-ink-soft)]">
+                    {sub}
+                </span>
                 <span className="mt-4 inline-flex items-center gap-1.5 font-display text-[13px] font-semibold">
                     Tool öffnen
-                    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.4">
+                    <svg
+                        viewBox="0 0 24 24"
+                        className="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.4"
+                    >
                         <path d="M5 12h14" />
                         <path d="M13 6l6 6-6 6" />
                     </svg>
                 </span>
             </button>
             <div className="flex items-center justify-between border-t-2 border-black px-4 py-2.5">
-                <span className="font-mono text-[11px] text-[var(--color-ink-muted)]">{toolId}</span>
+                <span className="font-mono text-[11px] text-[var(--color-ink-muted)]">
+                    {toolId}
+                </span>
                 <button
                     type="button"
                     aria-label={starred ? 'Favorit entfernen' : 'Als Favorit markieren'}

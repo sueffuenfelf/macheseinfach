@@ -16,7 +16,8 @@ export function PlannedTool({ tool }: PlannedToolProps) {
             <ResultCard tone="info" heading="Bald verfügbar">
                 <p className="text-[14px]">{tool.sub}</p>
                 <p className="text-[14px]">
-                    Wir arbeiten an diesem Werkzeug. Trag dich ein und wir sagen Bescheid, sobald es soweit ist.
+                    Wir arbeiten an diesem Werkzeug. Trag dich ein und wir sagen Bescheid, sobald es
+                    soweit ist.
                 </p>
                 <div className="flex flex-col gap-2 sm:flex-row">
                     <input

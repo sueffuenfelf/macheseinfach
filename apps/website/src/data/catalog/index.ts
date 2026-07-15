@@ -1,7 +1,15 @@
 import { areaOrder, areas } from './areas';
 import { stories } from './stories';
-import { catalogTags, groupCatalogTags, TAG_GROUP_ORDER, type CatalogTagDefinition, type TagGroupId, type TagGroupSection } from './tags';
+import {
+    catalogTags,
+    groupCatalogTags,
+    TAG_GROUP_ORDER,
+    type CatalogTagDefinition,
+    type TagGroupId,
+    type TagGroupSection,
+} from './tags';
 import { tools } from './tools';
+import { getVariantStoryBySlug } from './variant-stories';
 import type {
     AreaDefinition,
     AreaId,
@@ -52,7 +60,9 @@ export function getAreaBySlug(slug: string): AreaDefinition | undefined {
 }
 
 export function getStoryBySlug(slug: string): UserStory | undefined {
-    return Object.values(stories).find((s) => s.slug === slug);
+    const catalogStory = Object.values(stories).find((s) => s.slug === slug);
+    if (catalogStory) return catalogStory;
+    return getVariantStoryBySlug(slug);
 }
 
 export function getToolBySlug(slug: string): ToolDefinition | undefined {

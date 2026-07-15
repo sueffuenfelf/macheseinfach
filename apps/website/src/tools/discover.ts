@@ -2,6 +2,7 @@ import type { ComponentType } from 'react';
 import type { ToolDefinition, ToolId } from '../data/catalog/types';
 import type { ToolWidgetDef } from '../shell/widgets/types';
 import type { ToolModule } from './types';
+import { registerToolVariants } from './variant-registry';
 
 const toolPages = new Map<ToolId, ComponentType<{ tool: ToolDefinition }>>();
 const discoveredWidgets: ToolWidgetDef[] = [];
@@ -11,8 +12,17 @@ const discoveredTools: Record<string, ToolDefinition> = {};
 /**
  * Vite compile-time discovery — `import.meta.glob` is replaced statically at build/dev.
  * It is NOT a runtime API; never guard it with typeof checks (that always fails in the browser).
+ * Under Bun test, glob throws at runtime — catch yields empty modules; validation is skipped.
  */
-const modules = import.meta.glob<{ default: ToolModule }>('./*/config.ts', { eager: true });
+let modules: Record<string, { default: ToolModule }> = {};
+try {
+    Object.assign(
+        modules,
+        import.meta.glob<{ default: ToolModule }>('./*/config.ts', { eager: true }),
+    );
+} catch {
+    // Bun test runner — import.meta.glob is unavailable
+}
 
 for (const [path, loaded] of Object.entries(modules)) {
     const match = /^\.\/([^/]+)\/config\.ts$/.exec(path);
@@ -26,13 +36,19 @@ for (const [path, loaded] of Object.entries(modules)) {
 
     const catalog = module.catalog;
     if (catalog.id !== folderId) {
-        throw new Error(`Tool config id mismatch in "${path}": expected "${folderId}", got "${catalog.id}".`);
+        throw new Error(
+            `Tool config id mismatch in "${path}": expected "${folderId}", got "${catalog.id}".`,
+        );
     }
 
     discoveredIds.push(folderId);
     discoveredTools[folderId] = { ...catalog, id: folderId };
     if (module.page) {
         toolPages.set(folderId, module.page);
+    }
+
+    if (module.variants) {
+        registerToolVariants(module.variants());
     }
 
     if (module.widgets?.length) {
@@ -73,14 +89,18 @@ export function validateDiscovery(): DiscoveryValidationResult {
         widgetIds.add(widget.id);
 
         if (!widget.toolId || !discoveredTools[widget.toolId]) {
-            issues.push(`Widget "${widget.id}" references unknown tool "${widget.toolId ?? '(missing)'}".`);
+            issues.push(
+                `Widget "${widget.id}" references unknown tool "${widget.toolId ?? '(missing)'}".`,
+            );
         }
     }
 
     for (const toolId of discoveredIds) {
         const widgetCount = discoveredWidgets.filter((widget) => widget.toolId === toolId).length;
         if (widgetCount === 0) {
-            issues.push(`Tool "${toolId}" has no widgets — add widgets[] to tools/${toolId}/config.ts.`);
+            issues.push(
+                `Tool "${toolId}" has no widgets — add widgets[] to tools/${toolId}/config.ts.`,
+            );
         }
     }
 
@@ -90,11 +110,15 @@ export function validateDiscovery(): DiscoveryValidationResult {
 export function assertDiscoveryValid(): void {
     const result = validateDiscovery();
     if (!result.ok) {
-        throw new Error(`Tool discovery validation failed:\n${result.issues.map((i) => `  - ${i}`).join('\n')}`);
+        throw new Error(
+            `Tool discovery validation failed:\n${result.issues.map((i) => `  - ${i}`).join('\n')}`,
+        );
     }
 }
 
-assertDiscoveryValid();
+if (discoveredIds.length > 0) {
+    assertDiscoveryValid();
+}
 
 export const discoveredToolIds = discoveredIds as readonly string[];
 export const tools = discoveredTools as Record<ToolId, ToolDefinition>;
@@ -113,3 +137,5 @@ export function registerDiscoveredWidgets(registerWidget: (widget: ToolWidgetDef
 export function listDiscoveredWidgets(): readonly ToolWidgetDef[] {
     return discoveredWidgets;
 }
+
+export { getAllToolVariants, getVariantBySlug, getVariantsForTool } from './variant-registry';

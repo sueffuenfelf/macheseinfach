@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { LIVE_FORMAT_IDS, getFormat } from '../../tools/_shared/image/formats';
+import type { WidgetImageStepOptions } from '../workspaces/image-step-options';
 import type { WidgetPasswordOptions } from '../workspaces/model';
 import { SettingsToggleRow } from './SettingsToggleRow';
 import type { ToolWidgetDef, WidgetValuePort } from './types';
@@ -29,6 +31,10 @@ type WidgetSettingsPopoverProps = {
     }[];
     selectedLinks?: WorkspaceWidgetLinkInput[];
     onSelectedLinksChange?: (links: WorkspaceWidgetLinkInput[]) => void;
+    imageStepOptions?: WidgetImageStepOptions;
+    onImageStepOptionsChange?: (options: WidgetImageStepOptions) => void;
+    useLinkedArtifactInput?: boolean;
+    onUseLinkedArtifactInputChange?: (value: boolean) => void;
 };
 
 type PopoverPosition = {
@@ -40,7 +46,10 @@ function clampPopoverPosition(anchor: DOMRect, popoverHeight: number): PopoverPo
     let top = anchor.bottom + POPOVER_GAP;
     let left = anchor.right - POPOVER_WIDTH;
 
-    left = Math.max(VIEWPORT_PADDING, Math.min(left, window.innerWidth - POPOVER_WIDTH - VIEWPORT_PADDING));
+    left = Math.max(
+        VIEWPORT_PADDING,
+        Math.min(left, window.innerWidth - POPOVER_WIDTH - VIEWPORT_PADDING),
+    );
 
     if (top + popoverHeight > window.innerHeight - VIEWPORT_PADDING) {
         const flippedTop = anchor.top - POPOVER_GAP - popoverHeight;
@@ -59,7 +68,8 @@ function clampPasswordLength(value: number): number {
 }
 
 function countEnabledCharTypes(options: WidgetPasswordOptions): number {
-    return [options.uppercase, options.lowercase, options.numbers, options.symbols].filter(Boolean).length;
+    return [options.uppercase, options.lowercase, options.numbers, options.symbols].filter(Boolean)
+        .length;
 }
 
 const PASSWORD_CHAR_TYPES: {
@@ -182,6 +192,311 @@ export function PasswordCharTypesInline({
     );
 }
 
+const IMAGE_FILE_DROP_WIDGET_ID = 'widget-image-file-drop';
+
+function ImageFormatSelect({
+    id,
+    label,
+    value,
+    onChange,
+}: {
+    id: string;
+    label: string;
+    value: string;
+    onChange: (value: string) => void;
+}) {
+    return (
+        <label className="widget-settings__field">
+            <span className="widget-settings__label">{label}</span>
+            <select
+                id={id}
+                className="ms-input mt-1 text-[12px]"
+                value={value}
+                onChange={(event) => onChange(event.target.value)}
+            >
+                {LIVE_FORMAT_IDS.map((formatId) => (
+                    <option key={formatId} value={formatId}>
+                        {getFormat(formatId).label}
+                    </option>
+                ))}
+            </select>
+        </label>
+    );
+}
+
+function ImageStepOptionsFields({
+    options,
+    onChange,
+}: {
+    options: WidgetImageStepOptions;
+    onChange: (next: WidgetImageStepOptions) => void;
+}) {
+    switch (options.kind) {
+        case 'convert':
+            return (
+                <fieldset className="widget-settings__fieldset">
+                    <legend className="widget-settings__legend">Konvertierung</legend>
+                    <p className="text-[11px] leading-[1.4] text-[var(--color-ink-soft)]">
+                        Das Quellformat wird automatisch aus der Datei erkannt.
+                    </p>
+                    <div className="mt-2 space-y-2">
+                        <ImageFormatSelect
+                            id="image-convert-to"
+                            label="Zielformat"
+                            value={options.convertTo ?? 'jpg'}
+                            onChange={(convertTo) =>
+                                onChange({
+                                    ...options,
+                                    convertTo: convertTo as WidgetImageStepOptions['convertTo'],
+                                })
+                            }
+                        />
+                    </div>
+                </fieldset>
+            );
+        case 'compress':
+            return (
+                <fieldset className="widget-settings__fieldset">
+                    <legend className="widget-settings__legend">Komprimierung</legend>
+                    <div className="space-y-2">
+                        <div className="widget-settings__field">
+                            <span className="widget-settings__label">Qualität (%)</span>
+                            <div className="widget-password__stepper-group widget-settings__stepper">
+                                <button
+                                    type="button"
+                                    className="widget-password__step"
+                                    aria-label="Qualität verringern"
+                                    disabled={(options.compressQuality ?? 82) <= 10}
+                                    onClick={() =>
+                                        onChange({
+                                            ...options,
+                                            compressQuality: Math.max(
+                                                10,
+                                                (options.compressQuality ?? 82) - 5,
+                                            ),
+                                        })
+                                    }
+                                >
+                                    −
+                                </button>
+                                <span className="widget-password__value" aria-live="polite">
+                                    {options.compressQuality ?? 82}
+                                </span>
+                                <button
+                                    type="button"
+                                    className="widget-password__step"
+                                    aria-label="Qualität erhöhen"
+                                    disabled={(options.compressQuality ?? 82) >= 100}
+                                    onClick={() =>
+                                        onChange({
+                                            ...options,
+                                            compressQuality: Math.min(
+                                                100,
+                                                (options.compressQuality ?? 82) + 5,
+                                            ),
+                                        })
+                                    }
+                                >
+                                    +
+                                </button>
+                            </div>
+                        </div>
+                        <ImageFormatSelect
+                            id="image-compress-format"
+                            label="Ausgabeformat"
+                            value={options.compressFormat ?? 'jpg'}
+                            onChange={(compressFormat) =>
+                                onChange({
+                                    ...options,
+                                    compressFormat:
+                                        compressFormat as WidgetImageStepOptions['compressFormat'],
+                                })
+                            }
+                        />
+                    </div>
+                </fieldset>
+            );
+        case 'resize':
+            return (
+                <fieldset className="widget-settings__fieldset">
+                    <legend className="widget-settings__legend">Skalierung</legend>
+                    <div className="space-y-2">
+                        <div className="widget-settings__field">
+                            <span className="widget-settings__label">Max. Breite (px)</span>
+                            <input
+                                type="number"
+                                min={64}
+                                max={8192}
+                                className="ms-input mt-1 text-[12px]"
+                                value={options.resizeMaxWidth ?? 1920}
+                                onChange={(event) =>
+                                    onChange({
+                                        ...options,
+                                        resizeMaxWidth: Number(event.target.value) || 1920,
+                                    })
+                                }
+                            />
+                        </div>
+                        <div className="widget-settings__field">
+                            <span className="widget-settings__label">Max. Höhe (px)</span>
+                            <input
+                                type="number"
+                                min={64}
+                                max={8192}
+                                className="ms-input mt-1 text-[12px]"
+                                value={options.resizeMaxHeight ?? 1920}
+                                onChange={(event) =>
+                                    onChange({
+                                        ...options,
+                                        resizeMaxHeight: Number(event.target.value) || 1920,
+                                    })
+                                }
+                            />
+                        </div>
+                        <ImageFormatSelect
+                            id="image-resize-format"
+                            label="Ausgabeformat"
+                            value={options.resizeFormat ?? 'jpg'}
+                            onChange={(resizeFormat) =>
+                                onChange({
+                                    ...options,
+                                    resizeFormat:
+                                        resizeFormat as WidgetImageStepOptions['resizeFormat'],
+                                })
+                            }
+                        />
+                    </div>
+                </fieldset>
+            );
+        case 'exif-strip':
+            return (
+                <fieldset className="widget-settings__fieldset">
+                    <legend className="widget-settings__legend">Metadaten</legend>
+                    <ImageFormatSelect
+                        id="image-exif-format"
+                        label="Ausgabeformat"
+                        value={options.exifFormat ?? 'jpg'}
+                        onChange={(exifFormat) =>
+                            onChange({
+                                ...options,
+                                exifFormat: exifFormat as WidgetImageStepOptions['exifFormat'],
+                            })
+                        }
+                    />
+                </fieldset>
+            );
+    }
+}
+
+function ImageArtifactOutputFields({ widget }: { widget: ToolWidgetDef }) {
+    const ports = widget.outputPorts ?? [];
+    if (ports.length === 0) return null;
+    return (
+        <fieldset className="widget-settings__fieldset">
+            <legend className="widget-settings__legend">Ausgänge für Verknüpfungen</legend>
+            <p className="text-[11px] leading-[1.4] text-[var(--color-ink-soft)]">
+                Nachgelagerte Widgets können diese Ausgänge als Bild-Eingang nutzen.
+            </p>
+            <ul className="mt-2 space-y-1">
+                {ports.map((port) => (
+                    <li
+                        key={port.id}
+                        className="rounded-[8px] border-2 border-black bg-white px-2 py-1 text-[12px]"
+                    >
+                        <span className="font-semibold">{port.label}</span>
+                        <span className="ml-1 text-[10px] text-[var(--color-ink-muted)]">
+                            ({port.id})
+                        </span>
+                    </li>
+                ))}
+            </ul>
+        </fieldset>
+    );
+}
+
+function ImageArtifactLinkFields({
+    sourceWidgets,
+    selectedLinks,
+    onSelectedLinksChange,
+    useLinkedArtifactInput,
+    onUseLinkedArtifactInputChange,
+}: {
+    sourceWidgets: {
+        id: string;
+        title: string;
+        ports: readonly { id: WidgetValuePort; label: string }[];
+    }[];
+    selectedLinks: WorkspaceWidgetLinkInput[];
+    onSelectedLinksChange: (links: WorkspaceWidgetLinkInput[]) => void;
+    useLinkedArtifactInput?: boolean;
+    onUseLinkedArtifactInputChange?: (value: boolean) => void;
+}) {
+    const artifactSources = sourceWidgets.filter((entry) =>
+        entry.ports.some((port) => port.id === 'imageArtifact'),
+    );
+    const artifactLink = selectedLinks.find((link) => link.sourcePort === 'imageArtifact');
+    const textLinks = selectedLinks.filter((link) => link.sourcePort !== 'imageArtifact');
+
+    function setArtifactLink(sourceWidgetId: string) {
+        onSelectedLinksChange([
+            ...textLinks,
+            { sourceWidgetId, sourcePort: 'imageArtifact' },
+        ]);
+    }
+
+    function clearArtifactLink() {
+        onSelectedLinksChange(textLinks);
+    }
+
+    return (
+        <fieldset className="widget-settings__fieldset">
+            <legend className="widget-settings__legend">Bild-Eingang</legend>
+            {onUseLinkedArtifactInputChange ? (
+                <SettingsToggleRow
+                    id="image-linked-artifact-input"
+                    title="Verknüpften Eingang nutzen"
+                    description="Verarbeitet Bild-Artefakte von einem vorgelagerten Widget automatisch."
+                    checked={useLinkedArtifactInput ?? true}
+                    onChange={onUseLinkedArtifactInputChange}
+                />
+            ) : null}
+            <p className="mt-2 text-[11px] leading-[1.4] text-[var(--color-ink-soft)]">
+                Wähle das Widget, dessen Bild-Artefakt als Eingabe dient.
+            </p>
+            <div className="mt-2 space-y-2">
+                <label className="block text-[10px] font-semibold uppercase text-[var(--color-ink-muted)]">
+                    Quelle
+                </label>
+                <select
+                    className="ms-input text-[12px]"
+                    value={artifactLink?.sourceWidgetId ?? ''}
+                    disabled={artifactSources.length === 0}
+                    onChange={(event) => {
+                        const value = event.target.value;
+                        if (!value) {
+                            clearArtifactLink();
+                            return;
+                        }
+                        setArtifactLink(value);
+                    }}
+                >
+                    <option value="">Keine Quelle</option>
+                    {artifactSources.map((entry) => (
+                        <option key={entry.id} value={entry.id}>
+                            {entry.title}
+                        </option>
+                    ))}
+                </select>
+                {artifactSources.length === 0 ? (
+                    <p className="text-[11px] text-[var(--color-ink-soft)]">
+                        Kein Widget mit Bild-Artefakt-Ausgang im Arbeitsbereich.
+                    </p>
+                ) : null}
+            </div>
+        </fieldset>
+    );
+}
+
 function WidgetSettingsPanel({
     widget,
     passwordOptions,
@@ -192,17 +507,47 @@ function WidgetSettingsPanel({
     sourceWidgets = [],
     selectedLinks = [],
     onSelectedLinksChange,
+    imageStepOptions,
+    onImageStepOptionsChange,
+    useLinkedArtifactInput,
+    onUseLinkedArtifactInputChange,
 }: Omit<WidgetSettingsPopoverProps, 'open' | 'onOpenChange'>) {
     const isPassword = widget.id === PASSWORD_WIDGET_ID;
+    const isImageFileDrop = widget.id === IMAGE_FILE_DROP_WIDGET_ID;
+    const isImageStep = Boolean(widget.imageStepKind);
     const supportsShared = Boolean(widget.supportsSharedInput);
     const supportsLinkedInput = Boolean(widget.supportsLinkedInput);
+    const hasImageArtifactOutput = Boolean(
+        widget.outputPorts?.some((port) => port.id === 'imageArtifact'),
+    );
+    const hasImageSettings =
+        isImageFileDrop || isImageStep || (hasImageArtifactOutput && !supportsLinkedInput);
+    const showTextLinking =
+        advancedLinkingEnabled && supportsLinkedInput && !isImageStep && onSelectedLinksChange;
+    const showImageLinking =
+        advancedLinkingEnabled &&
+        isImageStep &&
+        onSelectedLinksChange &&
+        onUseLinkedArtifactInputChange;
 
-    if (!isPassword && !supportsShared && !(advancedLinkingEnabled && supportsLinkedInput)) {
-        return <p className="widget-settings__empty">Für dieses Widget gibt es noch keine Einstellungen.</p>;
+    if (
+        !isPassword &&
+        !supportsShared &&
+        !showTextLinking &&
+        !showImageLinking &&
+        !hasImageSettings
+    ) {
+        return (
+            <p className="widget-settings__empty">
+                Für dieses Widget gibt es noch keine Einstellungen.
+            </p>
+        );
     }
 
     function updateLink(index: number, patch: Partial<WorkspaceWidgetLinkInput>) {
-        const next = selectedLinks.map((entry, current) => (current === index ? { ...entry, ...patch } : entry));
+        const next = selectedLinks.map((entry, current) =>
+            current === index ? { ...entry, ...patch } : entry,
+        );
         onSelectedLinksChange?.(next);
     }
 
@@ -214,7 +559,10 @@ function WidgetSettingsPanel({
         const firstWidget = sourceWidgets[0];
         const firstPort = firstWidget?.ports[0];
         if (!firstWidget || !firstPort) return;
-        onSelectedLinksChange?.([...selectedLinks, { sourceWidgetId: firstWidget.id, sourcePort: firstPort.id }]);
+        onSelectedLinksChange?.([
+            ...selectedLinks,
+            { sourceWidgetId: firstWidget.id, sourcePort: firstPort.id },
+        ]);
     }
 
     return (
@@ -223,9 +571,14 @@ function WidgetSettingsPanel({
                 <>
                     <PasswordLengthField
                         length={passwordOptions.length}
-                        onChange={(length) => onPasswordOptionsChange({ ...passwordOptions, length })}
+                        onChange={(length) =>
+                            onPasswordOptionsChange({ ...passwordOptions, length })
+                        }
                     />
-                    <PasswordCharTypeFields options={passwordOptions} onChange={onPasswordOptionsChange} />
+                    <PasswordCharTypeFields
+                        options={passwordOptions}
+                        onChange={onPasswordOptionsChange}
+                    />
                 </>
             ) : null}
             {supportsShared && onUseSharedInputChange ? (
@@ -237,7 +590,31 @@ function WidgetSettingsPanel({
                     onChange={onUseSharedInputChange}
                 />
             ) : null}
-            {advancedLinkingEnabled && supportsLinkedInput && onSelectedLinksChange ? (
+            {imageStepOptions && onImageStepOptionsChange ? (
+                <ImageStepOptionsFields
+                    options={imageStepOptions}
+                    onChange={onImageStepOptionsChange}
+                />
+            ) : null}
+            {showImageLinking ? (
+                <ImageArtifactLinkFields
+                    sourceWidgets={sourceWidgets}
+                    selectedLinks={selectedLinks}
+                    onSelectedLinksChange={onSelectedLinksChange}
+                    useLinkedArtifactInput={useLinkedArtifactInput}
+                    onUseLinkedArtifactInputChange={onUseLinkedArtifactInputChange}
+                />
+            ) : null}
+            {!advancedLinkingEnabled && isImageStep ? (
+                <p className="rounded-[8px] border-2 border-black bg-[var(--color-brand-soft)] px-2 py-2 text-[11px] leading-[1.4] text-[var(--color-ink-soft)]">
+                    Aktiviere unter Einstellungen „Erweiterte Widget-Verknüpfungen", um
+                    Bild-Eingänge von anderen Widgets zu verbinden.
+                </p>
+            ) : null}
+            {(isImageFileDrop || (hasImageArtifactOutput && !isImageStep)) ? (
+                <ImageArtifactOutputFields widget={widget} />
+            ) : null}
+            {showTextLinking ? (
                 <fieldset className="widget-settings__fieldset">
                     <legend className="widget-settings__legend">Verknüpfte Eingänge</legend>
                     <p className="text-[11px] leading-[1.4] text-[var(--color-ink-soft)]">
@@ -245,10 +622,15 @@ function WidgetSettingsPanel({
                     </p>
                     <div className="mt-2 space-y-2">
                         {selectedLinks.map((link, index) => {
-                            const sourceWidget = sourceWidgets.find((entry) => entry.id === link.sourceWidgetId) ?? sourceWidgets[0];
+                            const sourceWidget =
+                                sourceWidgets.find((entry) => entry.id === link.sourceWidgetId) ??
+                                sourceWidgets[0];
                             const ports = sourceWidget?.ports ?? [];
                             return (
-                                <div key={`${link.sourceWidgetId}:${link.sourcePort}:${index}`} className="rounded-[8px] border-2 border-black bg-white p-2">
+                                <div
+                                    key={`${link.sourceWidgetId}:${link.sourcePort}:${index}`}
+                                    className="rounded-[8px] border-2 border-black bg-white p-2"
+                                >
                                     <label className="block text-[10px] font-semibold uppercase text-[var(--color-ink-muted)]">
                                         Quelle
                                     </label>
@@ -256,7 +638,9 @@ function WidgetSettingsPanel({
                                         className="ms-input mt-1 text-[12px]"
                                         value={sourceWidget?.id ?? ''}
                                         onChange={(event) => {
-                                            const nextWidget = sourceWidgets.find((entry) => entry.id === event.target.value);
+                                            const nextWidget = sourceWidgets.find(
+                                                (entry) => entry.id === event.target.value,
+                                            );
                                             updateLink(index, {
                                                 sourceWidgetId: event.target.value,
                                                 sourcePort: nextWidget?.ports[0]?.id ?? 'value',
@@ -276,7 +660,12 @@ function WidgetSettingsPanel({
                                         <select
                                             className="ms-input text-[12px]"
                                             value={link.sourcePort}
-                                            onChange={(event) => updateLink(index, { sourcePort: event.target.value as WidgetValuePort })}
+                                            onChange={(event) =>
+                                                updateLink(index, {
+                                                    sourcePort: event.target
+                                                        .value as WidgetValuePort,
+                                                })
+                                            }
                                         >
                                             {ports.map((port) => (
                                                 <option key={port.id} value={port.id}>
@@ -284,14 +673,23 @@ function WidgetSettingsPanel({
                                                 </option>
                                             ))}
                                         </select>
-                                        <button type="button" className="ms-btn px-2 py-1 text-[11px]" onClick={() => removeLink(index)}>
+                                        <button
+                                            type="button"
+                                            className="ms-btn px-2 py-1 text-[11px]"
+                                            onClick={() => removeLink(index)}
+                                        >
                                             Entfernen
                                         </button>
                                     </div>
                                 </div>
                             );
                         })}
-                        <button type="button" className="ms-btn w-full py-1 text-[12px]" disabled={sourceWidgets.length === 0} onClick={addLink}>
+                        <button
+                            type="button"
+                            className="ms-btn w-full py-1 text-[12px]"
+                            disabled={sourceWidgets.length === 0}
+                            onClick={addLink}
+                        >
                             Quelle hinzufügen
                         </button>
                     </div>
@@ -313,6 +711,10 @@ export function WidgetSettingsPopover({
     sourceWidgets,
     selectedLinks,
     onSelectedLinksChange,
+    imageStepOptions,
+    onImageStepOptionsChange,
+    useLinkedArtifactInput,
+    onUseLinkedArtifactInputChange,
 }: WidgetSettingsPopoverProps) {
     const panelId = useId();
     const anchorRef = useRef<HTMLButtonElement>(null);
@@ -331,7 +733,17 @@ export function WidgetSettingsPopover({
     useLayoutEffect(() => {
         if (!open) return;
         updatePosition();
-    }, [open, updatePosition, passwordOptions, useSharedInput, widget.id, selectedLinks, advancedLinkingEnabled]);
+    }, [
+        open,
+        updatePosition,
+        passwordOptions,
+        useSharedInput,
+        widget.id,
+        selectedLinks,
+        advancedLinkingEnabled,
+        imageStepOptions,
+        useLinkedArtifactInput,
+    ]);
 
     useEffect(() => {
         if (!open) return;
@@ -372,7 +784,14 @@ export function WidgetSettingsPopover({
                 aria-controls={open ? panelId : undefined}
                 onClick={() => onOpenChange(!open)}
             >
-                <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                <svg
+                    viewBox="0 0 24 24"
+                    className="h-3.5 w-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    aria-hidden
+                >
                     <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" />
                     <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" />
                 </svg>
@@ -388,7 +807,9 @@ export function WidgetSettingsPopover({
                           style={{ top: position.top, left: position.left }}
                       >
                           <header className="widget-settings__header">
-                              <span className="font-display text-[12px] font-bold">Einstellungen</span>
+                              <span className="font-display text-[12px] font-bold">
+                                  Einstellungen
+                              </span>
                               <button
                                   type="button"
                                   className="widget-settings__close"
@@ -408,6 +829,10 @@ export function WidgetSettingsPopover({
                               sourceWidgets={sourceWidgets}
                               selectedLinks={selectedLinks}
                               onSelectedLinksChange={onSelectedLinksChange}
+                              imageStepOptions={imageStepOptions}
+                              onImageStepOptionsChange={onImageStepOptionsChange}
+                              useLinkedArtifactInput={useLinkedArtifactInput}
+                              onUseLinkedArtifactInputChange={onUseLinkedArtifactInputChange}
                           />
                       </div>,
                       document.body,

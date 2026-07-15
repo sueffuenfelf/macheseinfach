@@ -54,7 +54,11 @@ export function Breadcrumb() {
     return (
         <nav className="mx-auto w-full max-w-[1040px] px-4 py-4 md:px-6" aria-label="Pfad">
             <div className="flex flex-wrap items-center gap-2 font-display text-[13px] font-semibold">
-                <Pill label={areaLabel} active={page === 'area'} to={page === 'area' ? undefined : areaTo} />
+                <Pill
+                    label={areaLabel}
+                    active={page === 'area'}
+                    to={page === 'area' ? undefined : areaTo}
+                />
                 <span className="text-[var(--color-ink-muted)]" aria-hidden>
                     ›
                 </span>

@@ -17,7 +17,9 @@ export function runEnvCheck(): number {
     console.log(`age-keygen: ${hasAge ? 'ok' : 'missing'}`);
     const root = findRepoRoot();
     const ageKey = join(root, '.kounds/age.key');
-    console.log(`.kounds/age.key: ${existsSync(ageKey) ? 'ok' : 'missing (run age-keygen -o .kounds/age.key)'}`);
+    console.log(
+        `.kounds/age.key: ${existsSync(ageKey) ? 'ok' : 'missing (run age-keygen -o .kounds/age.key)'}`,
+    );
     return hasSops && hasAge ? 0 : 1;
 }
 

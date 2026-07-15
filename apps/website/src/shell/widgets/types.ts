@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 import type { ToolId } from '../../data/catalog/types';
+import type { WidgetImageStepKind, WidgetImageStepOptions } from '../workspaces/image-step-options';
 import type { WidgetPasswordOptions } from '../workspaces/model';
 
 export type WidgetComponentProps = {
@@ -13,13 +14,30 @@ export type WidgetComponentProps = {
     /** Persisted password generator options (`widget-password-mini`). */
     passwordOptions?: WidgetPasswordOptions;
     onPasswordOptionsChange?: (options: WidgetPasswordOptions) => void;
+    /** Persisted image pipeline step options (convert/compress/resize/exif widgets). */
+    imageStepOptions?: WidgetImageStepOptions;
+    onImageStepOptionsChange?: (options: WidgetImageStepOptions) => void;
+    /** When false, linked image artifacts are ignored even if configured. */
+    useLinkedArtifactInput?: boolean;
+    /** Hint when pipeline linking is available but global advanced linking is off. */
+    pipelineLinkingHint?: boolean;
     /** Value resolved from advanced widget links (settings-gated). */
     linkedInput?: string;
     linkedSourceLabel?: string;
+    /** Upstream image artifact ID from widget links (settings-gated). */
+    linkedArtifactId?: string;
+    linkedArtifactSourceLabel?: string;
     onEmitLinkValue?: (port: WidgetValuePort, value: string) => void;
 };
 
-export type WidgetValuePort = 'input' | 'value' | 'text' | 'status' | 'fileName' | 'fileText';
+export type WidgetValuePort =
+    | 'input'
+    | 'value'
+    | 'text'
+    | 'status'
+    | 'fileName'
+    | 'fileText'
+    | 'imageArtifact';
 
 export type ToolWidgetDef = {
     id: string;
@@ -40,4 +58,6 @@ export type ToolWidgetDef = {
     supportsLinkedInput?: boolean;
     /** Optional exported value ports for advanced linking. */
     outputPorts?: readonly { id: WidgetValuePort; label: string }[];
+    /** Image pipeline step kind for per-widget settings in the gear popover. */
+    imageStepKind?: WidgetImageStepKind;
 };

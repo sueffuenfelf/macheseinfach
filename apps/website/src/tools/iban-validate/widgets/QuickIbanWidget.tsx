@@ -23,11 +23,18 @@ export function QuickIbanWidget({
         if (useSharedInput) setInput(sharedInput);
     }, [sharedInput, useSharedInput]);
 
-    const result = useMemo(() => (effectiveInput.trim() ? validateIban(effectiveInput) : null), [effectiveInput]);
+    const result = useMemo(
+        () => (effectiveInput.trim() ? validateIban(effectiveInput) : null),
+        [effectiveInput],
+    );
     const state = !effectiveInput.trim() ? null : result?.ok ? 'ok' : 'bad';
 
     const statusText =
-        state === null ? 'Prueft lokal ohne Netzwerkzugriff.' : state === 'ok' ? 'Gueltige IBAN.' : 'IBAN ist ungueltig.';
+        state === null
+            ? 'Prueft lokal ohne Netzwerkzugriff.'
+            : state === 'ok'
+              ? 'Gueltige IBAN.'
+              : 'IBAN ist ungueltig.';
 
     useEffect(() => {
         onEmitLinkValue?.('value', effectiveInput);

@@ -7,7 +7,11 @@ type WorkspaceTitleEditorProps = {
     renameRequestId?: number;
 };
 
-export function WorkspaceTitleEditor({ name, onRename, renameRequestId = 0 }: WorkspaceTitleEditorProps) {
+export function WorkspaceTitleEditor({
+    name,
+    onRename,
+    renameRequestId = 0,
+}: WorkspaceTitleEditorProps) {
     const [editing, setEditing] = useState(false);
     const [draft, setDraft] = useState(name);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -77,7 +81,13 @@ export function WorkspaceTitleEditor({ name, onRename, renameRequestId = 0 }: Wo
                         onClick={confirm}
                         aria-label="Umbenennung speichern"
                     >
-                        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <svg
+                            viewBox="0 0 24 24"
+                            className="h-4 w-4"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                        >
                             <path d="M20 6L9 17l-5-5" />
                         </svg>
                     </button>
@@ -87,7 +97,13 @@ export function WorkspaceTitleEditor({ name, onRename, renameRequestId = 0 }: Wo
                         onClick={cancel}
                         aria-label="Umbenennung abbrechen"
                     >
-                        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <svg
+                            viewBox="0 0 24 24"
+                            className="h-4 w-4"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                        >
                             <path d="M18 6L6 18M6 6l12 12" />
                         </svg>
                     </button>
@@ -105,7 +121,13 @@ export function WorkspaceTitleEditor({ name, onRename, renameRequestId = 0 }: Wo
                 onClick={startEditing}
                 aria-label="Arbeitsbereich umbenennen"
             >
-                <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg
+                    viewBox="0 0 24 24"
+                    className="h-3.5 w-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                >
                     <path d="M12 20h9" />
                     <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
                 </svg>

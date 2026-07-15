@@ -1,10 +1,7 @@
 import { yieldToMain } from './yield';
 import type { BatchItemInput, BatchProcessor, JobContext, JobRecord } from './types';
 
-export function createBatchJobRecord<T>(
-    context: JobContext,
-    items: BatchItemInput[],
-): JobRecord {
+export function createBatchJobRecord<T>(context: JobContext, items: BatchItemInput[]): JobRecord {
     const now = new Date().toISOString();
     return {
         id: crypto.randomUUID(),

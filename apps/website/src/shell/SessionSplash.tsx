@@ -8,12 +8,16 @@ type SessionSplashProps = {
 };
 
 function prefersReducedMotion(): boolean {
-    return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    return (
+        typeof window !== 'undefined' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    );
 }
 
 export function SessionSplash({ children }: SessionSplashProps) {
     const skipped = useRef(
-        typeof sessionStorage !== 'undefined' && sessionStorage.getItem('msf.session.splash.v1') === '1',
+        typeof sessionStorage !== 'undefined' &&
+            sessionStorage.getItem('msf.session.splash.v1') === '1',
     );
     const { phase, showSplash, markAnimationComplete, animationMinMs } = useSessionBootstrap();
     const [playEnter, setPlayEnter] = useState(false);

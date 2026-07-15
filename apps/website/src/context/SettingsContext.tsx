@@ -1,11 +1,4 @@
-import {
-    createContext,
-    useCallback,
-    useContext,
-    useMemo,
-    useState,
-    type ReactNode,
-} from 'react';
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 
 const STORAGE_KEY = 'macheseinfa.settings';
 
@@ -15,12 +8,15 @@ export type MacheseinfaSettings = {
     backgroundNotifications: boolean;
     /** Enables per-widget source/target links in dashboard settings. */
     advancedWidgetLinking: boolean;
+    /** Chrome Prompt API für Suche (Stage 3) — default an wenn verfügbar */
+    chromeSearchAi: boolean;
 };
 
 const DEFAULT_SETTINGS: MacheseinfaSettings = {
     autoCopyCommandResults: true,
     backgroundNotifications: false,
     advancedWidgetLinking: false,
+    chromeSearchAi: true,
 };
 
 type SettingsContextValue = {
@@ -50,6 +46,10 @@ function readSettings(): MacheseinfaSettings {
                 typeof parsed.advancedWidgetLinking === 'boolean'
                     ? parsed.advancedWidgetLinking
                     : DEFAULT_SETTINGS.advancedWidgetLinking,
+            chromeSearchAi:
+                typeof parsed.chromeSearchAi === 'boolean'
+                    ? parsed.chromeSearchAi
+                    : DEFAULT_SETTINGS.chromeSearchAi,
         };
     } catch {
         return DEFAULT_SETTINGS;

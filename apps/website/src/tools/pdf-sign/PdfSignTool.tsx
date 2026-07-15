@@ -59,7 +59,10 @@ export function PdfSignTool({ tool }: PdfSignToolProps) {
         const signW = pageSize.width * 0.28;
         const signH = pageSize.height * 0.08;
         const x = Math.max(0, Math.min(pageSize.width - signW, relX * pageSize.width - signW / 2));
-        const y = Math.max(0, Math.min(pageSize.height - signH, pageSize.height - relY * pageSize.height - signH / 2));
+        const y = Math.max(
+            0,
+            Math.min(pageSize.height - signH, pageSize.height - relY * pageSize.height - signH / 2),
+        );
         setPlacement({ x, y });
     }
 
@@ -149,18 +152,25 @@ export function PdfSignTool({ tool }: PdfSignToolProps) {
                     </div>
 
                     <section className="rounded-xl border-2 border-black bg-white p-4 shadow-brutal-sm">
-                        <p className="font-display text-[12px] font-bold uppercase tracking-[0.05em]">Unterschrift</p>
+                        <p className="font-display text-[12px] font-bold uppercase tracking-[0.05em]">
+                            Unterschrift
+                        </p>
                         <div className="mt-2">
                             <SignaturePad canvasRef={canvasRef} onChange={setHasSignature} />
                         </div>
                     </section>
 
                     <section className="rounded-xl border-2 border-black bg-white p-4 shadow-brutal-sm">
-                        <p className="font-display text-[12px] font-bold uppercase tracking-[0.05em]">Position wählen</p>
+                        <p className="font-display text-[12px] font-bold uppercase tracking-[0.05em]">
+                            Position wählen
+                        </p>
                         <div
                             ref={previewRef}
                             className="relative mt-2 cursor-crosshair overflow-hidden rounded-md border-2 border-black bg-[var(--color-chip)]"
-                            style={{ aspectRatio: `${pageSize.width} / ${pageSize.height}`, maxHeight: '420px' }}
+                            style={{
+                                aspectRatio: `${pageSize.width} / ${pageSize.height}`,
+                                maxHeight: '420px',
+                            }}
                             onClick={placeSignature}
                         >
                             {placement ? (

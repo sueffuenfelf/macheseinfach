@@ -22,7 +22,9 @@ export function PdfMergeTool({ tool }: PdfMergeToolProps) {
     const { toast } = useToast();
 
     function appendFiles(list: FileList) {
-        const pdfs = Array.from(list).filter((file) => file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf'));
+        const pdfs = Array.from(list).filter(
+            (file) => file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf'),
+        );
         if (!pdfs.length) {
             toast({ message: 'Bitte nur PDF-Dateien auswählen.', variant: 'error' });
             return;
@@ -67,7 +69,10 @@ export function PdfMergeTool({ tool }: PdfMergeToolProps) {
     }
 
     return (
-        <div className="ms-animate-fade mx-auto w-full max-w-3xl space-y-4 px-4 py-6 md:px-6" aria-busy={working}>
+        <div
+            className="ms-animate-fade mx-auto w-full max-w-3xl space-y-4 px-4 py-6 md:px-6"
+            aria-busy={working}
+        >
             <section
                 className="ms-dropzone rounded-xl p-6 text-center"
                 data-drag={dragOver}
@@ -75,11 +80,17 @@ export function PdfMergeTool({ tool }: PdfMergeToolProps) {
                 onDragLeave={onDragLeave}
                 onDrop={onDrop}
             >
-                <p className="font-display text-[20px] font-bold tracking-[-0.02em]">PDFs hierher ziehen</p>
+                <p className="font-display text-[20px] font-bold tracking-[-0.02em]">
+                    PDFs hierher ziehen
+                </p>
                 <p className="mt-2 text-[14px] text-[var(--color-ink-soft)]">
                     Reihenfolge mit ↑/↓ anpassen — mindestens zwei Dateien.
                 </p>
-                <button type="button" className="ms-btn mt-4" onClick={() => inputRef.current?.click()}>
+                <button
+                    type="button"
+                    className="ms-btn mt-4"
+                    onClick={() => inputRef.current?.click()}
+                >
                     PDFs auswählen
                 </button>
                 <input
@@ -99,7 +110,9 @@ export function PdfMergeTool({ tool }: PdfMergeToolProps) {
                             key={entry.id}
                             className="flex items-center gap-2 rounded-lg border-2 border-black bg-white px-3 py-2 shadow-brutal-sm"
                         >
-                            <span className="min-w-0 flex-1 truncate text-[14px]">{entry.file.name}</span>
+                            <span className="min-w-0 flex-1 truncate text-[14px]">
+                                {entry.file.name}
+                            </span>
                             <div className="flex shrink-0 gap-1">
                                 <button
                                     type="button"
