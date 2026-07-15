@@ -13,11 +13,11 @@ export function AreaStep() {
     const showRecent = !activeAreaId && recentTools.length > 0;
 
     return (
-        <main className="mx-auto w-full max-w-[1040px] px-4 py-8 md:px-6 md:py-11">
-            <h1 className="max-w-[16ch] font-display text-[44px] leading-[1.02] font-bold tracking-[-0.03em] text-[var(--color-ink)]">
+        <main className="mx-auto w-full max-w-[1040px] px-4 py-6 md:px-6 md:py-11">
+            <h1 className="max-w-[16ch] font-display text-[34px] leading-[1.02] font-bold tracking-[-0.03em] text-[var(--color-ink)] sm:text-[44px]">
                 Was willst du erledigen?
             </h1>
-            <p className="mt-4 max-w-[52ch] text-[17px] leading-relaxed text-[var(--color-ink-soft)]">
+            <p className="mt-3 max-w-[52ch] text-[15px] leading-relaxed text-[var(--color-ink-soft)] sm:mt-4 sm:text-[17px]">
                 Wähle erst deinen Bereich. Danach zeigen wir dir passende Situationen und öffnen das richtige Tool
                 direkt.
             </p>
@@ -33,7 +33,7 @@ export function AreaStep() {
                                 type="button"
                                 onClick={() => selectArea(id)}
                                 style={{ background: area.accent }}
-                                className={`ms-focus ms-card ms-card-hover w-full cursor-pointer p-[22px] text-left ${
+                                className={`ms-focus ms-card ms-card-hover w-full cursor-pointer p-4 text-left sm:p-[22px] ${
                                     planned ? 'opacity-[0.82]' : ''
                                 }`}
                             >
@@ -43,7 +43,7 @@ export function AreaStep() {
                                     </span>
                                     {planned ? <span className="ms-badge bg-black text-white">Geplant</span> : null}
                                 </span>
-                                <span className="mt-4 block font-display text-[24px] leading-tight font-bold tracking-[-0.02em]">
+                                <span className="mt-3 block font-display text-[21px] leading-tight font-bold tracking-[-0.02em] sm:mt-4 sm:text-[24px]">
                                     {area.label}
                                 </span>
                                 <span className="mt-2 block max-w-[34ch] text-[14.5px] leading-relaxed text-[var(--color-ink-soft)]">

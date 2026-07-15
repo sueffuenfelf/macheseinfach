@@ -1637,6 +1637,44 @@ body.workspace-grid-interacting * {
   min-height: calc(100vh - 12rem);
 }
 
+body.workspace-immersive {
+  overflow: hidden;
+}
+
+.workspace-shell--immersive {
+  min-height: 100vh;
+}
+
+@media (max-width: 767px) {
+  .workspace-dashboard:fullscreen,
+  .workspace-dashboard--fullscreen:fullscreen {
+    padding: 0.75rem;
+  }
+
+  .workspace-dashboard:fullscreen .workspace-canvas,
+  .workspace-dashboard--fullscreen:fullscreen .workspace-canvas {
+    min-height: calc(100vh - 8.5rem);
+  }
+
+  .workspace-dashboard .workspace-canvas {
+    border-radius: 10px;
+  }
+
+  .workspace-dashboard .workspace-grid-layout .react-grid-item > .react-resizable-handle {
+    width: 1.15rem;
+    height: 1.15rem;
+  }
+
+  .ms-session-splash__inner {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .ms-session-splash__logo {
+    transform: scale(0.9);
+    transform-origin: center;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

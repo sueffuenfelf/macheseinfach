@@ -31,10 +31,10 @@ export function QuickLeakWidget({ embedded, linkedInput = '', onEmitLinkValue }:
                 value={effectiveValue}
                 onChange={(event) => setValue(event.target.value)}
                 placeholder="name@beispiel.de"
-                className="ms-input text-[12px]"
+                className="ms-input min-h-11 text-[12px] sm:min-h-0"
                 disabled={Boolean(linkedValue)}
             />
-            <button type="button" className="ms-btn mt-2 w-full py-1 text-[12px]" onClick={runCheck}>
+            <button type="button" className="ms-btn mt-2 min-h-11 w-full py-1 text-[12px] sm:min-h-0" onClick={runCheck}>
                 Pruefen
             </button>
             <p className="mt-2 text-[12px] text-[var(--color-ink-soft)]">

@@ -30,7 +30,7 @@ export function StoryPickStep({ areaId }: StoryPickStepProps) {
     }, [selectStory, selectedStory]);
 
     return (
-        <main className="mx-auto w-full max-w-[1040px] px-4 py-8 md:px-6">
+        <main className="mx-auto w-full max-w-[1040px] px-4 py-6 md:px-6 md:py-8">
             <BackButton />
 
             <div className="mt-4 flex items-center gap-3">
@@ -40,9 +40,9 @@ export function StoryPickStep({ areaId }: StoryPickStepProps) {
                 >
                     <Icon svg={area.icon} size={22} />
                 </span>
-                <h1 className="font-display text-[34px] leading-[1.05] font-bold tracking-[-0.02em]">{area.label}</h1>
+                <h1 className="font-display text-[28px] leading-[1.05] font-bold tracking-[-0.02em] sm:text-[34px]">{area.label}</h1>
             </div>
-            <p className="mt-3 max-w-[62ch] text-[16px] leading-relaxed text-[var(--color-ink-soft)]">
+            <p className="mt-3 max-w-[62ch] text-[15px] leading-relaxed text-[var(--color-ink-soft)] sm:text-[16px]">
                 Wähle die Situation, die zu deinem Vorhaben passt. Wenn nur ein Tool passt, öffnen wir es direkt.
             </p>
 
@@ -156,13 +156,13 @@ export function ToolPickForStory({ storyId }: { storyId: StoryId }) {
     if (!story) return null;
 
     return (
-        <main className="mx-auto w-full max-w-[1040px] px-4 py-8 md:px-6">
+        <main className="mx-auto w-full max-w-[1040px] px-4 py-6 md:px-6 md:py-8">
             <BackButton />
 
             <SectionLabel className="mt-6">
                 {storyTools.length > 1 ? 'Mehrere Tools gefunden' : 'Tool für diese Situation'}
             </SectionLabel>
-            <h2 className="mt-2 max-w-[48ch] font-display text-[28px] leading-tight font-bold tracking-[-0.02em]">
+            <h2 className="mt-2 max-w-[48ch] font-display text-[23px] leading-tight font-bold tracking-[-0.02em] sm:text-[28px]">
                 {storyTools.length > 1
                     ? `Welches Tool passt für „${story.outcome}"?`
                     : story.outcome}

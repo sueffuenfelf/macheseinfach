@@ -50,6 +50,7 @@ export function ToolShell() {
     const [workspacePickerOpen, setWorkspacePickerOpen] = useState(false);
     const [pendingToolForWorkspace, setPendingToolForWorkspace] = useState<ReturnType<typeof getTool> | null>(null);
     const [layoutEditMode, setLayoutEditMode] = useState(false);
+    const [workspaceImmersive, setWorkspaceImmersive] = useState(false);
 
     useDismissLayer(Boolean(workspacePickerOpen && pendingToolForWorkspace), () => {
         setWorkspacePickerOpen(false);
@@ -70,6 +71,12 @@ export function ToolShell() {
         saveWorkspaceState(workspaceState);
     }, [workspaceState]);
 
+    useEffect(() => {
+        if (!workspaceImmersive) return;
+        document.body.classList.add('workspace-immersive');
+        return () => document.body.classList.remove('workspace-immersive');
+    }, [workspaceImmersive]);
+
     const activeWorkspace = useMemo(() => {
         if (page !== 'workspace') return null;
         const current = activeWorkspaceId ? workspaces.find((workspace) => workspace.slug === activeWorkspaceId) : null;
@@ -82,6 +89,20 @@ export function ToolShell() {
         const fallback = defaultWorkspace(workspaceState);
         if (fallback) platform.goToWorkspace(fallback.slug);
     }, [activeWorkspace, page, platform, workspaceState]);
+
+    useEffect(() => {
+        if (page === 'workspace') return;
+        setWorkspaceImmersive(false);
+        if (document.fullscreenElement) {
+            void document.exitFullscreen().catch(() => {
+                // Ignore browsers that reject programmatic fullscreen exit.
+            });
+        }
+    }, [page]);
+
+    useEffect(() => {
+        if (workspaceImmersive) platform.closePalette();
+    }, [platform, workspaceImmersive]);
 
     const workspaceToolIds = useMemo(() => {
         if (!activeWorkspace) return [];
@@ -223,6 +244,8 @@ export function ToolShell() {
             activeWorkspace ? (
                 <WorkspaceDashboard
                     workspace={activeWorkspace}
+                    immersiveMode={workspaceImmersive}
+                    onImmersiveModeChange={setWorkspaceImmersive}
                     layout={workspaceState.layouts[activeWorkspace.id] ?? {}}
                     layoutEditMode={layoutEditMode}
                     onLayoutChange={(nextLayout) => updateState(setWorkspaceLayout(workspaceState, activeWorkspace.id, nextLayout))}
@@ -306,13 +329,20 @@ export function ToolShell() {
         );
 
     return (
-        <div className="flex min-h-screen flex-col bg-[var(--color-canvas)] text-[var(--color-ink)]" data-shell="brutalist">
+        <div
+            className={`flex min-h-screen flex-col bg-[var(--color-canvas)] text-[var(--color-ink)] ${
+                workspaceImmersive ? 'workspace-shell--immersive' : ''
+            }`}
+            data-shell="brutalist"
+        >
+            {!workspaceImmersive ? (
             <header className="sticky top-0 z-30 border-b-2 border-black bg-white">
-                <div className="mx-auto flex w-full max-w-[1040px] items-center justify-between gap-4 px-4 py-3 md:px-6">
+                <div className="mx-auto flex w-full max-w-[1040px] flex-col gap-3 px-4 py-3 md:px-6">
+                    <div className="flex items-center justify-between gap-3">
                     <Link to={homePath()} onClick={platform.goHome} className="ms-focus text-left" aria-label="Zur Startseite">
                         <BrandLogo />
                     </Link>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center justify-end gap-2">
                         <Link to={favoritesPath()} className="ms-focus inline-flex h-10 items-center gap-1.5 rounded-[8px] border-2 border-black bg-white px-3 font-display text-[13px] font-semibold shadow-[2px_2px_0_#000] transition hover:-translate-x-[2px] hover:-translate-y-[2px] hover:shadow-brutal active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0_#000]">
                             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
                                 <path d="M12 3.8l2.68 5.43 5.99.87-4.33 4.22 1.02 5.96L12 17.43l-5.36 2.83 1.02-5.96-4.33-4.22 5.99-.87z" />
@@ -353,51 +383,57 @@ export function ToolShell() {
                         </button>
                     </div>
                 </div>
+                </div>
                 {page === 'workspace' && activeWorkspace ? (
-                    <div className="mx-auto flex w-full max-w-[1040px] items-center gap-2 overflow-x-auto border-t-2 border-black px-4 py-2 md:px-6">
-                        {workspaces.map((workspace) => (
-                            <button
-                                key={workspace.id}
-                                type="button"
-                                onClick={() => platform.goToWorkspace(workspace.slug)}
-                                className={`ms-focus shrink-0 rounded-[8px] border-2 border-black px-3 py-1.5 font-display text-[12px] font-semibold ${
-                                    workspace.id === activeWorkspace.id ? 'bg-[var(--color-brand)] text-white' : 'bg-white'
-                                }`}
-                            >
-                                {workspace.name} {workspace.isDefault ? '•' : ''}
+                    <div className="mx-auto w-full max-w-[1040px] border-t-2 border-black px-4 py-2 md:px-6">
+                        <div className="flex gap-2 overflow-x-auto pb-1">
+                            {workspaces.map((workspace) => (
+                                <button
+                                    key={workspace.id}
+                                    type="button"
+                                    onClick={() => platform.goToWorkspace(workspace.slug)}
+                                    className={`ms-focus shrink-0 rounded-[8px] border-2 border-black px-3 py-1.5 font-display text-[12px] font-semibold ${
+                                        workspace.id === activeWorkspace.id ? 'bg-[var(--color-brand)] text-white' : 'bg-white'
+                                    }`}
+                                >
+                                    {workspace.name} {workspace.isDefault ? '•' : ''}
+                                </button>
+                            ))}
+                            <button type="button" onClick={() => createNewWorkspace()} className="ms-focus shrink-0 rounded-[8px] border-2 border-black bg-white px-3 py-1.5 font-display text-[12px] font-semibold">
+                                + Neu
                             </button>
-                        ))}
-                        <button type="button" onClick={() => createNewWorkspace()} className="ms-focus shrink-0 rounded-[8px] border-2 border-black bg-white px-3 py-1.5 font-display text-[12px] font-semibold">
-                            + Neu
-                        </button>
-                        <button type="button" onClick={duplicateActiveWorkspace} className="ms-focus ml-auto shrink-0 rounded-[8px] border-2 border-black bg-white px-3 py-1.5 text-[11px] font-semibold">
-                            Duplizieren
-                        </button>
-                        <button type="button" onClick={() => updateState(setDefaultWorkspace(workspaceState, activeWorkspace.id))} className="ms-focus shrink-0 rounded-[8px] border-2 border-black bg-white px-3 py-1.5 text-[11px] font-semibold">
-                            Standard
-                        </button>
-                        <button type="button" onClick={() => moveActiveWorkspace(-1)} className="ms-focus shrink-0 rounded-[8px] border-2 border-black bg-white px-3 py-1.5 text-[11px] font-semibold" aria-label="Arbeitsbereich nach links verschieben">
-                            ←
-                        </button>
-                        <button type="button" onClick={() => moveActiveWorkspace(1)} className="ms-focus shrink-0 rounded-[8px] border-2 border-black bg-white px-3 py-1.5 text-[11px] font-semibold" aria-label="Arbeitsbereich nach rechts verschieben">
-                            →
-                        </button>
-                        <button type="button" onClick={deleteActiveWorkspace} className="ms-focus shrink-0 rounded-[8px] border-2 border-black bg-white px-3 py-1.5 text-[11px] font-semibold">
-                            Löschen
-                        </button>
+                        </div>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                            <button type="button" onClick={duplicateActiveWorkspace} className="ms-focus shrink-0 rounded-[8px] border-2 border-black bg-white px-3 py-1.5 text-[11px] font-semibold">
+                                Duplizieren
+                            </button>
+                            <button type="button" onClick={() => updateState(setDefaultWorkspace(workspaceState, activeWorkspace.id))} className="ms-focus shrink-0 rounded-[8px] border-2 border-black bg-white px-3 py-1.5 text-[11px] font-semibold">
+                                Standard
+                            </button>
+                            <button type="button" onClick={() => moveActiveWorkspace(-1)} className="ms-focus shrink-0 rounded-[8px] border-2 border-black bg-white px-3 py-1.5 text-[11px] font-semibold" aria-label="Arbeitsbereich nach links verschieben">
+                                ←
+                            </button>
+                            <button type="button" onClick={() => moveActiveWorkspace(1)} className="ms-focus shrink-0 rounded-[8px] border-2 border-black bg-white px-3 py-1.5 text-[11px] font-semibold" aria-label="Arbeitsbereich nach rechts verschieben">
+                                →
+                            </button>
+                            <button type="button" onClick={deleteActiveWorkspace} className="ms-focus shrink-0 rounded-[8px] border-2 border-black bg-white px-3 py-1.5 text-[11px] font-semibold">
+                                Löschen
+                            </button>
+                        </div>
                     </div>
                 ) : null}
             </header>
+            ) : null}
 
             {mainContent}
 
-            {paletteMode === 'workspace' ? (
+            {!workspaceImmersive ? (paletteMode === 'workspace' ? (
                 <CommandPalette open={platform.paletteOpen} toolIds={workspaceToolIds} onClose={platform.closePalette} onSelectScenario={(tool) => platform.selectTool(tool.id)} />
             ) : (
                 <GlobalActionPalette open={platform.paletteOpen} actions={globalActions} onClose={platform.closePalette} />
-            )}
-            {workspacePickerOpen && pendingToolForWorkspace ? (
-                <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+            )) : null}
+            {workspacePickerOpen && pendingToolForWorkspace && !workspaceImmersive ? (
+                <div className="fixed inset-0 z-50 flex items-end justify-center px-3 py-3 sm:items-center sm:px-4">
                     <button
                         type="button"
                         className="absolute inset-0 bg-black/35 backdrop-blur-[4px]"
@@ -407,7 +443,7 @@ export function ToolShell() {
                         }}
                         aria-label="Arbeitsbereich-Auswahl schließen"
                     />
-                    <section className="ms-animate-pop relative z-10 w-full max-w-[28rem] rounded-[16px] border-2 border-black bg-white p-4 shadow-brutal-lg">
+                    <section className="ms-animate-pop relative z-10 max-h-[88svh] w-full max-w-[28rem] overflow-y-auto rounded-[16px] border-2 border-black bg-white p-4 shadow-brutal-lg">
                         <h2 className="font-display text-[18px] font-bold">Zu welchem Arbeitsbereich?</h2>
                         <p className="mt-1 text-[13px] text-[var(--color-ink-soft)]">
                             „{pendingToolForWorkspace.shortTitle}" wird als Widget bereitgestellt.
@@ -445,6 +481,7 @@ export function ToolShell() {
                     </section>
                 </div>
             ) : null}
+            {!workspaceImmersive ? (
             <footer className="mt-auto border-t-2 border-black bg-white px-4 py-4 text-center md:px-6">
                 <p className="text-[12px] text-[var(--color-ink-soft)]">
                     Dateien bleiben auf deinem Gerät · keine Registrierung · Open Source
@@ -467,6 +504,7 @@ export function ToolShell() {
                     <span>Impressum</span>
                 </div>
             </footer>
+            ) : null}
         </div>
     );
 }

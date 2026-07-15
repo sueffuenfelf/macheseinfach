@@ -53,8 +53,8 @@ export function SessionSplash({ children }: SessionSplashProps) {
                     aria-label="macheseinfach wird geladen"
                 >
                     <div className="ms-session-splash__inner">
-                        <BrandMarkDraw size={96} className="ms-session-splash__logo" />
-                        <p className="mt-6 font-display text-[22px] font-bold tracking-[-0.02em] text-[var(--color-ink)]">
+                        <BrandMarkDraw size={84} className="ms-session-splash__logo" />
+                        <p className="mt-5 font-display text-[20px] font-bold tracking-[-0.02em] text-[var(--color-ink)] sm:mt-6 sm:text-[22px]">
                             <span>mach</span>
                             <span>es</span>
                             <span className="text-[var(--color-brand)]">einfa.ch</span>

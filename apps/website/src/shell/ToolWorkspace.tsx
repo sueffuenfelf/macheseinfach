@@ -17,7 +17,7 @@ export function ToolWorkspace({ tool, onAddToWorkspace, addToWorkspaceLabel = 'Z
 
     return (
         <div className="flex-1">
-            <main className="mx-auto w-full max-w-[1040px] px-4 pt-8 md:px-6">
+            <main className="mx-auto w-full max-w-[1040px] px-4 pt-6 md:px-6 md:pt-8">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                     <div className="min-w-0 flex-1 space-y-3">
                         <BackButton />
@@ -31,20 +31,20 @@ export function ToolWorkspace({ tool, onAddToWorkspace, addToWorkspaceLabel = 'Z
                             <div className="min-w-0">
                                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                                     <span className="ms-badge shrink-0 bg-[var(--color-chip)]">{maturityLabel(tool.maturity)}</span>
-                                    <h1 className="font-display text-[32px] leading-[1.05] font-bold tracking-[-0.02em]">
+                                    <h1 className="font-display text-[26px] leading-[1.05] font-bold tracking-[-0.02em] sm:text-[32px]">
                                         {tool.title}
                                     </h1>
                                 </div>
-                                <p className="mt-1 max-w-[60ch] text-[15px] text-[var(--color-ink-soft)]">{tool.sub}</p>
+                                <p className="mt-1 max-w-[60ch] text-[14px] text-[var(--color-ink-soft)] sm:text-[15px]">{tool.sub}</p>
                             </div>
                         </div>
                     </div>
-                    <div className="flex shrink-0 items-center gap-2">
+                    <div className="flex w-full shrink-0 items-center gap-2 sm:w-auto">
                         {onAddToWorkspace ? (
                             <button
                                 type="button"
                                 onClick={onAddToWorkspace}
-                                className="ms-btn px-3 py-2 text-[12px] font-semibold"
+                                className="ms-btn min-h-11 flex-1 px-3 py-2 text-[12px] font-semibold sm:min-h-0 sm:flex-none"
                             >
                                 {addToWorkspaceLabel}
                             </button>

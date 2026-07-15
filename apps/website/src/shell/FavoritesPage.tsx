@@ -8,13 +8,13 @@ export function FavoritesPage() {
     const favoriteTools = favorites.map((id) => getTool(id));
 
     return (
-        <main className="mx-auto w-full max-w-[1040px] px-4 py-8 md:px-6 md:py-11">
+        <main className="mx-auto w-full max-w-[1040px] px-4 py-6 md:px-6 md:py-11">
             <BackButton />
 
             <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
                 <div>
-                    <h1 className="font-display text-[40px] leading-[1.02] font-bold tracking-[-0.03em]">Favoriten</h1>
-                    <p className="mt-2 max-w-[48ch] text-[16px] leading-relaxed text-[var(--color-ink-soft)]">
+                    <h1 className="font-display text-[32px] leading-[1.02] font-bold tracking-[-0.03em] sm:text-[40px]">Favoriten</h1>
+                    <p className="mt-2 max-w-[48ch] text-[15px] leading-relaxed text-[var(--color-ink-soft)] sm:text-[16px]">
                         Deine gemerkten Tools — ein Klick und du bist direkt im Werkzeug.
                     </p>
                 </div>

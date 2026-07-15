@@ -203,7 +203,7 @@ export function CommandPalette({ open, toolIds, onClose, onSelectScenario }: Com
     const canCopy = Boolean(result && result.status !== 'error' && (result.copyText ?? result.output));
 
     return (
-        <div className="fixed inset-0 z-50 flex items-start justify-center px-4 pt-[10vh]">
+        <div className="fixed inset-0 z-50 flex items-end justify-center px-3 py-3 sm:items-start sm:px-4 sm:pt-[10vh] sm:pb-0">
             <button
                 type="button"
                 className="absolute inset-0 bg-black/35 backdrop-blur-[4px]"
@@ -264,7 +264,7 @@ export function CommandPalette({ open, toolIds, onClose, onSelectScenario }: Com
                     )}
                 </div>
 
-                <div className="max-h-[50vh] overflow-y-auto px-2 pb-3">
+                <div className="max-h-[66svh] overflow-y-auto px-2 pb-3 sm:max-h-[50vh]">
                     {result ? (
                         <div className="px-2 py-3">
                             <SectionLabel className="py-2">Ergebnis</SectionLabel>

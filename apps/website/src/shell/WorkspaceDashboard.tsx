@@ -24,6 +24,8 @@ const STAGED_WIDGET_DRAG_MIME = 'application/x-macheseinfach-widget-id';
 
 type WorkspaceDashboardProps = {
     workspace: Workspace;
+    immersiveMode?: boolean;
+    onImmersiveModeChange?: (next: boolean) => void;
     layout: WorkspaceLayoutSet;
     layoutEditMode: boolean;
     onLayoutChange: (next: WorkspaceLayoutSet) => void;
@@ -53,6 +55,8 @@ type WorkspaceDashboardProps = {
 
 export function WorkspaceDashboard({
     workspace,
+    immersiveMode = false,
+    onImmersiveModeChange,
     layout,
     layoutEditMode,
     onLayoutChange,
@@ -132,6 +136,14 @@ export function WorkspaceDashboard({
     useEffect(() => {
         void exitFullscreen();
     }, [workspace.id, exitFullscreen]);
+
+    useEffect(() => {
+        onImmersiveModeChange?.(isFullscreen);
+    }, [isFullscreen, onImmersiveModeChange]);
+
+    useEffect(() => {
+        return () => onImmersiveModeChange?.(false);
+    }, [onImmersiveModeChange]);
 
     const currentBreakpoint = gridWidth >= 1200 ? 'lg' : gridWidth >= 996 ? 'md' : gridWidth >= 768 ? 'sm' : gridWidth >= 480 ? 'xs' : 'xxs';
     const cols = currentBreakpoint === 'lg' ? 12 : currentBreakpoint === 'md' ? 10 : currentBreakpoint === 'sm' ? 6 : currentBreakpoint === 'xs' ? 4 : 2;
@@ -336,66 +348,92 @@ export function WorkspaceDashboard({
     return (
         <main
             ref={rootRef}
-            className={`workspace-dashboard mx-auto w-full max-w-[1200px] px-4 py-6 md:px-6 ${isFullscreen ? 'workspace-dashboard--fullscreen' : ''}`}
+            className={`workspace-dashboard mx-auto w-full max-w-[1200px] px-3 py-4 sm:px-4 sm:py-6 md:px-6 ${
+                isFullscreen ? 'workspace-dashboard--fullscreen' : ''
+            }`}
         >
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            {isFullscreen ? (
+                <div className="workspace-immersive-topbar mb-3 flex items-center justify-between gap-3 rounded-[12px] border-2 border-black bg-white px-3 py-2 shadow-brutal-sm">
+                    <p className="truncate font-display text-[14px] font-bold">{workspace.name}</p>
+                    <button
+                        type="button"
+                        className="ms-btn px-3 py-2 text-[12px]"
+                        onClick={() => void toggleFullscreen()}
+                        aria-label="Vollbild beenden"
+                        title="Vollbild beenden (Esc)"
+                    >
+                        Vollbild beenden
+                    </button>
+                </div>
+            ) : null}
+            <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
                 <div>
-                    <WorkspaceTitleEditor name={workspace.name} onRename={onRenameWorkspace} renameRequestId={renameRequestId} />
-                    <p className="text-[14px] text-[var(--color-ink-soft)]">
+                    {isFullscreen ? (
+                        <h1 className="font-display text-[22px] font-bold tracking-[-0.02em]">{workspace.name}</h1>
+                    ) : (
+                        <WorkspaceTitleEditor name={workspace.name} onRename={onRenameWorkspace} renameRequestId={renameRequestId} />
+                    )}
+                    <p className="mt-1 text-[13px] text-[var(--color-ink-soft)] sm:text-[14px]">
                         {layoutEditMode
                             ? 'Layout bearbeiten aktiv: Ziehen und Skalieren ist verfügbar, Inhalte sind pausiert.'
                             : 'Nutzungsmodus aktiv: Widgets sind voll bedienbar, Layout bleibt gesperrt.'}
                     </p>
                 </div>
-                <div className="flex items-center gap-2">
-                    <button
-                        type="button"
-                        className={`ms-btn px-3 py-2 text-[13px] ${isFullscreen ? 'bg-[#ff90e8]' : ''}`}
-                        onClick={() => void toggleFullscreen()}
-                        aria-pressed={isFullscreen}
-                        aria-label={isFullscreen ? 'Vollbild beenden' : 'Vollbild'}
-                        title={isFullscreen ? 'Vollbild beenden (Esc)' : 'Vollbild'}
-                    >
-                        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-                            {isFullscreen ? (
-                                <>
-                                    <path d="M9 9H5V5M15 9h4V5M9 15H5v4M15 15h4v4" />
-                                </>
-                            ) : (
-                                <>
-                                    <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
-                                </>
-                            )}
-                        </svg>
-                    </button>
-                    <button
-                        type="button"
-                        className={`ms-btn px-3 py-2 text-[13px] ${layoutEditMode ? 'bg-[#fff8b8]' : ''}`}
-                        onClick={() => onLayoutEditModeChange(!layoutEditMode)}
-                        aria-pressed={layoutEditMode}
-                        aria-label={layoutEditMode ? 'Layout sperren' : 'Layout entsperren'}
-                    >
-                        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-                            {layoutEditMode ? (
-                                <>
-                                    <rect x="4.5" y="10" width="15" height="10" rx="2" />
-                                    <path d="M8 10V7a4 4 0 0 1 7.2-2.4" />
-                                </>
-                            ) : (
-                                <>
-                                    <rect x="4.5" y="10" width="15" height="10" rx="2" />
-                                    <path d="M8 10V7a4 4 0 1 1 8 0v3" />
-                                </>
-                            )}
-                        </svg>
-                    </button>
-                    <button type="button" className="ms-btn px-3 py-2 text-[13px]" onClick={() => setPickerOpen(true)}>
-                        Widget hinzufügen
-                    </button>
-                    <button type="button" className="ms-btn px-3 py-2 text-[13px]" onClick={onOpenCatalog}>
-                        Zum Katalog
-                    </button>
-                </div>
+                {!isFullscreen ? (
+                    <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+                        <button
+                            type="button"
+                            className={`ms-btn min-h-11 px-3 py-2 text-[13px] sm:min-h-0 ${isFullscreen ? 'bg-[#ff90e8]' : ''}`}
+                            onClick={() => void toggleFullscreen()}
+                            aria-pressed={isFullscreen}
+                            aria-label={isFullscreen ? 'Vollbild beenden' : 'Vollbild'}
+                            title={isFullscreen ? 'Vollbild beenden (Esc)' : 'Vollbild'}
+                        >
+                            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+                                {isFullscreen ? (
+                                    <>
+                                        <path d="M9 9H5V5M15 9h4V5M9 15H5v4M15 15h4v4" />
+                                    </>
+                                ) : (
+                                    <>
+                                        <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
+                                    </>
+                                )}
+                            </svg>
+                        </button>
+                        <button
+                            type="button"
+                            className={`ms-btn min-h-11 px-3 py-2 text-[13px] sm:min-h-0 ${layoutEditMode ? 'bg-[#fff8b8]' : ''}`}
+                            onClick={() => onLayoutEditModeChange(!layoutEditMode)}
+                            aria-pressed={layoutEditMode}
+                            aria-label={layoutEditMode ? 'Layout sperren' : 'Layout entsperren'}
+                        >
+                            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+                                {layoutEditMode ? (
+                                    <>
+                                        <rect x="4.5" y="10" width="15" height="10" rx="2" />
+                                        <path d="M8 10V7a4 4 0 0 1 7.2-2.4" />
+                                    </>
+                                ) : (
+                                    <>
+                                        <rect x="4.5" y="10" width="15" height="10" rx="2" />
+                                        <path d="M8 10V7a4 4 0 1 1 8 0v3" />
+                                    </>
+                                )}
+                            </svg>
+                        </button>
+                        {!immersiveMode ? (
+                            <>
+                                <button type="button" className="ms-btn min-h-11 px-3 py-2 text-[13px] sm:min-h-0" onClick={() => setPickerOpen(true)}>
+                                    Widget hinzufügen
+                                </button>
+                                <button type="button" className="ms-btn min-h-11 px-3 py-2 text-[13px] sm:min-h-0" onClick={onOpenCatalog}>
+                                    Zum Katalog
+                                </button>
+                            </>
+                        ) : null}
+                    </div>
+                ) : null}
             </div>
 
             {stagedWidgets.length > 0 ? (
@@ -425,7 +463,7 @@ export function WorkspaceDashboard({
                                         draggable={layoutEditMode}
                                         onDragStart={(event) => handleStagingDragStart(widget.id, event)}
                                         onDragEnd={handleStagingDragEnd}
-                                        className={`min-w-[10rem] rounded-[10px] border-2 border-black bg-white px-3 py-2 shadow-[2px_2px_0_#000] ${
+                                        className={`min-w-[9rem] rounded-[10px] border-2 border-black bg-white px-3 py-2 shadow-[2px_2px_0_#000] sm:min-w-[10rem] ${
                                             layoutEditMode ? 'cursor-grab active:cursor-grabbing' : 'cursor-not-allowed opacity-75'
                                         } ${
                                             draggingStagedWidgetId === widget.id ? 'opacity-60' : ''
@@ -739,15 +777,15 @@ export function WorkspaceDashboard({
                 </div>
             )}
 
-            {pickerOpen ? (
-                <div className="fixed inset-0 z-40 flex items-start justify-center px-4 pt-[10vh]">
+            {pickerOpen && !immersiveMode ? (
+                <div className="fixed inset-0 z-40 flex items-end justify-center px-3 py-3 sm:items-start sm:px-4 sm:pt-[10vh] sm:pb-0">
                     <button
                         type="button"
                         className="absolute inset-0 bg-black/35 backdrop-blur-[4px]"
                         onClick={() => setPickerOpen(false)}
                         aria-label="Widget-Auswahl schließen"
                     />
-                    <section className="ms-animate-pop relative z-10 w-full max-w-[44rem] overflow-visible rounded-[16px] border-2 border-black bg-white shadow-brutal-lg">
+                    <section className="ms-animate-pop relative z-10 max-h-[88svh] w-full max-w-[44rem] overflow-y-auto rounded-[16px] border-2 border-black bg-white shadow-brutal-lg sm:max-h-none sm:overflow-visible">
                         <header className="border-b-2 border-black px-4 py-4">
                             <div className="flex items-center justify-between">
                                 <h2 className="font-display text-[18px] font-bold">Widget hinzufügen</h2>
@@ -777,7 +815,7 @@ export function WorkspaceDashboard({
                                 <input
                                     ref={pickerSearchRef}
                                     type="search"
-                                    className="ms-input ml-auto max-w-[18rem] py-2 text-[12px]"
+                                    className="ms-input w-full py-2 text-[12px] sm:ml-auto sm:max-w-[18rem]"
                                     placeholder="Suchen …"
                                     value={query}
                                     onChange={(event) => setQuery(event.target.value)}
@@ -787,8 +825,8 @@ export function WorkspaceDashboard({
                         <div
                             className={
                                 pickerMode === 'tools'
-                                    ? 'flex max-h-[56vh] flex-col overflow-visible p-4'
-                                    : 'max-h-[56vh] overflow-y-auto p-4'
+                                    ? 'flex max-h-[62vh] flex-col overflow-visible p-3 sm:max-h-[56vh] sm:p-4'
+                                    : 'max-h-[62vh] overflow-y-auto p-3 sm:max-h-[56vh] sm:p-4'
                             }
                         >
                             {pickerMode === 'widgets' ? (
