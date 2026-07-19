@@ -11,8 +11,10 @@ import { outputFilename } from '../_shared/image/convert';
 import { getFormat, IMAGE_FORMATS } from '../_shared/image/formats';
 import { resizeImage } from '../_shared/image/resize';
 import { downloadBlob } from '../_shared/pdf/io';
+import { isUnitQuad, type Quad, UNIT_QUAD } from '../_shared/image/perspective';
 import type { ImageFormatId } from '../_shared/image/types';
 import { ContinueWithNextTool, useImageToolSession } from '../_shared/image/useImageToolSession';
+import { ImageResizeCanvas } from './ImageResizeCanvas';
 
 type ImageResizeToolProps = {
     tool: Tool;
@@ -23,6 +25,7 @@ type ResizePayload = {
     maxWidth?: number;
     maxHeight?: number;
     format: ImageFormatId;
+    quad?: Quad;
 };
 
 type ProcessedFile = {
@@ -44,6 +47,8 @@ export function ImageResizeTool({ tool }: ImageResizeToolProps) {
     const [maxHeight, setMaxHeight] = useState('1080');
     const [keepAspect, setKeepAspect] = useState(true);
     const [outputFormat, setOutputFormat] = useState<ImageFormatId>('jpg');
+    const [quad, setQuad] = useState<Quad>(UNIT_QUAD);
+    const hasCut = !isUnitQuad(quad);
     const [activeJobId, setActiveJobId] = useState<string | null>(null);
     const [jobProgress, setJobProgress] = useState(0);
     const [jobDoneCount, setJobDoneCount] = useState(0);
@@ -93,12 +98,11 @@ export function ImageResizeTool({ tool }: ImageResizeToolProps) {
     }
 
     function buildOptions() {
-        const w = parseLimit(maxWidth);
-        const h = parseLimit(maxHeight);
         return {
-            maxWidth: w,
-            maxHeight: keepAspect ? h : h,
+            maxWidth: parseLimit(maxWidth),
+            maxHeight: parseLimit(maxHeight),
             format: outputFormat,
+            quad,
         };
     }
 
@@ -108,6 +112,7 @@ export function ImageResizeTool({ tool }: ImageResizeToolProps) {
                 maxWidth: payload.maxWidth,
                 maxHeight: payload.maxHeight,
                 format: payload.format,
+                quad: payload.quad,
             });
             processedRef.current.set(meta.itemId, {
                 blob,
@@ -154,6 +159,7 @@ export function ImageResizeTool({ tool }: ImageResizeToolProps) {
         maxHeight,
         maxWidth,
         outputFormat,
+        quad,
         reattachBatch,
         route,
         shortcutRoute,
@@ -162,7 +168,8 @@ export function ImageResizeTool({ tool }: ImageResizeToolProps) {
     function startResize() {
         if (!fileEntries.length || working) return;
         const opts = buildOptions();
-        if (!opts.maxWidth && !opts.maxHeight) {
+        // Ein gezogener Ausschnitt gibt die Größe bereits vor — dann sind die Felder optional.
+        if (!opts.maxWidth && !opts.maxHeight && !hasCut) {
             toast({ message: 'Bitte max. Breite oder Höhe angeben', variant: 'info' });
             return;
         }
@@ -241,9 +248,36 @@ export function ImageResizeTool({ tool }: ImageResizeToolProps) {
                     </div>
                 ) : null}
 
+                {fileEntries[0] ? (
+                    <ImageResizeCanvas
+                        key={fileEntries[0].id}
+                        file={fileEntries[0].file}
+                        quad={quad}
+                        onQuadChange={setQuad}
+                        maxWidth={maxWidth}
+                        maxHeight={maxHeight}
+                        disabled={working}
+                    />
+                ) : null}
+
+                {fileEntries.length > 1 ? (
+                    <StateHint>
+                        Der gezogene Ausschnitt gilt für alle {fileEntries.length} Bilder des
+                        Stapels.
+                    </StateHint>
+                ) : null}
+
                 <section className="grid gap-4 rounded-xl border-2 border-black bg-white p-4 shadow-brutal-sm md:grid-cols-2">
+                    {hasCut ? (
+                        <p className="md:col-span-2 rounded-[8px] border-2 border-black bg-[var(--color-brand-soft)] px-3 py-2 text-[12px]">
+                            Ein Ausschnitt ist gesetzt — Größe und Seitenverhältnis kommen jetzt vom
+                            gezogenen Viereck. Die Felder unten wirken nur noch als Obergrenze.
+                        </p>
+                    ) : null}
                     <label className="space-y-1">
-                        <span className="font-display text-[13px] font-bold">Max. Breite (px)</span>
+                        <span className="font-display text-[13px] font-bold">
+                            {hasCut ? 'Obergrenze Breite (px)' : 'Max. Breite (px)'}
+                        </span>
                         <input
                             className="ms-input w-full"
                             type="number"
@@ -255,7 +289,9 @@ export function ImageResizeTool({ tool }: ImageResizeToolProps) {
                         />
                     </label>
                     <label className="space-y-1">
-                        <span className="font-display text-[13px] font-bold">Max. Höhe (px)</span>
+                        <span className="font-display text-[13px] font-bold">
+                            {hasCut ? 'Obergrenze Höhe (px)' : 'Max. Höhe (px)'}
+                        </span>
                         <input
                             className="ms-input w-full"
                             type="number"
@@ -271,9 +307,14 @@ export function ImageResizeTool({ tool }: ImageResizeToolProps) {
                             type="checkbox"
                             checked={keepAspect}
                             onChange={(e) => setKeepAspect(e.target.checked)}
-                            disabled={working}
+                            disabled={working || hasCut}
                         />
-                        <span className="text-[14px]">Seitenverhältnis beibehalten</span>
+                        <span
+                            className={`text-[14px] ${hasCut ? 'text-[var(--color-ink-soft)]' : ''}`}
+                        >
+                            Seitenverhältnis beibehalten
+                            {hasCut ? ' — folgt dem Ausschnitt' : ''}
+                        </span>
                     </label>
                     <label className="space-y-1 md:col-span-2">
                         <span className="font-display text-[13px] font-bold">Zielformat</span>
@@ -323,7 +364,10 @@ export function ImageResizeTool({ tool }: ImageResizeToolProps) {
                 ) : null}
 
                 {!working && jobStatus === 'completed' && jobDoneCount > 0 ? (
-                    <ResultCard tone="success" heading={`Fertig: ${jobDoneCount} Dateien verkleinert`}>
+                    <ResultCard
+                        tone="success"
+                        heading={`Fertig: ${jobDoneCount} Dateien verkleinert`}
+                    >
                         <div className="flex flex-col gap-2">
                             <button
                                 type="button"
@@ -357,11 +401,15 @@ export function ImageResizeTool({ tool }: ImageResizeToolProps) {
                     disabled={!fileEntries.length || working}
                     onClick={startResize}
                 >
-                    {fileEntries.length ? `${fileEntries.length} Bilder verkleinern` : 'Bilder verkleinern'}
+                    {fileEntries.length
+                        ? `${fileEntries.length} Bilder verkleinern`
+                        : 'Bilder verkleinern'}
                 </button>
 
                 <StateHint>
-                    Skaliert nur nach unten — größere Bilder werden nicht hochskaliert. Läuft client-seitig.
+                    Skaliert nur nach unten — größere Bilder werden nicht hochskaliert. Ein
+                    gezogener Ausschnitt wird beim Cut projektiv zu einem Rechteck entzerrt; die
+                    Zahlenfelder wirken dann als Obergrenze. Läuft client-seitig.
                 </StateHint>
             </div>
         </>

@@ -84,11 +84,14 @@ export function JobQueueProvider({
     }, []);
 
     const runJob = useCallback(
-        async <T,>(jobId: string, startIndex: number) => {
+        async <T,>(jobId: string, startIndex: number, knownJob?: JobRecord) => {
             const runner = runnersRef.current.get(jobId) as ActiveRunner<T> | undefined;
             if (!runner) return;
 
-            const job = jobsRef.current.find((j) => j.id === jobId);
+            // `jobsRef` wird erst beim nächsten Render aktualisiert. Ein gerade erst
+            // eingereihter Job steht dort noch nicht — deshalb reicht der Aufrufer den
+            // Datensatz direkt durch, sonst bricht der Lauf hier sofort ab.
+            const job = knownJob ?? jobsRef.current.find((j) => j.id === jobId);
             if (!job) return;
 
             runner.abort = new AbortController();
@@ -149,7 +152,7 @@ export function JobQueueProvider({
             });
             notifier.onJobQueued(job);
 
-            void runJob(job.id, 0);
+            void runJob(job.id, 0, job);
             return job.id;
         },
         [notifier, runJob],
