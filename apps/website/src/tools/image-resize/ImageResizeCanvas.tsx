@@ -14,6 +14,10 @@ const STAGE_MAX = 460;
 const HANDLE_HIT = 24;
 /** Längste Kante der Ergebnis-Vorschau — klein genug, um synchron zu rechnen. */
 const PREVIEW_MAX = 150;
+/** Lupe beim Ziehen einer Ecke: Kantenlänge, Vergrößerung, Abstand zum Bühnenrand. */
+const LOUPE_SIZE = 112;
+const LOUPE_ZOOM = 4;
+const LOUPE_INSET = 8;
 
 /** Ecken im Uhrzeigersinn ab links oben — Reihenfolge wie in `Quad`. */
 const CORNER_LABELS = ['links oben', 'rechts oben', 'rechts unten', 'links unten'] as const;
@@ -50,6 +54,7 @@ export function ImageResizeCanvas({
     const [natural, setNatural] = useState<Natural | null>(null);
     const [loadError, setLoadError] = useState(false);
     const [activeCorner, setActiveCorner] = useState<number | null>(null);
+    const [focusedCorner, setFocusedCorner] = useState<number | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const stageRef = useRef<HTMLDivElement | null>(null);
     const imageRef = useRef<HTMLImageElement | null>(null);
@@ -201,22 +206,72 @@ export function ImageResizeCanvas({
 
     const endDrag = useCallback(() => setActiveCorner(null), []);
 
+    /**
+     * Lupe: beim Ziehen liegt Cursor bzw. Finger genau auf der Stelle, die man treffen
+     * will. Auch bei Tastaturbedienung sichtbar, damit das Nudgen kontrollierbar bleibt.
+     */
+    const magnified = activeCorner ?? focusedCorner;
+
+    const loupe = useMemo(() => {
+        if (magnified === null || !stage || !natural || loadError) return null;
+        const point = quad[magnified];
+
+        // In die am weitesten entfernte Bühnenecke setzen, damit sie den Punkt
+        // nie verdeckt.
+        const corners = [
+            { left: LOUPE_INSET, top: LOUPE_INSET, at: { x: 0, y: 0 } },
+            { left: stage.width - LOUPE_SIZE - LOUPE_INSET, top: LOUPE_INSET, at: { x: 1, y: 0 } },
+            {
+                left: stage.width - LOUPE_SIZE - LOUPE_INSET,
+                top: stage.height - LOUPE_SIZE - LOUPE_INSET,
+                at: { x: 1, y: 1 },
+            },
+            {
+                left: LOUPE_INSET,
+                top: stage.height - LOUPE_SIZE - LOUPE_INSET,
+                at: { x: 0, y: 1 },
+            },
+        ];
+        const spot = corners.reduce((best, candidate) =>
+            Math.hypot(candidate.at.x - point.x, candidate.at.y - point.y) >
+            Math.hypot(best.at.x - point.x, best.at.y - point.y)
+                ? candidate
+                : best,
+        );
+
+        // Hintergrund in Originalpixeln skalieren, damit die Lupe echte Bildpixel
+        // zeigt und nicht die bereits herunterskalierte Bühne.
+        const sourceX = point.x * natural.width * LOUPE_ZOOM;
+        const sourceY = point.y * natural.height * LOUPE_ZOOM;
+        return {
+            left: spot.left,
+            top: spot.top,
+            backgroundSize: `${natural.width * LOUPE_ZOOM}px ${natural.height * LOUPE_ZOOM}px`,
+            backgroundPosition: `${LOUPE_SIZE / 2 - sourceX}px ${LOUPE_SIZE / 2 - sourceY}px`,
+            label: `${Math.round(point.x * natural.width)}, ${Math.round(point.y * natural.height)}`,
+        };
+    }, [loadError, magnified, natural, quad, stage]);
+
     const handleKeyDown = useCallback(
         (index: number) => (event: React.KeyboardEvent<HTMLButtonElement>) => {
-            if (disabled || !stage) return;
-            const step = (event.shiftKey ? 10 : 1) / Math.max(stage.width, stage.height);
+            if (disabled || !natural) return;
+            // Schrittweite in echten Bildpixeln, nicht in Bühnenpixeln — sonst wäre das
+            // Nudgen bei großen Bildern gröber als die Lupe suggeriert.
+            const amount = event.shiftKey ? 10 : 1;
+            const stepX = amount / natural.width;
+            const stepY = amount / natural.height;
             const deltas: Record<string, Point> = {
-                ArrowLeft: { x: -step, y: 0 },
-                ArrowRight: { x: step, y: 0 },
-                ArrowUp: { x: 0, y: -step },
-                ArrowDown: { x: 0, y: step },
+                ArrowLeft: { x: -stepX, y: 0 },
+                ArrowRight: { x: stepX, y: 0 },
+                ArrowUp: { x: 0, y: -stepY },
+                ArrowDown: { x: 0, y: stepY },
             };
             const delta = deltas[event.key];
             if (!delta) return;
             event.preventDefault();
             moveCorner(index, { x: quad[index].x + delta.x, y: quad[index].y + delta.y });
         },
-        [disabled, moveCorner, quad, stage],
+        [disabled, moveCorner, natural, quad],
     );
 
     if (!src) return null;
@@ -341,8 +396,38 @@ export function ImageResizeCanvas({
                                         onPointerUp={endDrag}
                                         onPointerCancel={endDrag}
                                         onKeyDown={handleKeyDown(index)}
+                                        onFocus={() => setFocusedCorner(index)}
+                                        onBlur={() =>
+                                            setFocusedCorner((prev) =>
+                                                prev === index ? null : prev,
+                                            )
+                                        }
                                     />
                                 ))}
+
+                                {loupe ? (
+                                    <div
+                                        className="pointer-events-none absolute overflow-hidden rounded-full border-2 border-black bg-white shadow-brutal-sm"
+                                        style={{
+                                            width: `${LOUPE_SIZE}px`,
+                                            height: `${LOUPE_SIZE}px`,
+                                            left: `${loupe.left}px`,
+                                            top: `${loupe.top}px`,
+                                            backgroundImage: `url(${src})`,
+                                            backgroundRepeat: 'no-repeat',
+                                            backgroundSize: loupe.backgroundSize,
+                                            backgroundPosition: loupe.backgroundPosition,
+                                            imageRendering: 'pixelated',
+                                        }}
+                                    >
+                                        {/* Fadenkreuz auf der Position der Ecke. */}
+                                        <span className="absolute left-0 right-0 top-1/2 block h-px bg-black/70" />
+                                        <span className="absolute bottom-0 left-1/2 top-0 block w-px bg-black/70" />
+                                        <span className="absolute inset-x-0 bottom-0 bg-black/70 text-center font-mono text-[10px] leading-[14px] text-white">
+                                            {loupe.label}
+                                        </span>
+                                    </div>
+                                ) : null}
                             </>
                         ) : null}
                     </div>
@@ -373,8 +458,9 @@ export function ImageResizeCanvas({
 
             <div className="flex flex-wrap items-center justify-between gap-2 text-[12px]">
                 <p className="text-[var(--color-ink-soft)]">
-                    Alle vier Ecken einzeln ziehen — Pfeiltasten für Feinarbeit, Shift für 10 px.
-                    Entzerrt wird erst beim Cut.
+                    Alle vier Ecken einzeln ziehen — beim Ziehen zeigt eine Lupe die Stelle in
+                    Originalpixeln. Pfeiltasten bewegen um 1 Bildpixel, mit Shift um 10. Entzerrt
+                    wird erst beim Cut.
                 </p>
                 {outputSize ? (
                     <p className="ms-badge bg-[var(--color-chip)] px-2 py-1" aria-live="polite">

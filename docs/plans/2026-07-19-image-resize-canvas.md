@@ -47,10 +47,19 @@ dem Encoden auf Weiß composited.
 
 ### `image-resize/ImageResizeCanvas.tsx` (neu)
 
-Pointer-Events statt Maus-Events (Touch inklusive), Griffe zusätzlich per Tastatur
-bedienbar (Pfeiltasten, Shift = 10 px). Bereich außerhalb des Vierecks wird abgedunkelt.
-Die Ergebnis-Vorschau ist auf 150 px gedeckelt und um 120 ms entprellt, damit das Ziehen
-flüssig bleibt.
+Pointer-Events statt Maus-Events (Touch inklusive). Bereich außerhalb des Vierecks wird
+abgedunkelt. Die Ergebnis-Vorschau ist auf 150 px gedeckelt und um 120 ms entprellt,
+damit das Ziehen flüssig bleibt.
+
+**Lupe.** Beim Ziehen liegt der Cursor genau auf der Stelle, die man treffen will —
+deshalb blendet sich eine runde Lupe ein, die den Bereich um die Ecke bei vierfacher
+Vergrößerung in **Originalpixeln** zeigt (`image-rendering: pixelated`), mit Fadenkreuz
+und Pixelkoordinate. Sie springt in die am weitesten entfernte Bühnenecke, verdeckt den
+Punkt also nie, und erscheint auch bei Tastaturfokus.
+
+Damit die Bedienung die angezeigte Genauigkeit auch einlöst, bewegen die Pfeiltasten um
+**einen Bildpixel** (Shift: zehn) statt wie zuvor um einen Bühnenpixel — bei einem
+4000 px breiten Bild auf 460 px Bühne waren das vorher rund neun Bildpixel pro Anschlag.
 
 ### `ImageResizeTool.tsx`
 
