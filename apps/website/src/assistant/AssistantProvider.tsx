@@ -15,6 +15,7 @@ import {
     type AttachmentRef,
     type ChatAttachment,
     type StoredMessage,
+    type ThreadIndexEntry,
     type ToolHit,
     type UserInputRequest,
 } from '@macheseinfach/assistant-core';
@@ -53,6 +54,7 @@ type AssistantContextValue = {
     settings: AssistantSettings;
     updateSettings: (patch: Partial<AssistantSettings>) => void;
     thread: AssistantThread;
+    threads: ThreadIndexEntry[];
     attachments: ChatAttachment[];
     isOpen: boolean;
     isMinimized: boolean;
@@ -61,18 +63,31 @@ type AssistantContextValue = {
     toolSteps: ToolStep[];
     streamingContent: string | null;
     canRetry: boolean;
+    canRegenerate: boolean;
     openPanel: () => void;
     closePanel: () => void;
     toggleMinimized: () => void;
     sendMessage: (text: string) => Promise<void>;
     retryTurn: () => Promise<void>;
+    regenerateLast: () => Promise<void>;
+    stopGeneration: () => void;
     attachFiles: (files: FileList | File[] | null) => Promise<void>;
     removeAttachment: (attachmentId: string) => void;
     clearError: () => void;
+    newThread: () => void;
+    selectThread: (threadId: string) => void;
+    deleteThread: (threadId: string) => void;
     favoriteHits: ToolHit[];
 };
 
 const AssistantContext = createContext<AssistantContextValue | null>(null);
+
+function isAbortError(error: unknown): boolean {
+    return (
+        (error instanceof DOMException && error.name === 'AbortError') ||
+        (error instanceof Error && error.name === 'AbortError')
+    );
+}
 
 function deriveThreadTitle(thread: AssistantThread): string {
     const firstUser = thread.messages.find((m) => m.role === 'user' && m.content?.trim());
@@ -132,6 +147,10 @@ function summarizeToolResult(name: string, result: string): string | undefined {
     return undefined;
 }
 
+function loadThreadIndex(persistence: ReturnType<typeof getAssistantPersistence>): ThreadIndexEntry[] {
+    return persistence.threadIndex.list();
+}
+
 export function AssistantProvider({ children }: { children: ReactNode }) {
     const platform = usePlatform();
     const nav = usePlatformNav();
@@ -146,6 +165,7 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
         }
         return createThread();
     });
+    const [threads, setThreads] = useState<ThreadIndexEntry[]>(() => loadThreadIndex(persistence));
     const [isOpen, setIsOpen] = useState(false);
     const [isMinimized, setIsMinimized] = useState(false);
     const [isRunning, setIsRunning] = useState(false);
@@ -156,11 +176,28 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
     const [inputRequest, setInputRequest] = useState<InputRequestState | null>(null);
     const threadRef = useRef(thread);
     threadRef.current = thread;
+    const abortRef = useRef<AbortController | null>(null);
+    const streamingRef = useRef<string | null>(null);
+    streamingRef.current = streamingContent;
+
+    const refreshThreadIndex = useCallback(() => {
+        setThreads(loadThreadIndex(persistence));
+    }, [persistence]);
 
     const attachments = useMemo(
         () => listThreadAttachments(thread),
         [thread, thread.attachmentIds.length],
     );
+
+    const canRegenerate = useMemo(() => {
+        if (isRunning) return false;
+        const msgs = thread.messages;
+        for (let i = msgs.length - 1; i >= 0; i -= 1) {
+            if (msgs[i]?.role === 'assistant' && msgs[i]?.content?.trim()) return true;
+            if (msgs[i]?.role === 'user') return false;
+        }
+        return false;
+    }, [isRunning, thread.messages]);
 
     const updateThreadState = useCallback((next: AssistantThread) => {
         threadRef.current = next;
@@ -181,8 +218,9 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
                 updatedAt: titled.updatedAt,
             });
             updateThreadState(titled);
+            refreshThreadIndex();
         },
-        [persistence, updateThreadState],
+        [persistence, refreshThreadIndex, updateThreadState],
     );
 
     const patchThread = useCallback(
@@ -242,7 +280,8 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
                             );
                             resolve(ref);
                         } catch (err) {
-                            const msg = err instanceof Error ? err.message : 'Eingabe fehlgeschlagen.';
+                            const msg =
+                                err instanceof Error ? err.message : 'Eingabe fehlgeschlagen.';
                             setError(msg);
                             toast({ message: msg, variant: 'error' });
                             resolve({ cancelled: true });
@@ -266,19 +305,59 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
                 updateThread: (patch) => patchThread(patch),
                 requestUserInput,
             }),
-        [nav.selectStory, nav.selectTool, patchThread, persistence, platform.favorites, requestUserInput],
+        [
+            nav.selectStory,
+            nav.selectTool,
+            patchThread,
+            persistence,
+            platform.favorites,
+            requestUserInput,
+        ],
     );
+
+    const finishAbort = useCallback(() => {
+        const partial = streamingRef.current?.trim();
+        streamingRef.current = null;
+        abortRef.current = null;
+        if (partial) {
+            const stored: StoredMessage = {
+                id: crypto.randomUUID(),
+                role: 'assistant',
+                content: `${partial}\n\n_(Antwort abgebrochen)_`,
+                createdAt: Date.now(),
+            };
+            const next: AssistantThread = {
+                ...threadRef.current,
+                messages: [...threadRef.current.messages, stored],
+                updatedAt: Date.now(),
+            };
+            persistThread(next);
+        }
+        setStreamingContent(null);
+        setIsRunning(false);
+        setCanRetry(false);
+        setToolSteps((prev) =>
+            prev.map((s) =>
+                s.status === 'running' ? { ...s, status: 'error', summary: 'Abgebrochen' } : s,
+            ),
+        );
+    }, [persistThread]);
 
     const reportError = useCallback(
         (err: unknown) => {
+            if (isAbortError(err)) {
+                finishAbort();
+                return;
+            }
             const msg = openRouterErrorDe(err);
             setError(msg);
             setCanRetry(true);
             setIsRunning(false);
             setStreamingContent(null);
+            abortRef.current = null;
             toast({ message: msg, variant: 'error' });
         },
-        [toast],
+        [finishAbort, toast],
     );
 
     const handleEvent = useCallback(
@@ -297,7 +376,10 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
                 const summary = summarizeToolResult(event.name, event.result);
                 let status: ToolStep['status'] = 'done';
                 try {
-                    const parsed = JSON.parse(event.result) as { ok?: boolean; cancelled?: boolean };
+                    const parsed = JSON.parse(event.result) as {
+                        ok?: boolean;
+                        cancelled?: boolean;
+                    };
                     if (parsed.cancelled === true) status = 'error';
                     if (parsed.ok === false) status = 'error';
                 } catch {
@@ -329,6 +411,7 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
             if (event.type === 'done') {
                 setIsRunning(false);
                 setCanRetry(false);
+                abortRef.current = null;
             }
             if (event.type === 'error') {
                 reportError(event.error);
@@ -338,6 +421,10 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
     );
 
     const runTurn = useCallback(async () => {
+        abortRef.current?.abort();
+        const controller = new AbortController();
+        abortRef.current = controller;
+
         const client = createOpenRouterClient({
             apiKey: settings.openRouterApiKey,
             defaultHeaders: {
@@ -356,6 +443,7 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
             activeFlow,
             onEvent: handleEvent,
             stream: true,
+            signal: controller.signal,
         });
     }, [
         activeFlow,
@@ -372,7 +460,8 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
             if (!trimmed || isRunning) return;
 
             if (!settings.openRouterApiKey.trim()) {
-                const msg = 'Bitte zuerst einen OpenRouter API-Key in den Einstellungen hinterlegen.';
+                const msg =
+                    'Bitte zuerst einen OpenRouter API-Key in den Einstellungen hinterlegen.';
                 setError(msg);
                 toast({ message: msg, variant: 'error' });
                 return;
@@ -406,7 +495,8 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
             try {
                 await runTurn();
             } catch (err) {
-                reportError(err);
+                // Abort is handled via the loop's error event → reportError/finishAbort.
+                if (!isAbortError(err)) reportError(err);
             }
         },
         [isRunning, persistThread, reportError, runTurn, settings.openRouterApiKey, toast],
@@ -422,9 +512,45 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
         try {
             await runTurn();
         } catch (err) {
-            reportError(err);
+            if (!isAbortError(err)) reportError(err);
         }
     }, [canRetry, isRunning, reportError, runTurn, settings.openRouterApiKey]);
+
+    const regenerateLast = useCallback(async () => {
+        if (isRunning || !settings.openRouterApiKey.trim()) return;
+        const msgs = threadRef.current.messages;
+        let lastUser = -1;
+        for (let i = msgs.length - 1; i >= 0; i -= 1) {
+            if (msgs[i]?.role === 'user') {
+                lastUser = i;
+                break;
+            }
+        }
+        if (lastUser < 0) return;
+
+        const next: AssistantThread = {
+            ...threadRef.current,
+            messages: msgs.slice(0, lastUser + 1),
+            updatedAt: Date.now(),
+        };
+        persistThread(next);
+
+        setError(null);
+        setCanRetry(false);
+        setToolSteps([]);
+        setStreamingContent(null);
+        setIsRunning(true);
+        try {
+            await runTurn();
+        } catch (err) {
+            if (!isAbortError(err)) reportError(err);
+        }
+    }, [isRunning, persistThread, reportError, runTurn, settings.openRouterApiKey]);
+
+    const stopGeneration = useCallback(() => {
+        if (!abortRef.current) return;
+        abortRef.current.abort();
+    }, []);
 
     const attachFiles = useCallback(
         async (files: FileList | File[] | null) => {
@@ -456,6 +582,61 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
         [patchThread, persistence],
     );
 
+    const newThread = useCallback(() => {
+        if (isRunning) stopGeneration();
+        const next = createThread();
+        persistThread(next);
+        setError(null);
+        setCanRetry(false);
+        setToolSteps([]);
+        setStreamingContent(null);
+    }, [isRunning, persistThread, stopGeneration]);
+
+    const selectThread = useCallback(
+        (threadId: string) => {
+            if (threadId === threadRef.current.id) return;
+            if (isRunning) stopGeneration();
+            const loaded = persistence.threads.get(threadId);
+            if (!loaded) return;
+            updateThreadState(loaded);
+            setError(null);
+            setCanRetry(false);
+            setToolSteps([]);
+            setStreamingContent(null);
+        },
+        [isRunning, persistence.threads, stopGeneration, updateThreadState],
+    );
+
+    const deleteThread = useCallback(
+        (threadId: string) => {
+            if (isRunning && threadRef.current.id === threadId) stopGeneration();
+            persistence.threads.delete(threadId);
+            persistence.threadIndex.remove(threadId);
+            refreshThreadIndex();
+            if (threadRef.current.id === threadId) {
+                const remaining = persistence.threadIndex.list()[0];
+                if (remaining) {
+                    const loaded = persistence.threads.get(remaining.id);
+                    updateThreadState(loaded ?? createThread());
+                } else {
+                    persistThread(createThread());
+                }
+            }
+            setError(null);
+            setToolSteps([]);
+            setStreamingContent(null);
+        },
+        [
+            isRunning,
+            persistThread,
+            persistence.threadIndex,
+            persistence.threads,
+            refreshThreadIndex,
+            stopGeneration,
+            updateThreadState,
+        ],
+    );
+
     useEffect(() => {
         const refresh = () => setSettings(readAssistantSettings());
         const onStorage = (e: StorageEvent) => {
@@ -479,6 +660,7 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
                 setSettings(next);
             },
             thread,
+            threads,
             attachments,
             isOpen,
             isMinimized,
@@ -487,6 +669,7 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
             toolSteps,
             streamingContent,
             canRetry,
+            canRegenerate,
             openPanel: () => {
                 setIsOpen(true);
                 setIsMinimized(false);
@@ -495,17 +678,23 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
             toggleMinimized: () => setIsMinimized((v) => !v),
             sendMessage,
             retryTurn,
+            regenerateLast,
+            stopGeneration,
             attachFiles,
             removeAttachment,
             clearError: () => {
                 setError(null);
                 setCanRetry(false);
             },
+            newThread,
+            selectThread,
+            deleteThread,
             favoriteHits,
         }),
         [
             settings,
             thread,
+            threads,
             attachments,
             isOpen,
             isMinimized,
@@ -514,10 +703,16 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
             toolSteps,
             streamingContent,
             canRetry,
+            canRegenerate,
             sendMessage,
             retryTurn,
+            regenerateLast,
+            stopGeneration,
             attachFiles,
             removeAttachment,
+            newThread,
+            selectThread,
+            deleteThread,
             favoriteHits,
         ],
     );

@@ -557,3 +557,14 @@ select {
         transition: padding-right 200ms ease;
     }
 }
+
+/* Assistant mobile fullscreen chat overlay */
+html[data-assistant-overlay="open"] {
+    overflow: hidden;
+}
+
+.assistant-mobile-panel {
+    height: 100dvh;
+    max-height: 100dvh;
+    padding-bottom: var(--assistant-keyboard-inset, 0px);
+}

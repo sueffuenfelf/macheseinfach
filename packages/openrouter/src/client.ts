@@ -16,6 +16,10 @@ export type OpenRouterClientOptions = {
     fetch?: typeof fetch;
 };
 
+export type ChatRequestOptions = {
+    signal?: AbortSignal;
+};
+
 export type OpenRouterClient = ReturnType<typeof createOpenRouterClient>;
 
 type CompletionChoice = {
@@ -92,11 +96,15 @@ export function createOpenRouterClient(options: OpenRouterClientOptions) {
     const httpFetch = options.fetch ?? fetch;
     const defaultHeaders = options.defaultHeaders ?? {};
 
-    async function postCompletions(body: ChatCompletionRequest): Promise<Response> {
+    async function postCompletions(
+        body: ChatCompletionRequest,
+        requestOptions?: ChatRequestOptions,
+    ): Promise<Response> {
         const response = await httpFetch(`${baseUrl}/chat/completions`, {
             method: 'POST',
             headers: buildHeaders(options.apiKey, defaultHeaders),
             body: JSON.stringify(body),
+            signal: requestOptions?.signal,
         });
         if (!response.ok) {
             await parseErrorResponse(response);
@@ -105,8 +113,11 @@ export function createOpenRouterClient(options: OpenRouterClientOptions) {
     }
 
     return {
-        async chat(req: ChatCompletionRequest): Promise<ChatMessage> {
-            const response = await postCompletions({ ...req, stream: false });
+        async chat(
+            req: ChatCompletionRequest,
+            requestOptions?: ChatRequestOptions,
+        ): Promise<ChatMessage> {
+            const response = await postCompletions({ ...req, stream: false }, requestOptions);
             const data = (await response.json()) as CompletionResponse;
             const message = data.choices?.[0]?.message;
             if (!message) {
@@ -115,8 +126,11 @@ export function createOpenRouterClient(options: OpenRouterClientOptions) {
             return parseAssistantMessage(message);
         },
 
-        async *chatStream(req: ChatCompletionRequest): AsyncIterable<ChatStreamChunk> {
-            const response = await postCompletions({ ...req, stream: true });
+        async *chatStream(
+            req: ChatCompletionRequest,
+            requestOptions?: ChatRequestOptions,
+        ): AsyncIterable<ChatStreamChunk> {
+            const response = await postCompletions({ ...req, stream: true }, requestOptions);
             if (!response.body) {
                 throw new OpenRouterError('OpenRouter stream has no body', 502);
             }
@@ -162,6 +176,9 @@ export function createOpenRouterClient(options: OpenRouterClientOptions) {
 
             try {
                 while (true) {
+                    if (requestOptions?.signal?.aborted) {
+                        throw new DOMException('The operation was aborted.', 'AbortError');
+                    }
                     const { done, value } = await reader.read();
                     if (done) {
                         break;
@@ -190,7 +207,11 @@ export function createOpenRouterClient(options: OpenRouterClientOptions) {
                     }
                 }
             } finally {
-                reader.releaseLock();
+                try {
+                    reader.releaseLock();
+                } catch {
+                    /* already released */
+                }
             }
 
             const calls = [...toolCalls.values()].filter((tc) => tc.id);

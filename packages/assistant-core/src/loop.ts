@@ -19,7 +19,15 @@ export type RunAssistantTurnArgs = {
     maxToolRounds?: number;
     /** When true, token deltas are emitted via `stream` events (final message still stored). */
     stream?: boolean;
+    /** Abort in-flight OpenRouter requests and stop further tool rounds. */
+    signal?: AbortSignal;
 };
+
+function assertNotAborted(signal?: AbortSignal): void {
+    if (signal?.aborted) {
+        throw new DOMException('The operation was aborted.', 'AbortError');
+    }
+}
 
 function storedToChatMessage(msg: StoredMessage): ChatMessage {
     return {
@@ -198,19 +206,22 @@ async function completeAssistantMessage(
     messages: ChatMessage[],
     tools: ReturnType<typeof metaToolsToDefinitions>,
 ): Promise<ChatMessage> {
+    assertNotAborted(args.signal);
     const request = {
         model: args.model,
         messages,
         tools,
         tool_choice: 'auto' as const,
     };
+    const requestOptions = args.signal ? { signal: args.signal } : undefined;
 
     if (!args.stream) {
-        return await args.client.chat(request);
+        return await args.client.chat(request, requestOptions);
     }
 
     let assistant: ChatMessage = { role: 'assistant', content: '' };
-    for await (const chunk of args.client.chatStream(request)) {
+    for await (const chunk of args.client.chatStream(request, requestOptions)) {
+        assertNotAborted(args.signal);
         if (chunk.type === 'content') {
             assistant.content = `${assistant.content ?? ''}${chunk.content}`;
             args.onEvent({ type: 'stream', content: chunk.content });
@@ -237,6 +248,7 @@ export async function runAssistantTurn(args: RunAssistantTurnArgs): Promise<void
 
     try {
         while (true) {
+            assertNotAborted(args.signal);
             const assistant = await completeAssistantMessage(args, messages, tools);
 
             if (!assistant.tool_calls?.length) {

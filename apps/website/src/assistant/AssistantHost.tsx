@@ -47,6 +47,42 @@ function useFocusTrap(containerRef: React.RefObject<HTMLElement | null>, active:
     }, [active, containerRef]);
 }
 
+/** Keep composer above soft keyboard on mobile via visualViewport. */
+function useKeyboardInset(active: boolean) {
+    useEffect(() => {
+        if (!active || typeof window === 'undefined' || !window.visualViewport) return;
+        const vv = window.visualViewport;
+
+        function sync() {
+            const inset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+            document.documentElement.style.setProperty(
+                '--assistant-keyboard-inset',
+                `${Math.round(inset)}px`,
+            );
+        }
+
+        sync();
+        vv.addEventListener('resize', sync);
+        vv.addEventListener('scroll', sync);
+        return () => {
+            vv.removeEventListener('resize', sync);
+            vv.removeEventListener('scroll', sync);
+            document.documentElement.style.removeProperty('--assistant-keyboard-inset');
+        };
+    }, [active]);
+}
+
+function useBodyScrollLock(locked: boolean) {
+    useEffect(() => {
+        if (!locked) return;
+        const prev = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.body.style.overflow = prev;
+        };
+    }, [locked]);
+}
+
 function AssistantErrorBanner() {
     const { error, clearError, canRetry, retryTurn } = useAssistant();
     if (!error) return null;
@@ -95,51 +131,63 @@ function AssistantPanelBody() {
     );
 }
 
-function AssistantPanel({ compact }: { compact?: boolean }) {
+function AssistantPanel({
+    compact,
+    hideLayoutToggle,
+}: {
+    compact?: boolean;
+    hideLayoutToggle?: boolean;
+}) {
     return (
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-            <AssistantChrome compact={compact} />
+            <AssistantChrome compact={compact} hideLayoutToggle={hideLayoutToggle} />
             <AssistantPanelBody />
         </div>
     );
 }
 
 export function AssistantLauncher() {
-    const {
-        isOpen,
-        isMinimized,
-        openPanel,
-        closePanel,
-        toggleMinimized,
-        settings,
-    } = useAssistant();
+    const { isOpen, isMinimized, openPanel, closePanel, toggleMinimized, settings } =
+        useAssistant();
     const isDesktop = useMediaQuery('(min-width: 768px)');
     const panelRef = useRef<HTMLDivElement>(null);
     const layoutMode = settings.layoutMode;
-    const trapFocus = layoutMode === 'floating' && isOpen && !isMinimized;
+    const overlayOpen = isOpen && !isMinimized;
+    const mobileOverlay = overlayOpen && !isDesktop;
+    const trapFocus = overlayOpen && (layoutMode === 'floating' || !isDesktop);
 
     useFocusTrap(panelRef, trapFocus);
+    useBodyScrollLock(mobileOverlay);
+    useKeyboardInset(mobileOverlay);
 
     useEffect(() => {
-        if (!isOpen || isMinimized) return;
+        if (!overlayOpen) return;
         const focusTarget = panelRef.current?.querySelector<HTMLElement>(
             'textarea, input:not([type="file"]), button',
         );
         focusTarget?.focus();
-    }, [isOpen, isMinimized, layoutMode]);
+    }, [overlayOpen]);
 
     useEffect(() => {
         const sidebarOpen =
-            settings.enabled && isOpen && !isMinimized && layoutMode === 'sidebar' && isDesktop;
+            settings.enabled && overlayOpen && layoutMode === 'sidebar' && isDesktop;
         if (sidebarOpen) {
             document.documentElement.dataset.assistantSidebar = 'open';
         } else {
             delete document.documentElement.dataset.assistantSidebar;
         }
+
+        if (mobileOverlay) {
+            document.documentElement.dataset.assistantOverlay = 'open';
+        } else {
+            delete document.documentElement.dataset.assistantOverlay;
+        }
+
         return () => {
             delete document.documentElement.dataset.assistantSidebar;
+            delete document.documentElement.dataset.assistantOverlay;
         };
-    }, [settings.enabled, isOpen, isMinimized, layoutMode, isDesktop]);
+    }, [settings.enabled, overlayOpen, layoutMode, isDesktop, mobileOverlay]);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -147,13 +195,16 @@ export function AssistantLauncher() {
             if (e.key !== 'Escape') return;
             if (isMinimized) {
                 closePanel();
+            } else if (!isDesktop) {
+                // Mobile main chat: Escape closes fully (toggle feel).
+                closePanel();
             } else {
                 toggleMinimized();
             }
         }
         window.addEventListener('keydown', onKey);
         return () => window.removeEventListener('keydown', onKey);
-    }, [isOpen, isMinimized, closePanel, toggleMinimized]);
+    }, [isOpen, isMinimized, isDesktop, closePanel, toggleMinimized]);
 
     if (!settings.enabled) {
         return null;
@@ -164,7 +215,7 @@ export function AssistantLauncher() {
             <button
                 type="button"
                 onClick={openPanel}
-                className="ms-focus fixed bottom-4 right-4 z-40 inline-flex items-center gap-2 rounded-[999px] border-2 border-black bg-[var(--color-accent)] px-4 py-2.5 font-display text-[14px] font-bold shadow-brutal-lg transition hover:-translate-x-[1px] hover:-translate-y-[1px] max-md:bottom-[max(1rem,env(safe-area-inset-bottom))]"
+                className="ms-focus fixed bottom-4 right-4 z-50 inline-flex min-h-11 items-center gap-2 rounded-[999px] border-2 border-black bg-[var(--color-accent)] px-4 py-2.5 font-display text-[14px] font-bold shadow-brutal-lg transition hover:-translate-x-[1px] hover:-translate-y-[1px] max-md:bottom-[max(1rem,env(safe-area-inset-bottom))] max-md:right-[max(1rem,env(safe-area-inset-right))]"
                 aria-label="Assistent öffnen"
             >
                 <svg
@@ -173,6 +224,7 @@ export function AssistantLauncher() {
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="2.2"
+                    aria-hidden="true"
                 >
                     <path d="M12 3a7 7 0 0 0-4 12.7V21l4-2 4 2v-5.3A7 7 0 0 0 12 3z" />
                 </svg>
@@ -186,7 +238,7 @@ export function AssistantLauncher() {
             <button
                 type="button"
                 onClick={openPanel}
-                className="ms-focus fixed bottom-4 right-4 z-40 inline-flex items-center gap-2 rounded-[999px] border-2 border-black bg-white px-4 py-2 font-display text-[13px] font-semibold shadow-brutal-lg"
+                className="ms-focus fixed bottom-4 right-4 z-50 inline-flex min-h-11 items-center gap-2 rounded-[999px] border-2 border-black bg-white px-4 py-2 font-display text-[13px] font-semibold shadow-brutal-lg max-md:bottom-[max(1rem,env(safe-area-inset-bottom))] max-md:right-[max(1rem,env(safe-area-inset-right))]"
                 aria-label="Assistent erweitern"
             >
                 Assistent
@@ -194,20 +246,31 @@ export function AssistantLauncher() {
         );
     }
 
+    // Mobile: always a fullscreen main chat overlay on top of the page.
+    if (!isDesktop) {
+        return (
+            <div
+                ref={panelRef}
+                className="assistant-mobile-panel fixed inset-0 z-50 flex flex-col bg-white"
+                role="dialog"
+                aria-label="Assistent"
+                aria-modal="true"
+                data-testid="assistant-mobile-overlay"
+            >
+                <AssistantPanel compact hideLayoutToggle />
+            </div>
+        );
+    }
+
     if (layoutMode === 'sidebar') {
         return (
             <aside
                 ref={panelRef}
-                className={
-                    isDesktop
-                        ? 'fixed inset-y-0 right-0 z-40 flex w-[min(100%,420px)] flex-col border-l-2 border-black bg-white shadow-brutal-lg transition-all duration-200'
-                        : 'fixed inset-0 z-50 flex flex-col bg-white'
-                }
+                className="fixed inset-y-0 right-0 z-40 flex w-[min(100%,420px)] flex-col border-l-2 border-black bg-white shadow-brutal-lg transition-all duration-200"
                 role="dialog"
                 aria-label="Assistent"
-                aria-modal={!isDesktop}
             >
-                <AssistantPanel compact={!isDesktop} />
+                <AssistantPanel />
             </aside>
         );
     }
@@ -215,11 +278,7 @@ export function AssistantLauncher() {
     return (
         <div
             ref={panelRef}
-            className={
-                isDesktop
-                    ? 'fixed bottom-4 right-4 z-40 flex h-[min(70vh,560px)] w-[min(calc(100%-2rem),400px)] flex-col overflow-hidden rounded-xl border-2 border-black bg-white shadow-brutal-lg transition-all duration-200'
-                    : 'fixed inset-x-0 bottom-0 z-40 flex h-[min(85vh,560px)] w-full flex-col overflow-hidden rounded-t-xl border-2 border-black bg-white pb-[env(safe-area-inset-bottom)] shadow-brutal-lg'
-            }
+            className="fixed bottom-4 right-4 z-40 flex h-[min(70vh,560px)] w-[min(calc(100%-2rem),400px)] flex-col overflow-hidden rounded-xl border-2 border-black bg-white shadow-brutal-lg transition-all duration-200"
             role="dialog"
             aria-label="Assistent"
             aria-modal

@@ -1,6 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { StoredMessage } from '@macheseinfach/assistant-core';
+import { useToast } from '../shell/toast';
 import { useAssistant } from './AssistantProvider';
+import { AssistantMarkdown } from './AssistantMarkdown';
 import { looksSensitiveContent } from './sensitive-content';
 
 const TOOL_LABELS: Record<string, string> = {
@@ -18,7 +20,79 @@ const TOOL_LABELS: Record<string, string> = {
     open_tool: 'Tool öffnen',
 };
 
-function MessageBubble({ message }: { message: StoredMessage }) {
+async function copyText(text: string): Promise<boolean> {
+    try {
+        await navigator.clipboard.writeText(text);
+        return true;
+    } catch {
+        try {
+            const area = document.createElement('textarea');
+            area.value = text;
+            area.setAttribute('readonly', '');
+            area.style.position = 'fixed';
+            area.style.left = '-9999px';
+            document.body.appendChild(area);
+            area.select();
+            const ok = document.execCommand('copy');
+            document.body.removeChild(area);
+            return ok;
+        } catch {
+            return false;
+        }
+    }
+}
+
+function MessageActions({
+    content,
+    showRegenerate,
+}: {
+    content: string;
+    showRegenerate?: boolean;
+}) {
+    const { toast } = useToast();
+    const { regenerateLast, canRegenerate, isRunning } = useAssistant();
+    const [copied, setCopied] = useState(false);
+
+    if (!content.trim()) return null;
+
+    return (
+        <div className="mt-1 flex flex-wrap items-center gap-1">
+            <button
+                type="button"
+                onClick={async () => {
+                    const ok = await copyText(content);
+                    if (ok) {
+                        setCopied(true);
+                        toast({ message: 'In die Zwischenablage kopiert', variant: 'success' });
+                        window.setTimeout(() => setCopied(false), 1600);
+                    } else {
+                        toast({ message: 'Kopieren fehlgeschlagen', variant: 'error' });
+                    }
+                }}
+                className="ms-focus rounded-[6px] border border-black/30 bg-white px-2 py-1 font-display text-[11px] font-semibold"
+            >
+                {copied ? 'Kopiert' : 'Kopieren'}
+            </button>
+            {showRegenerate && canRegenerate && !isRunning ? (
+                <button
+                    type="button"
+                    onClick={() => void regenerateLast()}
+                    className="ms-focus rounded-[6px] border border-black/30 bg-white px-2 py-1 font-display text-[11px] font-semibold"
+                >
+                    Erneut generieren
+                </button>
+            ) : null}
+        </div>
+    );
+}
+
+function MessageBubble({
+    message,
+    isLastAssistant,
+}: {
+    message: StoredMessage;
+    isLastAssistant?: boolean;
+}) {
     const isUser = message.role === 'user';
     const content = message.content ?? '';
     const sensitive = isUser && looksSensitiveContent(content);
@@ -31,8 +105,15 @@ function MessageBubble({ message }: { message: StoredMessage }) {
                         isUser ? 'bg-[var(--color-accent)]' : 'bg-white'
                     }`}
                 >
-                    {content}
+                    {isUser ? (
+                        <span className="whitespace-pre-wrap">{content}</span>
+                    ) : (
+                        <AssistantMarkdown content={content} />
+                    )}
                 </div>
+                {!isUser ? (
+                    <MessageActions content={content} showRegenerate={isLastAssistant} />
+                ) : null}
                 {sensitive ? (
                     <p
                         className="mt-1 rounded-[8px] border border-[var(--color-danger)] bg-[#fff5f5] px-2 py-1 text-[11px] leading-snug text-[var(--color-ink-soft)]"
@@ -49,10 +130,8 @@ function MessageBubble({ message }: { message: StoredMessage }) {
 function StreamingBubble({ content }: { content: string }) {
     return (
         <div className="flex justify-start">
-            <div
-                className="max-w-[90%] rounded-[12px] border-2 border-black bg-white px-3 py-2 text-[14px] leading-relaxed shadow-brutal-sm"
-            >
-                {content}
+            <div className="max-w-[90%] rounded-[12px] border-2 border-black bg-white px-3 py-2 text-[14px] leading-relaxed shadow-brutal-sm">
+                <AssistantMarkdown content={content} />
                 <span
                     className="ml-0.5 inline-block h-4 w-1 animate-pulse bg-[var(--color-ink-muted)]"
                     aria-hidden
@@ -114,12 +193,8 @@ function TypingIndicator() {
         >
             <span className="inline-flex gap-1" aria-hidden>
                 <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--color-ink-muted)]" />
-                <span
-                    className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--color-ink-muted)] [animation-delay:120ms]"
-                />
-                <span
-                    className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--color-ink-muted)] [animation-delay:240ms]"
-                />
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--color-ink-muted)] [animation-delay:120ms]" />
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--color-ink-muted)] [animation-delay:240ms]" />
             </span>
             <span>Assistent denkt nach …</span>
         </p>
@@ -130,31 +205,45 @@ export function AssistantThreadView() {
     const { thread, isRunning, streamingContent, toolSteps } = useAssistant();
     const bottomRef = useRef<HTMLDivElement>(null);
 
+    // Scroll when transcript/stream/tools change (intentional deps beyond React Compiler hints).
+    // biome-ignore lint/correctness/useExhaustiveDependencies: scroll triggers on chat activity
     useEffect(() => {
-        bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+        bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, [thread.messages.length, isRunning, streamingContent, toolSteps.length]);
 
     const visibleMessages = thread.messages.filter((m) => m.role !== 'tool');
+    const lastAssistantId = [...visibleMessages].reverse().find((m) => m.role === 'assistant')?.id;
     const showTyping = isRunning && !streamingContent && toolSteps.length === 0;
 
     return (
         <div
-            className="min-h-0 flex-1 overflow-y-auto px-3 py-3"
+            className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3"
             aria-live="polite"
             aria-relevant="additions text"
         >
             {visibleMessages.length === 0 && !streamingContent ? (
-                <p className="px-1 text-center text-[13px] text-[var(--color-ink-soft)]">
-                    Frag nach Tools, Bereichen oder deinen Favoriten — z. B. „Finde ein IBAN-Tool“.
-                </p>
+                <div className="flex h-full min-h-[160px] flex-col items-center justify-center gap-2 px-2 text-center">
+                    <p className="font-display text-[15px] font-bold">Womit kann ich helfen?</p>
+                    <p className="max-w-[300px] text-[13px] text-[var(--color-ink-soft)]">
+                        Frag nach Tools, Bereichen oder Favoriten — z. B. „Finde ein IBAN-Tool“.
+                    </p>
+                </div>
             ) : (
                 <div className="space-y-3">
                     {visibleMessages.map((msg) => (
-                        <MessageBubble key={msg.id} message={msg} />
+                        <MessageBubble
+                            key={msg.id}
+                            message={msg}
+                            isLastAssistant={msg.id === lastAssistantId}
+                        />
                     ))}
                 </div>
             )}
-            {streamingContent ? <StreamingBubble content={streamingContent} /> : null}
+            {streamingContent ? (
+                <div className="mt-3">
+                    <StreamingBubble content={streamingContent} />
+                </div>
+            ) : null}
             <ToolStepCards />
             {showTyping ? <TypingIndicator /> : null}
             <div ref={bottomRef} />
