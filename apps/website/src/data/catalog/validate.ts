@@ -74,7 +74,7 @@ export function validateCatalog(): CatalogValidationResult {
                 );
                 continue;
             }
-            if (!story.areaIds.includes(area.id)) {
+            if (!(story.areaIds as readonly AreaId[]).includes(area.id)) {
                 issues.push(
                     issue(
                         'AREA_STORY_MISMATCH',
@@ -97,7 +97,7 @@ export function validateCatalog(): CatalogValidationResult {
                 );
                 continue;
             }
-            if (!area.storyIds.includes(story.id)) {
+            if (!(area.storyIds as readonly StoryId[]).includes(story.id)) {
                 issues.push(
                     issue(
                         'STORY_AREA_MISSING',
@@ -164,7 +164,7 @@ export function validateCatalog(): CatalogValidationResult {
                 );
                 continue;
             }
-            if (!story.toolIds.includes(tool.id)) {
+            if (!(story.toolIds as readonly ToolId[]).includes(tool.id)) {
                 issues.push(
                     issue(
                         'TOOL_STORY_MISMATCH',

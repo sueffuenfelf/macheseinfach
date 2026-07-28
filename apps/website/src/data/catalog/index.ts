@@ -18,6 +18,7 @@ import type {
     ToolDefinition,
     ToolId,
     ToolMaturity,
+    ToolTheme,
     UserStory,
 } from './types';
 import { assertCatalogValid } from './validate';

@@ -6,6 +6,16 @@ export const AREA_IDS = [
     'dokumente',
     'security',
     'seo',
+    'text',
+    'zeit',
+    'wohnen',
+    'einheiten',
+    'web',
+    'steuern',
+    'recht',
+    'kommunikation',
+    'barrierefreiheit',
+    'kreativ',
 ] as const;
 
 export type AreaId = (typeof AREA_IDS)[number];
@@ -15,6 +25,7 @@ export type ToolId = string;
 export const STORY_IDS = [
     'story-elster-pdf-limit',
     'story-vermieter-gehalt-schwaarzen',
+    'story-formular-ausfuellen',
     'story-freelancer-girocode',
     'story-iban-vor-ueberweisung',
     'story-iban-aus-rechnung',

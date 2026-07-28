@@ -44,6 +44,10 @@ const ACTION_ALIASES: Record<string, string> = {
     schwaerzen: 'redact',
     schwärzen: 'redact',
     redact: 'redact',
+    formular: 'formular',
+    antrag: 'formular',
+    ausfuellen: 'formular',
+    ausfüllen: 'formular',
     signieren: 'sign',
     sign: 'sign',
     ocr: 'ocr',
@@ -133,10 +137,7 @@ export function extractQuerySlots(query: string): QuerySlots {
     };
 }
 
-export function slotBoostForDocument(
-    querySlots: QuerySlots,
-    docSlots: DocumentSlots,
-): number {
+export function slotBoostForDocument(querySlots: QuerySlots, docSlots: DocumentSlots): number {
     let boost = 0;
 
     for (const format of querySlots.formats) {
@@ -166,6 +167,7 @@ export function inferToolSlots(toolId: string, tags: readonly string[]): Documen
     if (toolId.includes('pdf-compress')) actions.push('compress');
     if (toolId.includes('pdf-merge')) actions.push('merge');
     if (toolId.includes('pdf-redact')) actions.push('redact');
+    if (toolId.includes('pdf-form-fill')) actions.push('formular');
     if (toolId.includes('pdf-sign')) actions.push('sign');
     if (toolId.includes('ocr')) actions.push('ocr');
     if (toolId.includes('iban')) actions.push('validate');
@@ -182,7 +184,8 @@ export function inferToolSlots(toolId: string, tags: readonly string[]): Documen
         formats: [...new Set(formats)],
         actions: [...new Set(actions)],
         context: [...new Set(context)],
-        multiStep: toolId.includes('pipeline') || tags.some((t) => t.toLowerCase().includes('pipeline')),
+        multiStep:
+            toolId.includes('pipeline') || tags.some((t) => t.toLowerCase().includes('pipeline')),
     };
 }
 

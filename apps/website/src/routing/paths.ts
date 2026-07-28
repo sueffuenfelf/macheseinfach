@@ -13,14 +13,7 @@ import {
 import { getVariantStoryBySlug, isVariantStorySlug } from '../data/catalog/variant-stories';
 import { getVariantBySlug } from '../tools/variant-registry';
 
-export type AppPage =
-    | 'home'
-    | 'area'
-    | 'story'
-    | 'tool'
-    | 'favorites'
-    | 'settings'
-    | 'search';
+export type AppPage = 'home' | 'area' | 'story' | 'tool' | 'favorites' | 'settings' | 'search';
 
 export function homePath(): string {
     return '/';

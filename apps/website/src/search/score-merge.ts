@@ -36,9 +36,7 @@ export function mergeHybridScores(
         const slotBoost = lexicalMeta.get(id)?.slotBoost ?? 0;
         const hasSemantic = semantic.size > 0;
 
-        const base = hasSemantic
-            ? lex * weights.lexical + sem * weights.semantic
-            : lex;
+        const base = hasSemantic ? lex * weights.lexical + sem * weights.semantic : lex;
 
         merged.set(id, {
             merged: Math.min(1, base + slotBoost * 0.1),

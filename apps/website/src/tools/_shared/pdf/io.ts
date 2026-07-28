@@ -28,6 +28,20 @@ export function downloadBlob(blob: Blob, filename: string): void {
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+/** Sequential downloads (browsers block parallel `download` clicks). */
+export async function downloadBlobsSequential(
+    items: { blob: Blob; filename: string }[],
+    gapMs = 250,
+): Promise<void> {
+    for (let i = 0; i < items.length; i++) {
+        const item = items[i]!;
+        downloadBlob(item.blob, item.filename);
+        if (i < items.length - 1) {
+            await new Promise((resolve) => window.setTimeout(resolve, gapMs));
+        }
+    }
+}
+
 export async function mergePdfFiles(files: File[]): Promise<Uint8Array> {
     const merged = await PDFDocument.create();
     for (const file of files) {
@@ -36,15 +50,6 @@ export async function mergePdfFiles(files: File[]): Promise<Uint8Array> {
         for (const page of pages) merged.addPage(page);
     }
     return merged.save({ useObjectStreams: true });
-}
-
-export async function compressPdfFile(
-    file: File,
-    useObjectStreams: boolean,
-): Promise<{ bytes: Uint8Array; originalSize: number; compressedSize: number }> {
-    const pdf = await loadPdfDocument(file);
-    const bytes = await pdf.save({ useObjectStreams });
-    return { bytes, originalSize: file.size, compressedSize: bytes.length };
 }
 
 export function swapBaseFilename(name: string, suffix: string): string {

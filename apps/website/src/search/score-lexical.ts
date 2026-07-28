@@ -64,9 +64,7 @@ function partialMatchScore(query: string, doc: SearchDocument): number {
     const q = normalizeQuery(query);
     if (!q) return 0;
 
-    const haystack = normalizeQuery(
-        [doc.title, doc.subtitle, doc.body, ...doc.keywords].join(' '),
-    );
+    const haystack = normalizeQuery([doc.title, doc.subtitle, doc.body, ...doc.keywords].join(' '));
     if (haystack.includes(q)) return 1;
 
     const qTokens = tokenize(q, { dropStopwords: false });
@@ -105,9 +103,7 @@ function bigramBoost(query: string, doc: SearchDocument): number {
     const bigrams = queryBigrams(tokens);
     if (bigrams.length === 0) return 0;
 
-    const haystack = normalizeQuery(
-        [doc.title, doc.subtitle, doc.body].join(' '),
-    );
+    const haystack = normalizeQuery([doc.title, doc.subtitle, doc.body].join(' '));
     let hits = 0;
     for (const bigram of bigrams) {
         if (haystack.includes(bigram)) hits += 1;
@@ -154,12 +150,7 @@ export function scoreLexical(
         const slotBoost = slotBoostForDocument(querySlots, doc.slots);
 
         const raw =
-            bm25 * 0.45 +
-            partial * 0.25 +
-            fuzzy * 0.1 +
-            bigram * 0.1 +
-            title * 0.1 +
-            slotBoost;
+            bm25 * 0.45 + partial * 0.25 + fuzzy * 0.1 + bigram * 0.1 + title * 0.1 + slotBoost;
 
         results.set(doc.id, { score: raw, slotBoost, querySlots });
     }

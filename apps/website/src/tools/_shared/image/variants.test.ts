@@ -12,7 +12,9 @@ describe('image variants', () => {
 
     test('heic variants target jpg and png', () => {
         const variants = buildConversionVariants();
-        const heicTargets = variants.filter((variant) => variant.params.from === 'heic').map((variant) => variant.params.to);
+        const heicTargets = variants
+            .filter((variant) => variant.params.from === 'heic')
+            .map((variant) => variant.params.to);
         expect(heicTargets).toContain('jpg');
         expect(heicTargets).toContain('png');
     });

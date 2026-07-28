@@ -16,6 +16,7 @@ import {
     type SlashCommand,
 } from './commands';
 import { Badge, SectionLabel } from './components/Primitives';
+import { SearchResultRow } from './SearchResultRow';
 
 type CommandPaletteProps = {
     open: boolean;
@@ -399,43 +400,28 @@ export function CommandPalette({
                     ) : (
                         <>
                             <SectionLabel className="px-2 py-2">
-                                Tools{searchLoading ? ' …' : ''}
+                                Treffer{searchLoading ? ' …' : ''}
                             </SectionLabel>
                             <ul>
                                 {searchResults.map((entry, index) => (
                                     <li key={entry.document.id}>
-                                        <button
-                                            type="button"
-                                            className={`ms-focus w-full rounded-[10px] px-3 py-2.5 text-left transition ${
-                                                index === activeIndex
-                                                    ? 'bg-[var(--color-success)]'
-                                                    : 'hover:bg-[var(--color-chip)]'
-                                            }`}
+                                        <SearchResultRow
+                                            result={entry}
+                                            compact
+                                            active={index === activeIndex}
                                             onClick={() => {
                                                 if (onSelectResult) {
                                                     onSelectResult(entry);
                                                 } else if (entry.document.toolId) {
-                                                    onSelectScenario(getTool(entry.document.toolId));
+                                                    onSelectScenario(
+                                                        getTool(entry.document.toolId),
+                                                    );
                                                 } else {
                                                     navigate(entry.document.href);
                                                 }
                                                 onClose();
                                             }}
-                                        >
-                                            <span className="flex items-center justify-between gap-2">
-                                                <span className="font-display text-[14px] font-semibold text-[var(--color-ink)]">
-                                                    {entry.document.title}
-                                                </span>
-                                                {entry.document.toolId ? (
-                                                    <span className="font-mono text-[11px] text-[var(--color-ink-muted)]">
-                                                        {getTool(entry.document.toolId).command}
-                                                    </span>
-                                                ) : null}
-                                            </span>
-                                            <span className="mt-1 block text-[12px] text-[var(--color-ink-soft)]">
-                                                {entry.document.subtitle}
-                                            </span>
-                                        </button>
+                                        />
                                     </li>
                                 ))}
                             </ul>

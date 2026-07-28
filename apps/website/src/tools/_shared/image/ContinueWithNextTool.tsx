@@ -9,7 +9,11 @@ type ContinueWithNextToolProps = {
     resultFilename: string;
 };
 
-export function ContinueWithNextTool({ toolId, resultBlob, resultFilename }: ContinueWithNextToolProps) {
+export function ContinueWithNextTool({
+    toolId,
+    resultBlob,
+    resultFilename,
+}: ContinueWithNextToolProps) {
     const { selectTool } = usePlatformNav();
     const { setPendingArtifactId, createFromBlob } = useImageArtifacts();
     const next = getNextImagePipelineStep(toolId);

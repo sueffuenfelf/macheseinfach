@@ -117,9 +117,7 @@ async function readFromIdb(id: string): Promise<ImageArtifact | undefined> {
     });
 }
 
-export async function readImageDimensions(
-    blob: Blob,
-): Promise<{ width: number; height: number }> {
+export async function readImageDimensions(blob: Blob): Promise<{ width: number; height: number }> {
     const bitmap = await createImageBitmap(blob);
     const dims = { width: bitmap.width, height: bitmap.height };
     bitmap.close();

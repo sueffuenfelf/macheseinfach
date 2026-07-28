@@ -4,7 +4,9 @@ import { filterAcceptedImageFiles, isAcceptedImageFile } from './accept';
 describe('image accept', () => {
     test('accepts common image mime types', () => {
         expect(isAcceptedImageFile(new File(['x'], 'photo.png', { type: 'image/png' }))).toBe(true);
-        expect(isAcceptedImageFile(new File(['x'], 'photo.jpg', { type: 'image/jpeg' }))).toBe(true);
+        expect(isAcceptedImageFile(new File(['x'], 'photo.jpg', { type: 'image/jpeg' }))).toBe(
+            true,
+        );
         expect(isAcceptedImageFile(new File(['x'], 'photo.webp', { type: 'image/webp' }))).toBe(
             true,
         );

@@ -516,11 +516,6 @@ select {
 }
 
 @media (max-width: 767px) {
-
-
-
-
-
     .ms-session-splash__inner {
         padding: 1.5rem 1.25rem;
     }

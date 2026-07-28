@@ -66,7 +66,8 @@ export function collectStaticRoutes(): RouteMeta[] {
         {
             path: '/suche',
             title: `Suche — ${SITE_NAME}`,
-            description: 'Finde Tools, Situationen und Bild-Varianten — lokal im Browser, ohne Upload.',
+            description:
+                'Finde Tools, Situationen und Bild-Varianten — lokal im Browser, ohne Upload.',
             canonical: absoluteUrl('/suche'),
         },
     ];
@@ -82,7 +83,8 @@ export function collectStaticRoutes(): RouteMeta[] {
 
         for (const storyId of area.storyIds) {
             const story = stories[storyId];
-            if (story.status === 'planned' && story.toolIds.length === 0) continue;
+            if (story.status === 'planned' && (story.toolIds as readonly ToolId[]).length === 0)
+                continue;
 
             routes.push({
                 path: `/bereich/${area.slug}/${story.slug}`,

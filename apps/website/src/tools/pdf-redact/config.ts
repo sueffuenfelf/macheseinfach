@@ -8,7 +8,8 @@ const catalog = {
     title: 'PDF schwärzen',
     sub: 'Markier sensible Zeilen — die Schwärzung wird fest ins PDF eingebrannt.',
     pain: 'Sensible Zeilen für Vermieter unkenntlich machen — ohne Acrobat.',
-    solution: 'Echte Schwärzung: Text wird aus der PDF entfernt.',
+    solution:
+        'Schwärzung mit Seitenvorschau — Inhalt unter den Markierungen wird beim Export entfernt.',
     trust: 'Schwärzung wird lokal eingebrannt · kein Upload',
     tags: ['PDF', 'Datenschutz', 'Vermieter'],
     keywords: ['schwärzen', 'zensur', 'datenschutz', 'redact', 'unkenntlich'],
@@ -16,7 +17,7 @@ const catalog = {
     command: '/pdf redact',
     entry: 'file',
     theme: { accent: '#ffc900', accentStrong: '#000', accentSoft: '#fff7cf' },
-    maturity: 'beta',
+    maturity: 'stable',
     areas: ['behoerden'],
     storyIds: ['story-vermieter-gehalt-schwaarzen'],
 } as const;

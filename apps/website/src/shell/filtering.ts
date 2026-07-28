@@ -84,6 +84,28 @@ export function storiesForAreaFiltered(
     return filterVisibleStories(areaStories, activeTags, query);
 }
 
+/**
+ * Tools in an area that are not reachable via any story listed on that area.
+ * Shown as “Direkt zum Tool” entries so areas without (or with incomplete) stories stay usable.
+ */
+export function orphanToolsInArea(areaId: AreaId): ToolDefinition[] {
+    const covered = new Set(storiesInArea(areaId).flatMap((story) => story.toolIds));
+    return toolsInArea(areaId).filter((tool) => !covered.has(tool.id));
+}
+
+export function toolsForAreaDirectFiltered(
+    areaId: AreaId,
+    activeTags: readonly string[],
+    query: string,
+): ToolDefinition[] {
+    const normalizedQuery = query.trim().toLowerCase();
+    return orphanToolsInArea(areaId).filter((tool) => {
+        if (!toolMatchesTags(tool, activeTags)) return false;
+        if (!normalizedQuery) return true;
+        return toolMatchesQuery(tool, normalizedQuery);
+    });
+}
+
 export function filterRecentTools(
     toolIds: readonly ToolId[],
     activeTags: readonly string[],

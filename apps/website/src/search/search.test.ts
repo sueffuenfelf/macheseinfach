@@ -47,7 +47,12 @@ describe('slots', () => {
 
     test('slot boost rewards matching document slots', () => {
         const querySlots = extractQuerySlots('heic konvertieren');
-        const docSlots = { formats: ['heic'], actions: ['convert'], context: ['iphone'], multiStep: false };
+        const docSlots = {
+            formats: ['heic'],
+            actions: ['convert'],
+            context: ['iphone'],
+            multiStep: false,
+        };
         expect(slotBoostForDocument(querySlots, docSlots)).toBeGreaterThan(0.2);
     });
 });
@@ -68,7 +73,8 @@ describe('score-lexical', () => {
         const raw = scoreLexical('heic zu png', docs);
         const normalized = normalizeLexicalScores(raw);
         const variantScore = normalized.get('variant:heic-zu-png') ?? 0;
-        const ibanScore = normalized.get('tool:iban-validate:buchhaltung:story-iban-vor-ueberweisung') ?? 0;
+        const ibanScore =
+            normalized.get('tool:iban-validate:buchhaltung:story-iban-vor-ueberweisung') ?? 0;
         expect(variantScore).toBeGreaterThan(ibanScore);
     });
 
@@ -78,9 +84,7 @@ describe('score-lexical', () => {
         for (const fixture of SEARCH_FIXTURES) {
             const raw = scoreLexical(fixture.query, docs);
             const normalized = normalizeLexicalScores(raw);
-            const ranked = [...normalized.entries()]
-                .sort((a, b) => b[1] - a[1])
-                .map(([id]) => id);
+            const ranked = [...normalized.entries()].sort((a, b) => b[1] - a[1]).map(([id]) => id);
 
             const topId = ranked[0] ?? '';
             const match = ranked.some((id) => id.includes(fixture.expectIdContains));
@@ -101,24 +105,64 @@ describe('score-merge', () => {
     });
 
     test('long queries favor semantic weight', () => {
-        const weights = mergeWeightsForQuery('ich muss mein iphone heic foto für ein portal umwandeln');
+        const weights = mergeWeightsForQuery(
+            'ich muss mein iphone heic foto für ein portal umwandeln',
+        );
         expect(weights.semantic).toBeGreaterThan(weights.lexical);
     });
 
     test('merge combines lexical and semantic scores', () => {
-        const lexical = new Map([['a', 0.8], ['b', 0.4]]);
-        const semantic = new Map([['a', 0.2], ['b', 0.9]]);
+        const lexical = new Map([
+            ['a', 0.8],
+            ['b', 0.4],
+        ]);
+        const semantic = new Map([
+            ['a', 0.2],
+            ['b', 0.9],
+        ]);
         const meta = new Map([
-            ['a', { score: 0.8, slotBoost: 0.1, querySlots: { formats: [], actions: [], context: [], multiStep: false } }],
-            ['b', { score: 0.4, slotBoost: 0, querySlots: { formats: [], actions: [], context: [], multiStep: false } }],
+            [
+                'a',
+                {
+                    score: 0.8,
+                    slotBoost: 0.1,
+                    querySlots: { formats: [], actions: [], context: [], multiStep: false },
+                },
+            ],
+            [
+                'b',
+                {
+                    score: 0.4,
+                    slotBoost: 0,
+                    querySlots: { formats: [], actions: [], context: [], multiStep: false },
+                },
+            ],
         ]);
         const merged = mergeHybridScores(lexical, semantic, meta, { lexical: 0.5, semantic: 0.5 });
         expect(merged.get('b')!.merged).toBeGreaterThan(merged.get('a')!.merged);
     });
 
     test('chrome trigger conditions', () => {
-        expect(shouldTriggerChrome({ multiStep: true, formats: [], actions: [], context: [] }, 0.9, [0.9, 0.5])).toBe(true);
-        expect(shouldTriggerChrome({ multiStep: false, formats: [], actions: [], context: [] }, 0.2, [0.2, 0.18])).toBe(true);
-        expect(shouldTriggerChrome({ multiStep: false, formats: [], actions: [], context: [] }, 0.8, [0.8, 0.3])).toBe(false);
+        expect(
+            shouldTriggerChrome(
+                { multiStep: true, formats: [], actions: [], context: [] },
+                0.9,
+                [0.9, 0.5],
+            ),
+        ).toBe(true);
+        expect(
+            shouldTriggerChrome(
+                { multiStep: false, formats: [], actions: [], context: [] },
+                0.2,
+                [0.2, 0.18],
+            ),
+        ).toBe(true);
+        expect(
+            shouldTriggerChrome(
+                { multiStep: false, formats: [], actions: [], context: [] },
+                0.8,
+                [0.8, 0.3],
+            ),
+        ).toBe(false);
     });
 });

@@ -284,7 +284,10 @@ export function ImageCompressTool({ tool }: ImageCompressToolProps) {
                 ) : null}
 
                 {!working && jobStatus === 'completed' && jobDoneCount > 0 ? (
-                    <ResultCard tone="success" heading={`Fertig: ${jobDoneCount} Dateien komprimiert`}>
+                    <ResultCard
+                        tone="success"
+                        heading={`Fertig: ${jobDoneCount} Dateien komprimiert`}
+                    >
                         <div className="flex flex-col gap-2">
                             <button
                                 type="button"
@@ -318,11 +321,14 @@ export function ImageCompressTool({ tool }: ImageCompressToolProps) {
                     disabled={!fileEntries.length || working}
                     onClick={startCompress}
                 >
-                    {fileEntries.length ? `${fileEntries.length} Bilder komprimieren` : 'Bilder komprimieren'}
+                    {fileEntries.length
+                        ? `${fileEntries.length} Bilder komprimieren`
+                        : 'Bilder komprimieren'}
                 </button>
 
                 <StateHint>
-                    Canvas-Neukodierung mit einstellbarer Qualität — läuft client-seitig, ohne Upload.
+                    Canvas-Neukodierung mit einstellbarer Qualität — läuft client-seitig, ohne
+                    Upload.
                 </StateHint>
             </div>
         </>

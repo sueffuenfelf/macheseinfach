@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useSettings } from '../context/SettingsContext';
-import { getTool } from '../data/catalog';
 import { EXAMPLE_SEARCH_CHIPS } from '../search/fixtures/queries';
 import {
     chromeAiSearchAvailable,
@@ -11,20 +10,8 @@ import {
 } from '../search';
 import { searchPath } from '../routing/paths';
 import { PageHead } from '../seo/PageHead';
-import { BackButton, Badge, BrutalInput, SectionLabel } from './components/Primitives';
-
-function kindLabel(kind: ScoredResult['document']['kind']): string {
-    switch (kind) {
-        case 'tool':
-            return 'Tool';
-        case 'variant':
-            return 'Variante';
-        case 'story':
-            return 'Situation';
-        case 'area':
-            return 'Bereich';
-    }
-}
+import { BackButton, BrutalInput, SectionLabel } from './components/Primitives';
+import { SearchResultRow } from './SearchResultRow';
 
 function sourceLabel(source: ScoredResult['source']): string {
     switch (source) {
@@ -58,19 +45,22 @@ export function SearchPage() {
 
     useEffect(() => {
         let cancelled = false;
-        const timer = setTimeout(() => {
-            setLoading(true);
-            void resolveSearch(localQuery, {
-                chromeAi: settings.chromeSearchAi,
-                showBreakdown,
-                limit: 16,
-            }).then((next) => {
-                if (cancelled) return;
-                setResults(next);
-                setSemanticState(getSemanticScoreState());
-                setLoading(false);
-            });
-        }, localQuery === urlQuery ? 0 : 250);
+        const timer = setTimeout(
+            () => {
+                setLoading(true);
+                void resolveSearch(localQuery, {
+                    chromeAi: settings.chromeSearchAi,
+                    showBreakdown,
+                    limit: 16,
+                }).then((next) => {
+                    if (cancelled) return;
+                    setResults(next);
+                    setSemanticState(getSemanticScoreState());
+                    setLoading(false);
+                });
+            },
+            localQuery === urlQuery ? 0 : 250,
+        );
 
         return () => {
             cancelled = true;
@@ -119,7 +109,8 @@ export function SearchPage() {
                     Suche
                 </h1>
                 <p className="mt-2 text-[15px] text-[var(--color-ink-soft)]">
-                    Stichwörter, Formate und ganze Sätze — wir finden passende Tools und Situationen.
+                    Stichwörter, Formate und ganze Sätze — wir finden passende Tools und
+                    Situationen.
                 </p>
             </div>
 
@@ -201,42 +192,13 @@ export function SearchPage() {
                     <ul className="mt-2 space-y-2">
                         {results.map((result) => (
                             <li key={result.document.id}>
-                                <button
-                                    type="button"
+                                <SearchResultRow
+                                    result={result}
+                                    showSource
+                                    sourceLabel={sourceLabel(result.source)}
+                                    showBreakdown={showBreakdown}
                                     onClick={() => openResult(result)}
-                                    className="ms-focus ms-card ms-card-hover w-full p-4 text-left"
-                                >
-                                    <span className="flex flex-wrap items-center gap-2">
-                                        <span className="font-display text-[16px] font-bold">
-                                            {result.document.title}
-                                        </span>
-                                        <Badge className="text-[10px]">
-                                            {kindLabel(result.document.kind)}
-                                        </Badge>
-                                        <Badge className="border-black bg-[var(--color-chip)] text-[10px]">
-                                            {sourceLabel(result.source)}
-                                        </Badge>
-                                    </span>
-                                    <span className="mt-1 block text-[13px] text-[var(--color-ink-soft)]">
-                                        {result.document.subtitle}
-                                    </span>
-                                    {result.document.toolId ? (
-                                        <span className="mt-2 block font-mono text-[11px] text-[var(--color-ink-muted)]">
-                                            {getTool(result.document.toolId).command}
-                                        </span>
-                                    ) : null}
-                                    {showBreakdown && result.breakdown ? (
-                                        <span className="mt-2 block font-mono text-[10px] text-[var(--color-ink-muted)]">
-                                            L:{result.breakdown.lexical.toFixed(2)} S:
-                                            {result.breakdown.semantic.toFixed(2)} B:
-                                            {result.breakdown.slotBoost.toFixed(2)}
-                                            {result.breakdown.chrome != null
-                                                ? ` C:${result.breakdown.chrome.toFixed(2)}`
-                                                : ''}{' '}
-                                            → {result.breakdown.merged.toFixed(2)}
-                                        </span>
-                                    ) : null}
-                                </button>
+                                />
                             </li>
                         ))}
                     </ul>

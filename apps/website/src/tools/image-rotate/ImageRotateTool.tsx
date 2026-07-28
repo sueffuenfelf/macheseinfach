@@ -331,7 +331,9 @@ export function ImageRotateTool({ tool }: ImageRotateToolProps) {
                     disabled={!fileEntries.length || working}
                     onClick={startRotate}
                 >
-                    {fileEntries.length ? `${fileEntries.length} Bilder ausrichten` : 'Bilder ausrichten'}
+                    {fileEntries.length
+                        ? `${fileEntries.length} Bilder ausrichten`
+                        : 'Bilder ausrichten'}
                 </button>
 
                 <StateHint>

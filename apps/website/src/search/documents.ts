@@ -1,10 +1,6 @@
 import { areaOrder, areas, stories, tools } from '../data/catalog';
 import type { AreaId, StoryId, ToolId } from '../data/catalog/types';
-import {
-    areaPath,
-    storyPath,
-    toolPath,
-} from '../routing/paths';
+import { areaPath, storyPath, toolPath, toolShortcutPath } from '../routing/paths';
 import { buildConversionVariants } from '../tools/_shared/image/variants';
 import type { ToolVariant } from '../tools/types';
 import { inferToolSlots } from './slots';
@@ -25,20 +21,15 @@ function variantSlots(variant: ToolVariant): DocumentSlots {
     };
 }
 
-function buildToolDocument(
-    toolId: ToolId,
-    areaId: AreaId,
-    storyId: StoryId,
-): SearchDocument {
+function buildToolDocument(toolId: ToolId, areaId: AreaId, storyId?: StoryId): SearchDocument {
     const tool = tools[toolId as keyof typeof tools];
     if (!tool) throw new Error(`Unknown tool: ${toolId}`);
 
-    const story = stories[storyId];
-    const area = areas[areaId];
+    const story = storyId ? stories[storyId] : undefined;
     const slots = inferToolSlots(tool.id, tool.tags);
 
     return {
-        id: `tool:${tool.id}:${areaId}:${storyId}`,
+        id: storyId ? `tool:${tool.id}:${areaId}:${storyId}` : `tool:${tool.id}:${areaId}`,
         kind: 'tool',
         title: tool.shortTitle,
         subtitle: story?.outcome ?? tool.sub,
@@ -55,7 +46,7 @@ function buildToolDocument(
         ]),
         keywords: [...tool.tags, ...tool.keywords, tool.command.replace('/', '')],
         slots,
-        href: toolPath(areaId, storyId, tool.id),
+        href: storyId ? toolPath(areaId, storyId, tool.id) : toolShortcutPath(tool.id),
         toolId: tool.id,
         areaId,
         storyId,
@@ -117,13 +108,7 @@ function buildStoryDocument(storyId: StoryId): SearchDocument {
         kind: 'story',
         title: story.outcome,
         subtitle: story.situation,
-        body: joinParts([
-            story.title,
-            story.role,
-            story.want,
-            story.situation,
-            story.outcome,
-        ]),
+        body: joinParts([story.title, story.role, story.want, story.situation, story.outcome]),
         keywords: [story.slug, story.role, story.want],
         slots,
         href: storyPath(areaId, story.id),
@@ -161,6 +146,8 @@ export function buildSearchDocuments(): SearchDocument[] {
 
     const docs: SearchDocument[] = [];
     const seen = new Set<string>();
+    /** Tools already indexed via a story for a given area — avoid duplicate orphan docs */
+    const toolsIndexedInArea = new Set<string>();
 
     function add(doc: SearchDocument) {
         if (seen.has(doc.id)) return;
@@ -173,15 +160,25 @@ export function buildSearchDocuments(): SearchDocument[] {
         const area = areas[areaId];
         for (const storyId of area.storyIds) {
             const story = stories[storyId];
-            if (story.status === 'planned' && story.toolIds.length === 0) continue;
+            if (story.status === 'planned' && (story.toolIds as readonly ToolId[]).length === 0)
+                continue;
             add(buildStoryDocument(storyId));
             for (const toolId of story.toolIds) {
                 const tool = tools[toolId as keyof typeof tools];
                 if (!tool) continue;
                 if (tool.areas.includes(areaId)) {
                     add(buildToolDocument(toolId, areaId, storyId));
+                    toolsIndexedInArea.add(`${toolId}:${areaId}`);
                 }
             }
+        }
+    }
+
+    // Tools without (or outside) area stories — still searchable & linkable via /tool/:slug
+    for (const tool of Object.values(tools)) {
+        for (const areaId of tool.areas) {
+            if (toolsIndexedInArea.has(`${tool.id}:${areaId}`)) continue;
+            add(buildToolDocument(tool.id, areaId));
         }
     }
 

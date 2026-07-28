@@ -61,18 +61,20 @@ export function AreaStep() {
                 </div>
             </form>
 
-            <ul className="ms-stagger mt-8 grid grid-cols-1 gap-5 md:grid-cols-2">
+            <ul className="ms-stagger mt-8 grid grid-cols-1 items-stretch gap-5 md:grid-cols-2">
                 {areaOrder.map((id) => {
                     const area = areas[id];
-                    const count = toolsInArea(id).length;
-                    const planned = id === 'seo';
+                    const areaTools = toolsInArea(id);
+                    const liveCount = areaTools.filter((t) => t.maturity !== 'planned').length;
+                    const planned = liveCount === 0 && areaTools.length > 0;
+                    const count = planned ? areaTools.length : liveCount;
                     return (
-                        <li key={id}>
+                        <li key={id} className="h-full">
                             <button
                                 type="button"
                                 onClick={() => selectArea(id)}
                                 style={{ background: area.accent }}
-                                className={`ms-focus ms-card ms-card-hover w-full cursor-pointer p-4 text-left sm:p-[22px] ${
+                                className={`ms-focus ms-card ms-card-hover flex h-full w-full cursor-pointer flex-col p-4 text-left sm:p-[22px] ${
                                     planned ? 'opacity-[0.82]' : ''
                                 }`}
                             >
@@ -89,10 +91,10 @@ export function AreaStep() {
                                 <span className="mt-3 block font-display text-[21px] leading-tight font-bold tracking-[-0.02em] sm:mt-4 sm:text-[24px]">
                                     {area.label}
                                 </span>
-                                <span className="mt-2 block max-w-[34ch] text-[14.5px] leading-relaxed text-[var(--color-ink-soft)]">
+                                <span className="mt-2 line-clamp-2 min-h-[2.9em] max-w-[34ch] text-[14.5px] leading-relaxed text-[var(--color-ink-soft)]">
                                     {area.description}
                                 </span>
-                                <span className="mt-5 flex items-center justify-between gap-3">
+                                <span className="mt-auto flex items-center justify-between gap-3 pt-5">
                                     <span className="rounded-full border-2 border-black bg-black px-3 py-1 font-display text-[12px] font-semibold text-white">
                                         {toolCountLabel(count, planned)}
                                     </span>

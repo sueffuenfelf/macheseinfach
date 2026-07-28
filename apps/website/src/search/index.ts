@@ -2,11 +2,7 @@ import { buildSearchDocuments } from './documents';
 import { resolveChromeIntent } from './intents-chrome';
 import { scoreLexical, normalizeLexicalScores } from './score-lexical';
 import { scoreSemantic, normalizeSemanticScores } from './score-semantic';
-import {
-    mergeHybridScores,
-    mergeWeightsForQuery,
-    shouldTriggerChrome,
-} from './score-merge';
+import { mergeHybridScores, mergeWeightsForQuery, shouldTriggerChrome } from './score-merge';
 import type { ResolveSearchOptions, ScoredResult } from './types';
 
 const DEFAULT_LIMIT = 12;
@@ -78,10 +74,7 @@ export async function resolveSearch(
     };
 
     const chromeEnabled = options.chromeAi !== false;
-    if (
-        chromeEnabled &&
-        shouldTriggerChrome(querySlots, topScore, topScores)
-    ) {
+    if (chromeEnabled && shouldTriggerChrome(querySlots, topScore, topScores)) {
         const chromeIntent = await resolveChromeIntent(trimmed);
         if (chromeIntent && chromeIntent.documentIds.length > 0) {
             const chromeResults: ScoredResult[] = [];

@@ -27,6 +27,8 @@ export const SEARCH_FIXTURES: SearchFixture[] = [
     { query: 'pdf zu gross', expectIdContains: 'pdf-compress' },
     { query: 'pdf schwärzen', expectIdContains: 'pdf-redact' },
     { query: 'gehalt schwärzen', expectIdContains: 'pdf-redact' },
+    { query: 'formular ausfüllen', expectIdContains: 'pdf-form-fill' },
+    { query: 'pdf formular', expectIdContains: 'pdf-form-fill' },
     { query: 'pdf zusammenfügen', expectIdContains: 'pdf-merge' },
     { query: 'pdf signieren', expectIdContains: 'pdf-sign' },
     { query: 'iban prüfen', expectIdContains: 'iban-validate' },
