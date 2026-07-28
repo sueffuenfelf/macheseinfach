@@ -8,7 +8,6 @@ export type ToastContext = {
     toolId?: string;
     toolSlug?: string;
     route?: string;
-    workspaceId?: string;
 };
 
 export type ToastItem = {
@@ -39,13 +38,12 @@ export type ToastInput = {
 
 export function jobToastContext(job: {
     id: string;
-    context: { route: string; toolId?: string; toolSlug?: string; workspaceId?: string };
+    context: { route: string; toolId?: string; toolSlug?: string };
 }): ToastContext {
     return {
         jobId: job.id,
         route: job.context.route,
         toolId: job.context.toolId,
         toolSlug: job.context.toolSlug,
-        workspaceId: job.context.workspaceId,
     };
 }

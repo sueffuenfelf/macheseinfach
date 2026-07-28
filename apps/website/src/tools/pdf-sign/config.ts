@@ -1,4 +1,3 @@
-import { createFileTaskWidget } from '../_shared/widgets/FileTaskWidget';
 import { defineTool } from '../types';
 import { PdfSignTool } from './PdfSignTool';
 
@@ -26,20 +25,6 @@ export default defineTool(
     {
         catalog,
         page: PdfSignTool,
-        widgets: [
-            createFileTaskWidget(catalog, {
-                widgetId: 'widget-pdf-sign',
-                title: 'PDF Signatur',
-                description: 'Dokument laden und Signatur-Schritt direkt vorbereiten.',
-                tags: ['PDF', 'Signatur', 'Vertrag'],
-                acceptLabel: 'PDF',
-                emptyHint: 'Lege den zu unterschreibenden Vertrag ab.',
-                footerHint: 'Signatur-Position im Tool festlegen.',
-                openLabel: 'Signatur-Tool öffnen',
-                defaultW: 5,
-                defaultH: 4,
-            }),
-        ],
     },
     'pdf-sign',
 );

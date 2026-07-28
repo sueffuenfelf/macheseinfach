@@ -1,7 +1,7 @@
 /** 40+ Suchanfragen mit erwarteten Top-Treffer-IDs (Präfix oder exakt). */
 export type SearchFixture = {
     query: string;
-    expectTopKind?: 'tool' | 'variant' | 'story' | 'area' | 'template';
+    expectTopKind?: 'tool' | 'variant' | 'story' | 'area';
     expectIdContains: string;
     minScore?: number;
 };
@@ -41,9 +41,8 @@ export const SEARCH_FIXTURES: SearchFixture[] = [
     { query: 'buchhaltung', expectIdContains: 'area:buchhaltung', expectTopKind: 'area' },
     { query: 'behörden', expectIdContains: 'area:behoerden', expectTopKind: 'area' },
     { query: 'dokumente', expectIdContains: 'area:dokumente' },
-    { query: 'pipeline', expectIdContains: 'template:bild-portal', expectTopKind: 'template' },
-    { query: 'mehrere schritte bild', expectIdContains: 'pipeline', minScore: 0.2 },
-    { query: 'heic und dann verkleinern', expectIdContains: 'template:bild-portal' },
+    { query: 'mehrere schritte bild', expectIdContains: 'image-', minScore: 0.15 },
+    { query: 'heic und dann verkleinern', expectIdContains: 'heic' },
     { query: 'portal heic', expectIdContains: 'heic' },
     { query: 'screenshot png', expectIdContains: 'png' },
     { query: 'bild format ändern', expectIdContains: 'image-convert' },
@@ -61,5 +60,5 @@ export const EXAMPLE_SEARCH_CHIPS = [
     'IBAN prüfen',
     'Bild verkleinern',
     'Passwort-Leak',
-    'Bild-Pipeline',
+    'Bild drehen',
 ];

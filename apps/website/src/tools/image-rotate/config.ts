@@ -1,4 +1,3 @@
-import { createFileTaskWidget } from '../_shared/widgets/FileTaskWidget';
 import { defineTool } from '../types';
 import { ImageRotateTool } from './ImageRotateTool';
 
@@ -26,20 +25,6 @@ export default defineTool(
     {
         catalog,
         page: ImageRotateTool,
-        widgets: [
-            createFileTaskWidget(catalog, {
-                widgetId: 'widget-image-rotate',
-                title: 'Bild ausrichten',
-                description: 'Bilder sammeln und drehen oder spiegeln.',
-                tags: ['Foto', 'PNG', 'JPG'],
-                acceptLabel: 'HEIC, PNG, JPG, WebP',
-                emptyHint: 'Zieh Bilder hier rein.',
-                footerHint: 'Ausrichtung läuft erst nach Öffnen des Tools.',
-                openLabel: 'Ausrichten öffnen',
-                defaultW: 5,
-                defaultH: 4,
-            }),
-        ],
     },
     'image-rotate',
 );

@@ -1,4 +1,3 @@
-import { createFileTaskWidget } from '../_shared/widgets/FileTaskWidget';
 import { defineTool } from '../types';
 import { PdfMergeTool } from './PdfMergeTool';
 
@@ -26,20 +25,6 @@ export default defineTool(
     {
         catalog,
         page: PdfMergeTool,
-        widgets: [
-            createFileTaskWidget(catalog, {
-                widgetId: 'widget-pdf-merge',
-                title: 'PDF Merge Queue',
-                description: 'Mehrere PDFs sammeln und Reihenfolge später im Tool setzen.',
-                tags: ['PDF', 'Merge', 'Queue'],
-                acceptLabel: 'Mehrere PDF',
-                emptyHint: 'Wähle die PDFs, die zusammengeführt werden sollen.',
-                footerHint: 'Die Sortierung passiert im Merge-Tool.',
-                openLabel: 'Merge-Tool öffnen',
-                defaultW: 6,
-                defaultH: 4,
-            }),
-        ],
     },
     'pdf-merge',
 );

@@ -53,7 +53,6 @@ export const areas = {
             'story-bild-verkleinern',
             'story-bild-ausrichten',
             'story-bild-metadaten',
-            'story-bild-pipeline',
         ],
     },
     dokumente: {

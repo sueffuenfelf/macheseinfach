@@ -14,36 +14,21 @@ type BootstrapStep = {
 const BOOTSTRAP_STEPS: BootstrapStep[] = [
     {
         id: 'fonts',
-        weight: 0.18,
+        weight: 0.28,
         run: async () => {
             if (document.fonts?.ready) await document.fonts.ready;
         },
     },
     {
         id: 'catalog',
-        weight: 0.22,
+        weight: 0.34,
         run: async () => {
             await import('../tools/discover');
         },
     },
     {
-        id: 'widgets',
-        weight: 0.2,
-        run: async () => {
-            const { listToolWidgets } = await import('./widgets/registry');
-            listToolWidgets();
-        },
-    },
-    {
-        id: 'workspace',
-        weight: 0.15,
-        run: async () => {
-            await import('./workspaces/model');
-        },
-    },
-    {
         id: 'processing',
-        weight: 0.25,
+        weight: 0.38,
         run: async () => {
             await Promise.all([import('pdf-lib'), import('heic2any')]);
         },

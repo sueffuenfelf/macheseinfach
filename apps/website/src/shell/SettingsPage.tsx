@@ -47,8 +47,7 @@ function BrutalistToggle({ id, label, description, checked, onChange }: Brutalis
 }
 
 export function SettingsPage() {
-    const { settings, setAutoCopyCommandResults, setAdvancedWidgetLinking, updateSettings } =
-        useSettings();
+    const { settings, setAutoCopyCommandResults, updateSettings } = useSettings();
     const [notifHint, setNotifHint] = useState<string | null>(null);
     const chromeAvailable = chromeAiSearchAvailable();
 
@@ -130,19 +129,6 @@ export function SettingsPage() {
                     }
                     checked={settings.chromeSearchAi}
                     onChange={(checked) => updateSettings({ chromeSearchAi: checked })}
-                />
-            </section>
-
-            <section className="mt-8 space-y-4" aria-label="Arbeitsbereiche">
-                <h2 className="font-display text-[12px] font-bold tracking-[0.05em] uppercase text-[var(--color-ink-muted)]">
-                    Arbeitsbereiche
-                </h2>
-                <BrutalistToggle
-                    id="advanced-widget-linking"
-                    label="Erweiterte Widget-Verknüpfungen"
-                    description="Erlaubt Eingänge und Ausgänge zwischen Widgets (mehrere Quellen pro Widget möglich). Ausgeschaltet bleibt nur die gemeinsame Eingabe aktiv."
-                    checked={settings.advancedWidgetLinking}
-                    onChange={setAdvancedWidgetLinking}
                 />
             </section>
         </main>

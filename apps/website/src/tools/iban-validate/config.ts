@@ -1,6 +1,5 @@
 import { defineTool } from '../types';
 import { IbanCheckTool } from './IbanCheckTool';
-import { QuickIbanWidget } from './widgets/QuickIbanWidget';
 
 export default defineTool(
     {
@@ -25,27 +24,6 @@ export default defineTool(
             storyIds: ['story-iban-vor-ueberweisung'],
         },
         page: IbanCheckTool,
-        widgets: [
-            {
-                id: 'widget-iban-quick',
-                title: 'IBAN Check',
-                description: 'Schneller IBAN-Check direkt im Dashboard.',
-                tags: ['IBAN', 'Bank', 'Quick'],
-                component: QuickIbanWidget,
-                supportsSharedInput: true,
-                supportsLinkedInput: true,
-                outputPorts: [
-                    { id: 'value', label: 'IBAN' },
-                    { id: 'status', label: 'Status' },
-                ],
-                minW: 3,
-                maxW: 6,
-                minH: 3,
-                maxH: 5,
-                defaultW: 4,
-                defaultH: 3,
-            },
-        ],
     },
     'iban-validate',
 );

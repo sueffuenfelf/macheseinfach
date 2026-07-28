@@ -1,12 +1,7 @@
 import type { ComponentType } from 'react';
 import type { ToolDefinition, ToolId } from '../data/catalog/types';
-import type { ToolWidgetDef } from '../shell/widgets/types';
 
 export type ToolCatalogInput = ToolDefinition & { id: string };
-
-export type ToolWidgetInput = Omit<ToolWidgetDef, 'toolId'> & {
-    toolId?: string;
-};
 
 export type ToolVariant = {
     id: string;
@@ -24,7 +19,6 @@ export type ToolVariant = {
 export type ToolModule = {
     catalog: ToolCatalogInput;
     page?: ComponentType<{ tool: ToolDefinition }>;
-    widgets?: ToolWidgetInput[];
     variants?: () => ToolVariant[];
 };
 

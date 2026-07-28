@@ -9,7 +9,6 @@ export type JobContext = {
     toolSlug?: string;
     /** App pathname, e.g. `/tool/heic-convert` */
     route: string;
-    workspaceId?: string;
 };
 
 export type JobItemRecord = {

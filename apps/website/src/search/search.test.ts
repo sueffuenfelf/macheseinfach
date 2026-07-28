@@ -57,7 +57,7 @@ describe('documents', () => {
         const docs = buildSearchDocuments();
         expect(docs.length).toBeGreaterThan(hasDiscoveredTools ? 30 : 10);
         expect(docs.some((d) => d.id === 'variant:heic-zu-png')).toBe(true);
-        expect(docs.some((d) => d.id === 'template:bild-portal')).toBe(true);
+        expect(docs.some((d) => d.kind === 'variant')).toBe(true);
     });
 });
 

@@ -121,18 +121,6 @@ export const stories = {
         toolIds: ['image-exif-strip'],
         status: 'ready',
     },
-    'story-bild-pipeline': {
-        id: 'story-bild-pipeline',
-        slug: 'bild-pipeline',
-        areaIds: ['bilder'],
-        role: 'Mehrere Schritte',
-        want: 'will ich mehrere Bildschritte an einem Foto ausführen',
-        title: 'Als Nutzer:in will ich Bilder in einer Pipeline bearbeiten',
-        situation: 'Konvertieren, komprimieren und verkleinern — alles an einem Foto.',
-        outcome: 'Verkettbare Bild-Pipeline im Arbeitsbereich',
-        toolIds: [],
-        status: 'ready',
-    },
     'story-bewerbung-eine-pdf': {
         id: 'story-bewerbung-eine-pdf',
         slug: 'pdf-zusammenfuegen',

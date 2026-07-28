@@ -2,7 +2,6 @@ import { areaOrder, areas, stories, tools } from '../data/catalog';
 import type { AreaId, StoryId, ToolId } from '../data/catalog/types';
 import {
     areaPath,
-    newWorkspacePath,
     storyPath,
     toolPath,
 } from '../routing/paths';
@@ -97,7 +96,7 @@ function buildStoryDocument(storyId: StoryId): SearchDocument {
         formats: [],
         actions: [],
         context: [],
-        multiStep: storyId === 'story-bild-pipeline',
+        multiStep: false,
     };
 
     for (const toolId of story.toolIds) {
@@ -154,31 +153,9 @@ function buildAreaDocument(areaId: AreaId): SearchDocument {
     };
 }
 
-function buildTemplateDocuments(): SearchDocument[] {
-    return [
-        {
-            id: 'template:bild-portal',
-            kind: 'template',
-            title: 'Bild-Portal',
-            subtitle: 'HEIC konvertieren, verkleinern, drehen und Metadaten entfernen — als Pipeline',
-            body: 'bild portal pipeline heic konvertieren verkleinern drehen metadaten mehrere schritte kette arbeitsbereich',
-            keywords: ['bild-portal', 'pipeline', 'heic', 'konvertieren'],
-            slots: {
-                formats: ['heic', 'jpg', 'png'],
-                actions: ['convert', 'compress', 'rotate', 'exif'],
-                context: ['pipeline', 'bild', 'iphone'],
-                multiStep: true,
-            },
-            href: newWorkspacePath('bild-portal'),
-            areaId: 'bilder',
-            storyId: 'story-bild-pipeline',
-        },
-    ];
-}
-
 let cachedDocuments: SearchDocument[] | null = null;
 
-/** Baut den Suchindex aus Katalog, Varianten, Stories und Vorlagen. */
+/** Baut den Suchindex aus Katalog, Varianten und Stories. */
 export function buildSearchDocuments(): SearchDocument[] {
     if (cachedDocuments) return cachedDocuments;
 
@@ -210,10 +187,6 @@ export function buildSearchDocuments(): SearchDocument[] {
 
     for (const variant of buildConversionVariants()) {
         add(buildVariantDocument(variant));
-    }
-
-    for (const template of buildTemplateDocuments()) {
-        add(template);
     }
 
     cachedDocuments = docs;

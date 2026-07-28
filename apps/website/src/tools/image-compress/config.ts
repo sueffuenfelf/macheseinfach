@@ -1,4 +1,3 @@
-import { createImageStepWidget } from '../_shared/widgets/ImageStepWidget';
 import { defineTool } from '../types';
 import { ImageCompressTool } from './ImageCompressTool';
 
@@ -26,18 +25,6 @@ export default defineTool(
     {
         catalog,
         page: ImageCompressTool,
-        widgets: [
-            createImageStepWidget('image-compress', {
-                widgetId: 'widget-image-compress',
-                title: 'Bild komprimieren',
-                description: 'Bilder mit Qualität 82 % komprimieren — Pipeline-fähig.',
-                tags: ['Foto', 'PNG', 'JPG', 'Pipeline'],
-                step: { kind: 'compress', compress: { quality: 0.82, format: 'jpg' } },
-                actionLabel: 'Bild komprimieren',
-                defaultW: 5,
-                defaultH: 4,
-            }),
-        ],
     },
     'image-compress',
 );

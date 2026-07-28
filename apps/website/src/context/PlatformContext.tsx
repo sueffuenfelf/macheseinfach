@@ -31,7 +31,6 @@ export type ShellView = 'main' | 'settings';
 
 export type RouteSnapshot = {
     page: AppPage;
-    workspaceId: string | null;
     areaId: AreaId | null;
     storyId: StoryId | null;
     tool: Tool | null;
@@ -40,7 +39,6 @@ export type RouteSnapshot = {
 
 type PlatformContextValue = {
     page: AppPage;
-    activeWorkspaceId: string | null;
     shellView: ShellView;
     activeAreaId: AreaId | null;
     activeStoryId: StoryId | null;
@@ -108,7 +106,6 @@ function writeStored(key: string, value: ToolId[]): void {
 export function PlatformProvider({ children }: { children: ReactNode }) {
     const { toast } = useToast();
     const [page, setPage] = useState<AppPage>('home');
-    const [activeWorkspaceId, setActiveWorkspaceId] = useState<string | null>(null);
     const [shellView, setShellView] = useState<ShellView>('main');
     const [activeAreaId, setActiveAreaId] = useState<AreaId | null>(null);
     const [activeStoryId, setActiveStoryId] = useState<StoryId | null>(null);
@@ -130,7 +127,6 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
 
     const applyRoute = useCallback((snapshot: RouteSnapshot) => {
         setPage(snapshot.page);
-        setActiveWorkspaceId(snapshot.workspaceId);
         setShellView(snapshot.page === 'settings' ? 'settings' : 'main');
         setActiveAreaId(snapshot.areaId);
         setActiveStoryId(snapshot.storyId);
@@ -138,13 +134,12 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
         setActiveTags([...snapshot.tags]);
         if (
             snapshot.page === 'home' ||
-            snapshot.page === 'workspace' ||
             snapshot.page === 'favorites' ||
             snapshot.page === 'settings'
         ) {
             setFileState(null);
         }
-        if (snapshot.page === 'home' || snapshot.page === 'workspace') {
+        if (snapshot.page === 'home') {
             setQueryState('');
         }
         if (snapshot.tool) {
@@ -283,7 +278,6 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
     const value = useMemo<PlatformContextValue>(
         () => ({
             page,
-            activeWorkspaceId,
             shellView,
             activeAreaId,
             activeStoryId,
@@ -319,7 +313,6 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
         }),
         [
             page,
-            activeWorkspaceId,
             shellView,
             activeAreaId,
             activeStoryId,

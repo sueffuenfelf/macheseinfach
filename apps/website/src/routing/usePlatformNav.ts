@@ -20,7 +20,6 @@ import {
     storyPath,
     toolPath,
     toolShortcutPath,
-    workspacePath,
 } from './paths';
 
 export function usePlatformNav() {
@@ -42,13 +41,6 @@ export function usePlatformNav() {
     const goToSearch = useCallback(
         (query?: string) => {
             navigate(searchPath(query));
-        },
-        [navigate],
-    );
-
-    const goToWorkspace = useCallback(
-        (workspaceId: string) => {
-            navigate(workspacePath(workspaceId));
         },
         [navigate],
     );
@@ -154,7 +146,6 @@ export function usePlatformNav() {
         goToFavorites,
         goToSettings,
         goToSearch,
-        goToWorkspace,
         openSettings: goToSettings,
         closeSettings: goHome,
         selectArea,

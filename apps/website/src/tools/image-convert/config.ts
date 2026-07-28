@@ -1,5 +1,3 @@
-import { createImageStepWidget } from '../_shared/widgets/ImageStepWidget';
-import { IMAGE_FILE_DROP_WIDGET_DEF } from '../_shared/widgets/ImageFileDropWidget';
 import { buildConversionVariants } from '../_shared/image/variants';
 import { defineTool } from '../types';
 import { ImageConvertTool } from './ImageConvertTool';
@@ -29,19 +27,6 @@ export default defineTool(
         catalog,
         page: ImageConvertTool,
         variants: buildConversionVariants,
-        widgets: [
-            IMAGE_FILE_DROP_WIDGET_DEF,
-            createImageStepWidget('image-convert', {
-                widgetId: 'widget-image-convert',
-                title: 'Bild-Konverter',
-                description: 'HEIC/PNG/WebP in JPG oder PNG umwandeln — Pipeline-fähig.',
-                tags: ['HEIC', 'PNG', 'JPG', 'Pipeline'],
-                step: { kind: 'convert', convert: { to: 'jpg' } },
-                actionLabel: 'Bild konvertieren',
-                defaultW: 5,
-                defaultH: 4,
-            }),
-        ],
     },
     'image-convert',
 );

@@ -2,7 +2,6 @@ import { areas } from './areas';
 import { stories } from './stories';
 import { catalogTags } from './tags';
 import { tools } from './tools';
-import { listDiscoveredWidgets } from '../../tools/discover';
 import { getAllToolVariants } from '../../tools/variant-registry';
 import type {
     AreaId,
@@ -173,19 +172,6 @@ export function validateCatalog(): CatalogValidationResult {
                     ),
                 );
             }
-        }
-    }
-
-    const widgets = listDiscoveredWidgets();
-    for (const tool of Object.values(tools)) {
-        const count = widgets.filter((widget) => widget.toolId === tool.id).length;
-        if (count === 0) {
-            issues.push(
-                issue(
-                    'TOOL_NO_WIDGETS',
-                    `Tool ${tool.id} hat keine registrierten Widgets (tools/${tool.id}/config.ts)`,
-                ),
-            );
         }
     }
 

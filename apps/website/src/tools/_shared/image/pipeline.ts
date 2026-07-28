@@ -15,11 +15,3 @@ export const IMAGE_TOOL_CHAIN: Partial<Record<ToolId, ImagePipelineNextStep>> = 
 export function getNextImagePipelineStep(toolId: ToolId): ImagePipelineNextStep | undefined {
     return IMAGE_TOOL_CHAIN[toolId];
 }
-
-export const BILD_PORTAL_WIDGET_IDS = [
-    'widget-image-file-drop',
-    'widget-image-convert',
-    'widget-image-compress',
-    'widget-image-resize',
-    'widget-image-exif-strip',
-] as const;

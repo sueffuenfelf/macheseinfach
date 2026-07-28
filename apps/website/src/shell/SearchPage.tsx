@@ -23,8 +23,6 @@ function kindLabel(kind: ScoredResult['document']['kind']): string {
             return 'Situation';
         case 'area':
             return 'Bereich';
-        case 'template':
-            return 'Vorlage';
     }
 }
 

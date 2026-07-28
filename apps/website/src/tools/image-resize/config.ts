@@ -1,4 +1,3 @@
-import { createImageStepWidget } from '../_shared/widgets/ImageStepWidget';
 import { defineTool } from '../types';
 import { ImageResizeTool } from './ImageResizeTool';
 
@@ -26,18 +25,6 @@ export default defineTool(
     {
         catalog,
         page: ImageResizeTool,
-        widgets: [
-            createImageStepWidget('image-resize', {
-                widgetId: 'widget-image-resize',
-                title: 'Bild verkleinern',
-                description: 'Max. 1920 px — Pipeline-fähig.',
-                tags: ['Foto', 'PNG', 'JPG', 'Pipeline'],
-                step: { kind: 'resize', resize: { maxWidth: 1920, maxHeight: 1920, format: 'jpg' } },
-                actionLabel: 'Bild skalieren',
-                defaultW: 5,
-                defaultH: 4,
-            }),
-        ],
     },
     'image-resize',
 );

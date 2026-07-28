@@ -1,4 +1,3 @@
-import { createFileTaskWidget } from '../_shared/widgets/FileTaskWidget';
 import { defineTool } from '../types';
 import { PdfRedactTool } from './PdfRedactTool';
 
@@ -26,20 +25,6 @@ export default defineTool(
     {
         catalog,
         page: PdfRedactTool,
-        widgets: [
-            createFileTaskWidget(catalog, {
-                widgetId: 'widget-pdf-redact',
-                title: 'PDF Schwärzen',
-                description: 'Dokument vorbereiten und sensible Stellen im Tool markieren.',
-                tags: ['PDF', 'Datenschutz', 'Schwärzen'],
-                acceptLabel: 'PDF',
-                emptyHint: 'Ziehe das PDF mit sensiblen Daten hier hinein.',
-                footerHint: 'Schwärzung erfolgt nach Öffnen des Tools.',
-                openLabel: 'Redact-Tool öffnen',
-                defaultW: 5,
-                defaultH: 4,
-            }),
-        ],
     },
     'pdf-redact',
 );

@@ -1,7 +1,5 @@
 import { defineTool } from '../types';
 import { GiroCodeTool } from './GiroCodeTool';
-import { QuickGiroWidget } from './widgets/QuickGiroWidget';
-import { QuickQrWidget } from './widgets/QuickQrWidget';
 
 const catalog = {
     id: 'girocode-gen',
@@ -28,40 +26,6 @@ export default defineTool(
     {
         catalog,
         page: GiroCodeTool,
-        widgets: [
-            {
-                id: 'widget-girocode-quick',
-                title: 'GiroCode Mini',
-                description: 'Kompakter GiroCode-Generator fuer schnelle Zahlungen.',
-                tags: ['QR', 'Rechnung', 'Quick'],
-                component: QuickGiroWidget,
-                minW: 4,
-                maxW: 7,
-                minH: 4,
-                maxH: 7,
-                defaultW: 5,
-                defaultH: 5,
-            },
-            {
-                id: 'widget-qr-mini',
-                title: 'QR Mini',
-                description: 'Beliebigen Text als QR erstellen.',
-                tags: ['QR', 'Quick'],
-                component: QuickQrWidget,
-                supportsSharedInput: true,
-                supportsLinkedInput: true,
-                outputPorts: [
-                    { id: 'value', label: 'Text' },
-                    { id: 'status', label: 'Status' },
-                ],
-                minW: 4,
-                maxW: 8,
-                minH: 2,
-                maxH: 4,
-                defaultW: 4,
-                defaultH: 2,
-            },
-        ],
     },
     'girocode-gen',
 );

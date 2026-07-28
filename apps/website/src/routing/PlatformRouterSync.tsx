@@ -13,7 +13,6 @@ export function PlatformRouterSync() {
         const route = parsePathname(location.pathname, location.search);
 
         applyRoute({
-            workspaceId: route.workspaceId,
             areaId: route.areaId,
             storyId: route.storyId,
             tool: route.toolId ? getTool(route.toolId) : null,

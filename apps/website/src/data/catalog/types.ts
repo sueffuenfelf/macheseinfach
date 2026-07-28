@@ -23,7 +23,6 @@ export const STORY_IDS = [
     'story-bild-verkleinern',
     'story-bild-ausrichten',
     'story-bild-metadaten',
-    'story-bild-pipeline',
     'story-bewerbung-eine-pdf',
     'story-vertrag-unterschreiben',
     'story-scan-text-kopieren',

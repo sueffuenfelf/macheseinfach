@@ -6,15 +6,9 @@ import { ToolBody } from './tools';
 
 type ToolWorkspaceProps = {
     tool: Tool;
-    onAddToWorkspace?: () => void;
-    addToWorkspaceLabel?: string;
 };
 
-export function ToolWorkspace({
-    tool,
-    onAddToWorkspace,
-    addToWorkspaceLabel = 'Zu Arbeitsbereich hinzufügen',
-}: ToolWorkspaceProps) {
+export function ToolWorkspace({ tool }: ToolWorkspaceProps) {
     const { activeAreaId, toggleFavorite, isFavorite } = usePlatformNav();
     const area = areas[activeAreaId ?? tool.areas[0]];
     const favorite = isFavorite(tool.id);
@@ -48,15 +42,6 @@ export function ToolWorkspace({
                         </div>
                     </div>
                     <div className="flex w-full shrink-0 items-center gap-2 sm:w-auto">
-                        {onAddToWorkspace ? (
-                            <button
-                                type="button"
-                                onClick={onAddToWorkspace}
-                                className="ms-btn min-h-11 flex-1 px-3 py-2 text-[12px] font-semibold sm:min-h-0 sm:flex-none"
-                            >
-                                {addToWorkspaceLabel}
-                            </button>
-                        ) : null}
                         <button
                             type="button"
                             aria-label={favorite ? 'Favorit entfernen' : 'Als Favorit markieren'}

@@ -1,4 +1,3 @@
-import { createFileTaskWidget } from '../_shared/widgets/FileTaskWidget';
 import { defineTool } from '../types';
 import { PdfCompressTool } from './PdfCompressTool';
 
@@ -26,20 +25,6 @@ export default defineTool(
     {
         catalog,
         page: PdfCompressTool,
-        widgets: [
-            createFileTaskWidget(catalog, {
-                widgetId: 'widget-pdf-compress',
-                title: 'PDF Kompakt',
-                description: 'Upload-Datei vorbereiten und Größe im Blick behalten.',
-                tags: ['PDF', 'Komprimieren', 'Upload'],
-                acceptLabel: 'PDF',
-                emptyHint: 'Lege ein PDF zum Komprimieren ab.',
-                footerHint: 'Komprimierung danach im Tool ausführen.',
-                openLabel: 'PDF-Tool öffnen',
-                defaultW: 5,
-                defaultH: 4,
-            }),
-        ],
     },
     'pdf-compress',
 );

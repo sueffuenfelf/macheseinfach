@@ -1,4 +1,3 @@
-import { createFileTaskWidget } from '../_shared/widgets/FileTaskWidget';
 import { defineTool } from '../types';
 
 const catalog = {
@@ -25,20 +24,6 @@ const catalog = {
 export default defineTool(
     {
         catalog,
-        widgets: [
-            createFileTaskWidget(catalog, {
-                widgetId: 'widget-epc-read',
-                title: 'EPC Reader',
-                description: 'Rechnung oder QR-Datei laden und direkt für EPC-Lesen vorbereiten.',
-                tags: ['EPC', 'QR', 'Datei'],
-                acceptLabel: 'PDF, PNG, JPG',
-                emptyHint: 'Lade eine Rechnung oder einen Scan mit EPC-Code.',
-                footerHint: 'Für exakte Erkennung anschließend das Tool öffnen.',
-                openLabel: 'EPC-Tool öffnen',
-                defaultW: 5,
-                defaultH: 4,
-            }),
-        ],
     },
     'epc-read',
 );

@@ -1,6 +1,6 @@
 import type { AreaId, StoryId, ToolId } from '../data/catalog/types';
 
-export type SearchDocumentKind = 'tool' | 'variant' | 'story' | 'area' | 'template';
+export type SearchDocumentKind = 'tool' | 'variant' | 'story' | 'area';
 
 export type DocumentSlots = {
     formats: string[];

@@ -6,8 +6,6 @@ export type MacheseinfaSettings = {
     autoCopyCommandResults: boolean;
     /** OS notifications when the tab is in the background */
     backgroundNotifications: boolean;
-    /** Enables per-widget source/target links in dashboard settings. */
-    advancedWidgetLinking: boolean;
     /** Chrome Prompt API für Suche (Stage 3) — default an wenn verfügbar */
     chromeSearchAi: boolean;
 };
@@ -15,14 +13,12 @@ export type MacheseinfaSettings = {
 const DEFAULT_SETTINGS: MacheseinfaSettings = {
     autoCopyCommandResults: true,
     backgroundNotifications: false,
-    advancedWidgetLinking: false,
     chromeSearchAi: true,
 };
 
 type SettingsContextValue = {
     settings: MacheseinfaSettings;
     setAutoCopyCommandResults: (value: boolean) => void;
-    setAdvancedWidgetLinking: (value: boolean) => void;
     updateSettings: (patch: Partial<MacheseinfaSettings>) => void;
 };
 
@@ -42,10 +38,6 @@ function readSettings(): MacheseinfaSettings {
                 typeof parsed.backgroundNotifications === 'boolean'
                     ? parsed.backgroundNotifications
                     : DEFAULT_SETTINGS.backgroundNotifications,
-            advancedWidgetLinking:
-                typeof parsed.advancedWidgetLinking === 'boolean'
-                    ? parsed.advancedWidgetLinking
-                    : DEFAULT_SETTINGS.advancedWidgetLinking,
             chromeSearchAi:
                 typeof parsed.chromeSearchAi === 'boolean'
                     ? parsed.chromeSearchAi
@@ -79,14 +71,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         (value: boolean) => updateSettings({ autoCopyCommandResults: value }),
         [updateSettings],
     );
-    const setAdvancedWidgetLinking = useCallback(
-        (value: boolean) => updateSettings({ advancedWidgetLinking: value }),
-        [updateSettings],
-    );
 
     const value = useMemo(
-        () => ({ settings, setAutoCopyCommandResults, setAdvancedWidgetLinking, updateSettings }),
-        [settings, setAutoCopyCommandResults, setAdvancedWidgetLinking, updateSettings],
+        () => ({ settings, setAutoCopyCommandResults, updateSettings }),
+        [settings, setAutoCopyCommandResults, updateSettings],
     );
 
     return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;

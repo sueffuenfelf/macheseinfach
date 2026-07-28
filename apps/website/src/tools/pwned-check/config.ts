@@ -1,6 +1,4 @@
 import { defineTool } from '../types';
-import { PasswordMiniWidget } from './widgets/PasswordMiniWidget';
-import { QuickLeakWidget } from './widgets/QuickLeakWidget';
 
 export default defineTool(
     {
@@ -24,39 +22,6 @@ export default defineTool(
             areas: ['security'],
             storyIds: ['story-leak-email-passwort'],
         },
-        widgets: [
-            {
-                id: 'widget-leak-check',
-                title: 'Leak-Check',
-                description: 'E-Mail auf bekannte Leaks pruefen.',
-                tags: ['Security', 'E-Mail'],
-                component: QuickLeakWidget,
-                supportsLinkedInput: true,
-                outputPorts: [
-                    { id: 'value', label: 'E-Mail' },
-                    { id: 'status', label: 'Status' },
-                ],
-                minW: 3,
-                maxW: 6,
-                minH: 3,
-                maxH: 5,
-                defaultW: 4,
-                defaultH: 3,
-            },
-            {
-                id: 'widget-password-mini',
-                title: 'Passwort Generator',
-                description: 'Lokaler Passwortgenerator mit Copy.',
-                tags: ['Passwort', 'Generator'],
-                component: PasswordMiniWidget,
-                minW: 4,
-                maxW: 8,
-                minH: 2,
-                maxH: 4,
-                defaultW: 4,
-                defaultH: 2,
-            },
-        ],
     },
     'pwned-check',
 );

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSettings } from '../context/SettingsContext';
-import { getTool, type Tool, type ToolId } from '../data/catalog';
+import { getTool, type Tool } from '../data/catalog';
 import { resolveSearch, type ScoredResult } from '../search';
 import { copyToClipboard } from '../lib/format';
 import { useToast } from './toast';
@@ -19,7 +19,6 @@ import { Badge, SectionLabel } from './components/Primitives';
 
 type CommandPaletteProps = {
     open: boolean;
-    toolIds?: readonly ToolId[];
     onClose: () => void;
     onSelectScenario: (tool: Tool) => void;
     onSelectResult?: (result: ScoredResult) => void;
@@ -27,7 +26,6 @@ type CommandPaletteProps = {
 
 export function CommandPalette({
     open,
-    toolIds,
     onClose,
     onSelectScenario,
     onSelectResult,
@@ -53,10 +51,6 @@ export function CommandPalette({
     });
 
     const commandMode = isCommandMode(localQuery);
-    const workspaceTools = useMemo(
-        () => (toolIds && toolIds.length > 0 ? toolIds.map((toolId) => getTool(toolId)) : null),
-        [toolIds],
-    );
 
     useEffect(() => {
         if (!open || commandMode) {
@@ -72,15 +66,7 @@ export function CommandPalette({
                 limit: 12,
             }).then((next) => {
                 if (cancelled) return;
-                let filtered = next;
-                if (workspaceTools) {
-                    const allowed = new Set(workspaceTools.map((tool) => tool.id));
-                    filtered = next.filter(
-                        (entry) =>
-                            entry.document.toolId && allowed.has(entry.document.toolId),
-                    );
-                }
-                setSearchResults(filtered);
+                setSearchResults(next);
                 setSearchLoading(false);
             });
         }, 150);
@@ -89,7 +75,7 @@ export function CommandPalette({
             cancelled = true;
             clearTimeout(timer);
         };
-    }, [localQuery, commandMode, open, settings.chromeSearchAi, workspaceTools]);
+    }, [localQuery, commandMode, open, settings.chromeSearchAi]);
     const commandResults = useMemo(
         () => (commandMode ? filterSlashCommands(localQuery) : []),
         [localQuery, commandMode],

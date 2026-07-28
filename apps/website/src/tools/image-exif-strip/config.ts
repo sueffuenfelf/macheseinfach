@@ -1,4 +1,3 @@
-import { createImageStepWidget } from '../_shared/widgets/ImageStepWidget';
 import { defineTool } from '../types';
 import { ImageExifStripTool } from './ImageExifStripTool';
 
@@ -26,18 +25,6 @@ export default defineTool(
     {
         catalog,
         page: ImageExifStripTool,
-        widgets: [
-            createImageStepWidget('image-exif-strip', {
-                widgetId: 'widget-image-exif-strip',
-                title: 'Metadaten entfernen',
-                description: 'EXIF/GPS entfernen — Pipeline-fähig.',
-                tags: ['Foto', 'Datenschutz', 'Pipeline'],
-                step: { kind: 'exif-strip', exif: { format: 'jpg' } },
-                actionLabel: 'Metadaten entfernen',
-                defaultW: 5,
-                defaultH: 4,
-            }),
-        ],
     },
     'image-exif-strip',
 );

@@ -15,7 +15,6 @@ import { getVariantBySlug } from '../tools/variant-registry';
 
 export type AppPage =
     | 'home'
-    | 'workspace'
     | 'area'
     | 'story'
     | 'tool'
@@ -42,20 +41,6 @@ export function searchPath(query?: string): string {
 
 export function parseSearchQuery(search: string): string {
     return new URLSearchParams(search).get('q')?.trim() ?? '';
-}
-
-export function workspacePath(workspaceId: string): string {
-    return `/arbeitsbereich/${workspaceId}`;
-}
-
-export function newWorkspacePath(template?: string): string {
-    if (!template?.trim()) return '/arbeitsbereich/neu';
-    return `/arbeitsbereich/neu?template=${encodeURIComponent(template)}`;
-}
-
-export function parseWorkspaceTemplate(search: string): string | null {
-    const template = new URLSearchParams(search).get('template');
-    return template?.trim() || null;
 }
 
 export function areaPath(areaId: AreaId): string {
@@ -97,13 +82,23 @@ export function tagsToSearchParam(tags: readonly string[]): string {
 
 export type ParsedRoute = {
     page: AppPage;
-    workspaceId: string | null;
     areaId: AreaId | null;
     storyId: StoryId | null;
     toolId: ToolId | null;
     variantSlug: string | null;
     tags: string[];
 };
+
+function homeRoute(): ParsedRoute {
+    return {
+        page: 'home',
+        areaId: null,
+        storyId: null,
+        toolId: null,
+        variantSlug: null,
+        tags: [],
+    };
+}
 
 function resolveStoryFromSlug(storySlug: string) {
     const catalogStory = getStoryBySlug(storySlug);
@@ -137,20 +132,11 @@ export function parsePathname(pathname: string, search: string): ParsedRoute {
     const tags = parseTagsParam(new URLSearchParams(search).get('tags'));
 
     if (pathname === '/' || pathname === '') {
-        return {
-            page: 'home',
-            workspaceId: null,
-            areaId: null,
-            storyId: null,
-            toolId: null,
-            variantSlug: null,
-            tags: [],
-        };
+        return homeRoute();
     }
     if (pathname === '/favoriten') {
         return {
             page: 'favorites',
-            workspaceId: null,
             areaId: null,
             storyId: null,
             toolId: null,
@@ -161,7 +147,6 @@ export function parsePathname(pathname: string, search: string): ParsedRoute {
     if (pathname === '/einstellungen') {
         return {
             page: 'settings',
-            workspaceId: null,
             areaId: null,
             storyId: null,
             toolId: null,
@@ -172,7 +157,6 @@ export function parsePathname(pathname: string, search: string): ParsedRoute {
     if (pathname === '/suche') {
         return {
             page: 'search',
-            workspaceId: null,
             areaId: null,
             storyId: null,
             toolId: null,
@@ -180,17 +164,8 @@ export function parsePathname(pathname: string, search: string): ParsedRoute {
             tags: [],
         };
     }
-    const workspaceMatch = pathname.match(/^\/arbeitsbereich\/([^/]+)$/);
-    if (workspaceMatch) {
-        return {
-            page: 'workspace',
-            workspaceId: workspaceMatch[1],
-            areaId: null,
-            storyId: null,
-            toolId: null,
-            variantSlug: null,
-            tags: [],
-        };
+    if (pathname.match(/^\/arbeitsbereich\/([^/]+)$/)) {
+        return homeRoute();
     }
 
     const redirect = getRedirectTarget(pathname, search);
@@ -201,21 +176,11 @@ export function parsePathname(pathname: string, search: string): ParsedRoute {
     const toolShortcut = pathname.match(/^\/tool\/([^/]+)$/);
     if (toolShortcut) {
         const tool = getToolBySlug(toolShortcut[1]);
-        if (!tool)
-            return {
-                page: 'home',
-                workspaceId: null,
-                areaId: null,
-                storyId: null,
-                toolId: null,
-                variantSlug: null,
-                tags: [],
-            };
+        if (!tool) return homeRoute();
         const areaId = tool.areas[0] ?? null;
         const storyId = tool.storyIds[0] ?? null;
         return {
             page: 'tool',
-            workspaceId: null,
             areaId,
             storyId,
             toolId: tool.id,
@@ -226,34 +191,16 @@ export function parsePathname(pathname: string, search: string): ParsedRoute {
 
     const bereichMatch = pathname.match(/^\/bereich\/([^/]+)(?:\/([^/]+))?(?:\/([^/]+))?$/);
     if (!bereichMatch) {
-        return {
-            page: 'home',
-            workspaceId: null,
-            areaId: null,
-            storyId: null,
-            toolId: null,
-            variantSlug: null,
-            tags: [],
-        };
+        return homeRoute();
     }
 
     const [, areaSlug, storySlug, toolSlug] = bereichMatch;
     const area = getAreaBySlug(areaSlug);
-    if (!area)
-        return {
-            page: 'home',
-            workspaceId: null,
-            areaId: null,
-            storyId: null,
-            toolId: null,
-            variantSlug: null,
-            tags: [],
-        };
+    if (!area) return homeRoute();
 
     if (!storySlug) {
         return {
             page: 'area',
-            workspaceId: null,
             areaId: area.id,
             storyId: null,
             toolId: null,
@@ -266,7 +213,6 @@ export function parsePathname(pathname: string, search: string): ParsedRoute {
     if (!story || !story.areaIds.includes(area.id)) {
         return {
             page: 'area',
-            workspaceId: null,
             areaId: area.id,
             storyId: null,
             toolId: null,
@@ -278,7 +224,6 @@ export function parsePathname(pathname: string, search: string): ParsedRoute {
     if (!toolSlug) {
         return {
             page: 'story',
-            workspaceId: null,
             areaId: area.id,
             storyId: story.id as StoryId,
             toolId: null,
@@ -291,7 +236,6 @@ export function parsePathname(pathname: string, search: string): ParsedRoute {
     if (!tool) {
         return {
             page: 'story',
-            workspaceId: null,
             areaId: area.id,
             storyId: story.id as StoryId,
             toolId: null,
@@ -306,7 +250,6 @@ export function parsePathname(pathname: string, search: string): ParsedRoute {
         if (variant && variant.toolId === tool.id && tool.areas.includes(area.id)) {
             return {
                 page: 'tool',
-                workspaceId: null,
                 areaId: area.id,
                 storyId: story.id as StoryId,
                 toolId: tool.id,
@@ -321,7 +264,6 @@ export function parsePathname(pathname: string, search: string): ParsedRoute {
         if (storyTools.length === 1) {
             return {
                 page: 'tool',
-                workspaceId: null,
                 areaId: area.id,
                 storyId: story.id as StoryId,
                 toolId: storyTools[0].id,
@@ -331,7 +273,6 @@ export function parsePathname(pathname: string, search: string): ParsedRoute {
         }
         return {
             page: 'story',
-            workspaceId: null,
             areaId: area.id,
             storyId: story.id as StoryId,
             toolId: null,
@@ -342,7 +283,6 @@ export function parsePathname(pathname: string, search: string): ParsedRoute {
 
     return {
         page: 'tool',
-        workspaceId: null,
         areaId: area.id,
         storyId: story.id as StoryId,
         toolId: tool.id,
