@@ -12,7 +12,7 @@ import { ASSISTANT_STORAGE_KEYS } from '../types';
 const DEFAULT_SETTINGS: AssistantSettings = {
     layoutMode: 'floating',
     openRouterApiKey: '',
-    model: 'anthropic/claude-sonnet-4',
+    model: 'openrouter/free',
     enabled: false,
 };
 

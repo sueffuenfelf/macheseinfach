@@ -6,6 +6,7 @@ import { BackButton } from './components/Primitives';
 import { isFeatureEnabled } from '../lib/featureFlags';
 import {
     CURATED_MODELS,
+    isCuratedModel,
     readAssistantSettings,
     writeAssistantSettings,
 } from '../assistant/settings';
@@ -56,11 +57,9 @@ export function SettingsPage() {
     const { settings, setAutoCopyCommandResults, updateSettings } = useSettings();
     const [notifHint, setNotifHint] = useState<string | null>(null);
     const [assistantSettings, setAssistantSettings] = useState(() => readAssistantSettings());
-    const [customModel, setCustomModel] = useState(
-        () =>
-            CURATED_MODELS.some((m) => m.id === assistantSettings.model)
-                ? ''
-                : assistantSettings.model,
+    const [customMode, setCustomMode] = useState(() => !isCuratedModel(assistantSettings.model));
+    const [customModel, setCustomModel] = useState(() =>
+        isCuratedModel(assistantSettings.model) ? '' : assistantSettings.model,
     );
     const chromeAvailable = chromeAiSearchAvailable();
     const assistantFlagOn = isFeatureEnabled('assistantChat');
@@ -192,35 +191,46 @@ export function SettingsPage() {
                         </label>
                         <select
                             id="assistant-model"
-                            value={
-                                CURATED_MODELS.some((m) => m.id === assistantSettings.model)
-                                    ? assistantSettings.model
-                                    : 'custom'
-                            }
+                            value={customMode ? 'custom' : assistantSettings.model}
                             onChange={(e) => {
                                 const value = e.target.value;
-                                if (value === 'custom') return;
-                                patchAssistant({ model: value });
+                                if (value === 'custom') {
+                                    setCustomMode(true);
+                                    setCustomModel(
+                                        isCuratedModel(assistantSettings.model)
+                                            ? ''
+                                            : assistantSettings.model,
+                                    );
+                                    return;
+                                }
+                                setCustomMode(false);
                                 setCustomModel('');
+                                patchAssistant({ model: value });
                             }}
                             className="ms-input ms-focus w-full text-[14px]"
                         >
                             {CURATED_MODELS.map((m) => (
-                                <option key={m.id} value={m.id}>{m.label}</option>
+                                <option key={m.id} value={m.id}>
+                                    {m.label}
+                                </option>
                             ))}
                             <option value="custom">Eigenes Modell …</option>
                         </select>
-                        {CURATED_MODELS.every((m) => m.id !== assistantSettings.model) ||
-                        customModel ? (
+                        {customMode ? (
                             <input
+                                id="assistant-model-custom"
                                 type="text"
-                                value={customModel || assistantSettings.model}
+                                value={customModel}
                                 onChange={(e) => {
-                                    setCustomModel(e.target.value);
-                                    patchAssistant({ model: e.target.value });
+                                    const next = e.target.value;
+                                    setCustomModel(next);
+                                    if (next.trim()) {
+                                        patchAssistant({ model: next.trim() });
+                                    }
                                 }}
                                 className="ms-input ms-focus w-full text-[14px]"
-                                placeholder="anthropic/claude-sonnet-4"
+                                placeholder="openrouter/free"
+                                aria-label="Eigenes Modell-ID"
                             />
                         ) : null}
                     </div>

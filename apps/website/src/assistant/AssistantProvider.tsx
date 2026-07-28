@@ -35,7 +35,12 @@ import {
 } from './toolHost';
 import { createThread, getAssistantPersistence, listThreadAttachments } from './persistence';
 import { buildActiveFlowContext } from './flow-context';
-import { readAssistantSettings, writeAssistantSettings, type AssistantSettings } from './settings';
+import {
+    ASSISTANT_SETTINGS_CHANGED_EVENT,
+    readAssistantSettings,
+    writeAssistantSettings,
+    type AssistantSettings,
+} from './settings';
 
 type ToolStep = {
     id: string;
@@ -452,13 +457,18 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
     );
 
     useEffect(() => {
+        const refresh = () => setSettings(readAssistantSettings());
         const onStorage = (e: StorageEvent) => {
             if (e.key === 'msf.assistant.settings' || e.key === 'msf.settings.openRouterApiKey') {
-                setSettings(readAssistantSettings());
+                refresh();
             }
         };
         window.addEventListener('storage', onStorage);
-        return () => window.removeEventListener('storage', onStorage);
+        window.addEventListener(ASSISTANT_SETTINGS_CHANGED_EVENT, refresh);
+        return () => {
+            window.removeEventListener('storage', onStorage);
+            window.removeEventListener(ASSISTANT_SETTINGS_CHANGED_EVENT, refresh);
+        };
     }, []);
 
     const value = useMemo<AssistantContextValue>(
