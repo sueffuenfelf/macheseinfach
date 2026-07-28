@@ -42,6 +42,7 @@ export const areas = {
         icon: ICONS.buchhaltung,
         storyIds: [
             'story-freelancer-girocode',
+            'story-freelancer-zahlung',
             'story-iban-vor-ueberweisung',
             'story-iban-aus-rechnung',
         ],
@@ -58,6 +59,7 @@ export const areas = {
         storyIds: [
             'story-elster-pdf-limit',
             'story-vermieter-gehalt-schwaarzen',
+            'story-vermieter-nachweis',
             'story-formular-ausfuellen',
         ],
     },
@@ -76,6 +78,8 @@ export const areas = {
             'story-bild-verkleinern',
             'story-bild-ausrichten',
             'story-bild-metadaten',
+            'story-portal-foto',
+            'story-vermieter-nachweis',
         ],
     },
     dokumente: {
@@ -142,7 +146,7 @@ export const areas = {
         description: 'Miete, Nebenkosten und Wohnalltag — Rechner und Checklisten für Mieter:innen.',
         accent: '#e8a0bf',
         icon: ICONS.wohnen,
-        storyIds: EMPTY_STORIES,
+        storyIds: ['story-vermieter-nachweis'],
     },
     einheiten: {
         id: 'einheiten',

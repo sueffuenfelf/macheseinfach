@@ -22,9 +22,7 @@ type StoryPickStepProps = {
     areaId: AreaId;
 };
 
-type AreaPickEntry =
-    | { kind: 'story'; story: UserStory }
-    | { kind: 'tool'; tool: ToolDefinition };
+type AreaPickEntry = { kind: 'story'; story: UserStory } | { kind: 'tool'; tool: ToolDefinition };
 
 function firstSelectableTool(tools: readonly ToolDefinition[]): ToolDefinition | null {
     return tools[0] ?? null;
@@ -65,7 +63,7 @@ export function StoryPickStep({ areaId }: StoryPickStepProps) {
 
     const hasStories = visibleStories.length > 0;
     const emptyHint = query.trim()
-        ? 'Keine Situation gefunden — passe die Suche an.'
+        ? 'Kein Vorhaben gefunden — Suche anpassen.'
         : 'In diesem Bereich sind noch keine Tools verfügbar.';
 
     return (
@@ -85,8 +83,8 @@ export function StoryPickStep({ areaId }: StoryPickStepProps) {
             </div>
             <p className="mt-3 max-w-[62ch] text-[15px] leading-relaxed text-[var(--color-ink-soft)] sm:text-[16px]">
                 {hasStories
-                    ? 'Wähle die Situation, die zu deinem Vorhaben passt. Wenn nur ein Tool passt, öffnen wir es direkt.'
-                    : 'Wähle ein Tool — wir öffnen es direkt. Situations-Karten folgen später.'}
+                    ? 'Wähle dein Vorhaben. Wenn nur ein Tool passt, öffnen wir es direkt.'
+                    : 'Wähle ein Tool — wir öffnen es direkt. Vorhaben-Karten folgen später.'}
             </p>
 
             <section className="mt-7 max-w-[720px]">
@@ -96,7 +94,7 @@ export function StoryPickStep({ areaId }: StoryPickStepProps) {
                         value={query}
                         onChange={setQuery}
                         onSubmit={submitSelection}
-                        placeholder={hasStories ? 'Situation suchen …' : 'Tool suchen …'}
+                        placeholder={hasStories ? 'Vorhaben suchen …' : 'Tool suchen …'}
                     />
                     {entries.length === 0 ? (
                         <p className="border-t-2 border-black px-4 py-4 text-[15px] text-[var(--color-ink-soft)]">
@@ -106,7 +104,7 @@ export function StoryPickStep({ areaId }: StoryPickStepProps) {
                         <ul
                             className="ms-stagger border-t-2 border-black"
                             role="listbox"
-                            aria-label={hasStories ? 'Situationen und Tools' : 'Tools'}
+                            aria-label={hasStories ? 'Vorhaben und Tools' : 'Tools'}
                         >
                             {entries.map((entry, index) => (
                                 <li
@@ -291,7 +289,7 @@ export function ToolPickForStory({ storyId }: { storyId: StoryId }) {
             <BackButton />
 
             <SectionLabel className="mt-6">
-                {storyTools.length > 1 ? 'Mehrere Tools gefunden' : 'Tool für diese Situation'}
+                {storyTools.length > 1 ? 'Mehrere Tools gefunden' : 'Tool für dieses Vorhaben'}
             </SectionLabel>
             <h2 className="mt-2 max-w-[48ch] font-display text-[23px] leading-tight font-bold tracking-[-0.02em] sm:text-[28px]">
                 {storyTools.length > 1

@@ -1,21 +1,31 @@
 import { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { usePlatformNav } from '../routing/usePlatformNav';
-import { favoritesPath, homePath, settingsPath } from '../routing/paths';
-import { BrandLogo } from './BrandLogo';
-import { AreaStep } from './AreaStep';
-import { FavoritesPage } from './FavoritesPage';
-import { GlobalActionPalette, type GlobalAction } from './GlobalActionPalette';
-import { SettingsPage } from './SettingsPage';
-import { SearchPage } from './SearchPage';
-import { StoryPickStep, ToolPickForStory } from './StoryPickStep';
-import { ConversionVariantHub } from './ConversionVariantHub';
+import { AssistantHost, AssistantProvider } from '../assistant';
+import { stories } from '../data/catalog';
+import { FlowWorkspace, shouldUseFlowWorkspace } from '../flow/FlowWorkspace';
+import { isFeatureEnabled } from '../lib/featureFlags';
 import { isConversionHubStory } from '../routing/conversion-hub';
+import { favoritesPath, homePath, settingsPath } from '../routing/paths';
+import { usePlatformNav } from '../routing/usePlatformNav';
+import { AreaStep } from './AreaStep';
+import { BrandLogo } from './BrandLogo';
+import { ConversionVariantHub } from './ConversionVariantHub';
+import { FavoritesPage } from './FavoritesPage';
+import { type GlobalAction, GlobalActionPalette } from './GlobalActionPalette';
+import { SearchPage } from './SearchPage';
+import { SettingsPage } from './SettingsPage';
+import { StoryPickStep, ToolPickForStory } from './StoryPickStep';
 import { ToolWorkspace } from './ToolWorkspace';
 
 export function ToolShell() {
     const platform = usePlatformNav();
     const { page, activeAreaId, activeStoryId, activeTool } = platform;
+
+    const flowWorkspaceActive = (() => {
+        if (!activeStoryId) return false;
+        if (isConversionHubStory(activeStoryId)) return false;
+        return shouldUseFlowWorkspace(stories[activeStoryId]);
+    })();
 
     useEffect(() => {
         document.documentElement.dataset.shell = 'brutalist';
@@ -52,6 +62,8 @@ export function ToolShell() {
             <SearchPage />
         ) : !activeAreaId ? (
             <AreaStep />
+        ) : flowWorkspaceActive && activeStoryId && (page === 'story' || page === 'tool') ? (
+            <FlowWorkspace flowId={activeStoryId} />
         ) : page === 'tool' && activeTool ? (
             <ToolWorkspace tool={activeTool} />
         ) : page === 'story' && activeStoryId ? (
@@ -68,7 +80,7 @@ export function ToolShell() {
 
     return (
         <div
-            className="flex min-h-screen flex-col bg-[var(--color-canvas)] text-[var(--color-ink)]"
+            className="flex min-h-screen flex-col bg-[var(--color-canvas)] text-[var(--color-ink)] ms-shell-main"
             data-shell="brutalist"
         >
             <header className="sticky top-0 z-30 border-b-2 border-black bg-white">
@@ -167,6 +179,12 @@ export function ToolShell() {
                     <span>Impressum</span>
                 </div>
             </footer>
+
+            {isFeatureEnabled('assistantChat') ? (
+                <AssistantProvider>
+                    <AssistantHost />
+                </AssistantProvider>
+            ) : null}
         </div>
     );
 }

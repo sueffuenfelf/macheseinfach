@@ -13,6 +13,15 @@ import { getVariantStoryBySlug } from './variant-stories';
 import type {
     AreaDefinition,
     AreaId,
+    FlowContextSchema,
+    FlowDefinition,
+    FlowRecommendation,
+    FlowSlotAccept,
+    FlowSlotDef,
+    FlowSlotKind,
+    FlowSlotPersist,
+    FlowStep,
+    FlowStepBindings,
     ScenarioEntry,
     StoryId,
     ToolDefinition,
@@ -26,6 +35,15 @@ import { assertCatalogValid } from './validate';
 export type {
     AreaDefinition,
     AreaId,
+    FlowContextSchema,
+    FlowDefinition,
+    FlowRecommendation,
+    FlowSlotAccept,
+    FlowSlotDef,
+    FlowSlotKind,
+    FlowSlotPersist,
+    FlowStep,
+    FlowStepBindings,
     ScenarioEntry,
     StoryId,
     ToolDefinition,
@@ -34,6 +52,7 @@ export type {
     ToolTheme,
     UserStory,
 };
+export { defaultPersistForKind, FLOW_SLOT_KINDS } from './types';
 export type Tool = ToolDefinition;
 /** @deprecated Alias für Tool — schrittweise Migration */
 export type Scenario = ToolDefinition;
@@ -78,8 +97,18 @@ export function toolsInArea(areaId: AreaId): ToolDefinition[] {
     return Object.values(tools).filter((t) => t.areas.includes(areaId));
 }
 
+/** Step tool ids for a flow/story (recommended excluded). */
+export function storyToolIds(story: FlowDefinition): readonly ToolId[] {
+    return story.steps.map((s) => s.toolId);
+}
+
+/** Step + recommended tool ids. */
+export function flowAllToolIds(story: FlowDefinition): readonly ToolId[] {
+    return [...story.steps.map((s) => s.toolId), ...(story.recommended ?? []).map((r) => r.toolId)];
+}
+
 export function toolsForStory(storyId: StoryId): ToolDefinition[] {
-    return stories[storyId].toolIds.map((id) => tools[id]);
+    return storyToolIds(stories[storyId]).map((id) => tools[id]);
 }
 
 /** Alle Tools als Liste — für Suche & ⌘K */

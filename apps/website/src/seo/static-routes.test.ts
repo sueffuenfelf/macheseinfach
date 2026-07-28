@@ -12,6 +12,9 @@ describe('static routes', () => {
         expect(paths).toContain('/bereich/bilder/heic-zu-png/image-convert');
         expect(paths).toContain('/bereich/bilder/bild-verkleinern/image-compress');
         expect(paths).toContain('/bereich/bilder/bild-metadaten/image-exif-strip');
+        expect(paths).toContain('/bereich/wohnen/vermieter-nachweis');
+        expect(paths).toContain('/bereich/buchhaltung/freelancer-zahlung');
+        expect(paths).toContain('/bereich/bilder/portal-foto');
 
         const variantRoutes = routes.filter((route) => route.variant);
         expect(variantRoutes.length).toBe(8);

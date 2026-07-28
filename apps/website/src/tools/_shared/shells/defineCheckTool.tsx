@@ -27,5 +27,12 @@ export function defineCheckTool(def: CheckToolDefinition, expectedId?: string): 
             />
         );
     }
-    return defineTool({ catalog: def.catalog, page: Page }, expectedId);
+    return defineTool(
+        {
+            catalog: def.catalog,
+            page: Page,
+            shell: { kind: 'check', fields: def.fields, check: def.check },
+        },
+        expectedId,
+    );
 }

@@ -82,15 +82,16 @@ function buildVariantDocument(variant: ToolVariant): SearchDocument {
 function buildStoryDocument(storyId: StoryId): SearchDocument {
     const story = stories[storyId];
     const areaId = story.areaIds[0]!;
-    const primaryToolId = story.toolIds[0];
+    const stepToolIds = story.steps.map((s) => s.toolId);
+    const primaryToolId = stepToolIds[0];
     const slots: DocumentSlots = {
         formats: [],
         actions: [],
         context: [],
-        multiStep: false,
+        multiStep: stepToolIds.length > 1,
     };
 
-    for (const toolId of story.toolIds) {
+    for (const toolId of stepToolIds) {
         const tool = tools[toolId as keyof typeof tools];
         if (!tool) continue;
         const toolSlots = inferToolSlots(tool.id, tool.tags);
@@ -109,7 +110,7 @@ function buildStoryDocument(storyId: StoryId): SearchDocument {
         title: story.outcome,
         subtitle: story.situation,
         body: joinParts([story.title, story.role, story.want, story.situation, story.outcome]),
-        keywords: [story.slug, story.role, story.want],
+        keywords: [story.slug, story.role, story.want, 'Vorhaben'],
         slots,
         href: storyPath(areaId, story.id),
         areaId,
@@ -160,10 +161,9 @@ export function buildSearchDocuments(): SearchDocument[] {
         const area = areas[areaId];
         for (const storyId of area.storyIds) {
             const story = stories[storyId];
-            if (story.status === 'planned' && (story.toolIds as readonly ToolId[]).length === 0)
-                continue;
+            if (story.status === 'planned' && story.steps.length === 0) continue;
             add(buildStoryDocument(storyId));
-            for (const toolId of story.toolIds) {
+            for (const toolId of story.steps.map((s) => s.toolId)) {
                 const tool = tools[toolId as keyof typeof tools];
                 if (!tool) continue;
                 if (tool.areas.includes(areaId)) {

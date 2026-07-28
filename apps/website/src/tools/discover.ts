@@ -1,9 +1,11 @@
 import type { ComponentType } from 'react';
 import type { ToolDefinition, ToolId } from '../data/catalog/types';
 import type { ToolModule } from './types';
+import type { ToolShellRuntime } from './shell-runtime';
 import { registerToolVariants } from './variant-registry';
 
 const toolPages = new Map<ToolId, ComponentType<{ tool: ToolDefinition }>>();
+const toolShells = new Map<ToolId, ToolShellRuntime>();
 const discoveredIds: string[] = [];
 const discoveredTools: Record<string, ToolDefinition> = {};
 
@@ -43,6 +45,9 @@ for (const [path, loaded] of Object.entries(modules)) {
     discoveredTools[folderId] = { ...catalog, id: folderId };
     if (module.page) {
         toolPages.set(folderId, module.page);
+    }
+    if (module.shell) {
+        toolShells.set(folderId, module.shell);
     }
 
     if (module.variants) {
@@ -87,6 +92,10 @@ export const tools = discoveredTools as Record<ToolId, ToolDefinition>;
 
 export function getToolPage(id: ToolId): ComponentType<{ tool: ToolDefinition }> | undefined {
     return toolPages.get(id);
+}
+
+export function getToolShellRuntime(id: ToolId): ToolShellRuntime | undefined {
+    return toolShells.get(id);
 }
 
 export { getAllToolVariants, getVariantBySlug, getVariantsForTool } from './variant-registry';

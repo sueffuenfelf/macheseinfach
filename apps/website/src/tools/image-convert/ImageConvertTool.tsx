@@ -15,6 +15,7 @@ import { getFormat, IMAGE_FORMATS, liveTargetFormats } from '../_shared/image/fo
 import { downloadBlob } from '../_shared/pdf/io';
 import type { ImageFormatId } from '../_shared/image/types';
 import { ContinueWithNextTool, useImageToolSession } from '../_shared/image/useImageToolSession';
+import { useFlowImageFile } from '../_shared/image/useFlowImageFile';
 
 type ImageConvertToolProps = {
     tool: Tool;
@@ -109,7 +110,23 @@ export function ImageConvertTool({ tool }: ImageConvertToolProps) {
         convertedRef.current.clear();
     }, []);
 
+    const flowFile = useFlowImageFile(tool.id, 'file');
+
     useImageToolSession({ toolId: tool.id, onIncomingFile: acceptIncomingFile });
+
+    useEffect(() => {
+        if (!flowFile.boundFile) return;
+        acceptIncomingFile(flowFile.boundFile);
+    }, [acceptIncomingFile, flowFile.boundFile]);
+
+    useEffect(() => {
+        if (jobStatus === 'completed' && jobDoneCount > 0) {
+            flowFile.reportSuccess();
+            const first = convertedRef.current.values().next().value;
+            if (first) flowFile.writeBack(first.blob, first.filename);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- fire once per completed job
+    }, [jobStatus, jobDoneCount]);
 
     useEffect(() => {
         if (params.to && params.to !== targetFormat) {
@@ -234,38 +251,48 @@ export function ImageConvertTool({ tool }: ImageConvertToolProps) {
                 className="ms-animate-fade mx-auto w-full max-w-3xl space-y-4 px-4 py-6 md:px-6"
                 aria-busy={working}
             >
-                <section
-                    className="ms-dropzone rounded-xl p-6 text-center"
-                    data-drag={dragOver}
-                    onDragOver={onDragOver}
-                    onDragLeave={onDragLeave}
-                    onDrop={onDrop}
-                >
-                    <p className="font-display text-[20px] font-bold tracking-[-0.02em]">
-                        {heading}
-                    </p>
-                    <p className="mt-2 text-[14px] text-[var(--color-ink-soft)]">
-                        Mehrere Dateien werden in der Warteschlange verarbeitet — du kannst
-                        wegnavigieren.
-                    </p>
-                    <button
-                        type="button"
-                        className="ms-btn mt-4"
-                        onClick={() => fileInputRef.current?.click()}
+                {flowFile.bound ? (
+                    <div className="mb-1">{flowFile.chip}</div>
+                ) : (
+                    <section
+                        className="ms-dropzone rounded-xl p-6 text-center"
+                        data-drag={dragOver}
+                        data-flow-source="local"
+                        data-testid="image-convert-dropzone"
+                        onDragOver={onDragOver}
+                        onDragLeave={onDragLeave}
+                        onDrop={onDrop}
                     >
-                        Dateien auswählen
-                    </button>
-                    <input
-                        ref={fileInputRef}
-                        className="ms-sr-only"
-                        type="file"
-                        multiple
-                        accept={IMAGE_ACCEPT}
-                        onChange={(e) => {
-                            if (e.target.files) appendFiles(e.target.files);
-                        }}
-                    />
-                </section>
+                        <p className="font-display text-[20px] font-bold tracking-[-0.02em]">
+                            {heading}
+                        </p>
+                        <p className="mt-2 text-[14px] text-[var(--color-ink-soft)]">
+                            Mehrere Dateien werden in der Warteschlange verarbeitet — du kannst
+                            wegnavigieren.
+                        </p>
+                        <button
+                            type="button"
+                            className="ms-btn mt-4"
+                            onClick={() => fileInputRef.current?.click()}
+                        >
+                            Dateien auswählen
+                        </button>
+                        <input
+                            ref={fileInputRef}
+                            className="ms-sr-only"
+                            type="file"
+                            multiple
+                            accept={IMAGE_ACCEPT}
+                            onChange={(e) => {
+                                if (e.target.files) {
+                                    appendFiles(e.target.files);
+                                    const first = e.target.files[0];
+                                    if (first) flowFile.onLocalFile(first);
+                                }
+                            }}
+                        />
+                    </section>
+                )}
 
                 {fileEntries.length ? (
                     <div className="flex flex-wrap gap-2">

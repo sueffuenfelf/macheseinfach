@@ -9,7 +9,7 @@ function kindLabel(kind: ScoredResult['document']['kind']): string {
         case 'variant':
             return 'Variante';
         case 'story':
-            return 'Situation';
+            return 'Vorhaben';
         case 'area':
             return 'Bereich';
     }
@@ -51,8 +51,7 @@ export function SearchResultRow({
     const areaId = doc.areaId as AreaId | undefined;
     const accent = areaId ? areas[areaId].accent : '#e5e5e5';
     const isArea = doc.kind === 'area';
-    const command =
-        doc.toolId && doc.kind !== 'area' ? getTool(doc.toolId).command : null;
+    const command = doc.toolId && doc.kind !== 'area' ? getTool(doc.toolId).command : null;
 
     return (
         <button

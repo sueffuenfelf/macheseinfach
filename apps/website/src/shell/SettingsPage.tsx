@@ -3,6 +3,12 @@ import { useSettings } from '../context/SettingsContext';
 import { chromeAiSearchAvailable } from '../search/intents-chrome';
 import { requestNotificationPermission } from './toast';
 import { BackButton } from './components/Primitives';
+import { isFeatureEnabled } from '../lib/featureFlags';
+import {
+    CURATED_MODELS,
+    readAssistantSettings,
+    writeAssistantSettings,
+} from '../assistant/settings';
 
 type BrutalistToggleProps = {
     id: string;
@@ -49,7 +55,20 @@ function BrutalistToggle({ id, label, description, checked, onChange }: Brutalis
 export function SettingsPage() {
     const { settings, setAutoCopyCommandResults, updateSettings } = useSettings();
     const [notifHint, setNotifHint] = useState<string | null>(null);
+    const [assistantSettings, setAssistantSettings] = useState(() => readAssistantSettings());
+    const [customModel, setCustomModel] = useState(
+        () =>
+            CURATED_MODELS.some((m) => m.id === assistantSettings.model)
+                ? ''
+                : assistantSettings.model,
+    );
     const chromeAvailable = chromeAiSearchAvailable();
+    const assistantFlagOn = isFeatureEnabled('assistantChat');
+
+    function patchAssistant(patch: Partial<typeof assistantSettings>) {
+        const next = writeAssistantSettings(patch);
+        setAssistantSettings(next);
+    }
 
     async function toggleBackgroundNotifications(enabled: boolean) {
         if (!enabled) {
@@ -131,6 +150,114 @@ export function SettingsPage() {
                     onChange={(checked) => updateSettings({ chromeSearchAi: checked })}
                 />
             </section>
+
+            {assistantFlagOn ? (
+                <section className="mt-8 space-y-4" aria-label="Assistent">
+                    <h2 className="font-display text-[12px] font-bold tracking-[0.05em] uppercase text-[var(--color-ink-muted)]">
+                        Assistent
+                    </h2>
+                    <BrutalistToggle
+                        id="assistant-enabled"
+                        label="Assistent aktivieren"
+                        description="KI-Hilfe über OpenRouter — Chat-Text geht an OpenRouter; Dateien bleiben lokal, außer du fügst Text ein."
+                        checked={assistantSettings.enabled}
+                        onChange={(checked) => patchAssistant({ enabled: checked })}
+                    />
+                    <div className="rounded-[14px] border-2 border-black bg-white p-4 shadow-brutal-sm space-y-3">
+                        <label
+                            htmlFor="openrouter-api-key"
+                            className="font-display text-[16px] font-bold tracking-[-0.01em]"
+                        >
+                            OpenRouter API-Key
+                        </label>
+                        <p className="text-[14px] leading-relaxed text-[var(--color-ink-soft)]">
+                            Nur lokal gespeichert — nie an unsere Server.
+                        </p>
+                        <input
+                            id="openrouter-api-key"
+                            type="password"
+                            value={assistantSettings.openRouterApiKey}
+                            onChange={(e) => patchAssistant({ openRouterApiKey: e.target.value })}
+                            className="ms-input ms-focus w-full text-[14px]"
+                            placeholder="sk-or-…"
+                            autoComplete="off"
+                        />
+                    </div>
+                    <div className="rounded-[14px] border-2 border-black bg-white p-4 shadow-brutal-sm space-y-3">
+                        <label
+                            htmlFor="assistant-model"
+                            className="font-display text-[16px] font-bold tracking-[-0.01em]"
+                        >
+                            Modell
+                        </label>
+                        <select
+                            id="assistant-model"
+                            value={
+                                CURATED_MODELS.some((m) => m.id === assistantSettings.model)
+                                    ? assistantSettings.model
+                                    : 'custom'
+                            }
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                if (value === 'custom') return;
+                                patchAssistant({ model: value });
+                                setCustomModel('');
+                            }}
+                            className="ms-input ms-focus w-full text-[14px]"
+                        >
+                            {CURATED_MODELS.map((m) => (
+                                <option key={m.id} value={m.id}>{m.label}</option>
+                            ))}
+                            <option value="custom">Eigenes Modell …</option>
+                        </select>
+                        {CURATED_MODELS.every((m) => m.id !== assistantSettings.model) ||
+                        customModel ? (
+                            <input
+                                type="text"
+                                value={customModel || assistantSettings.model}
+                                onChange={(e) => {
+                                    setCustomModel(e.target.value);
+                                    patchAssistant({ model: e.target.value });
+                                }}
+                                className="ms-input ms-focus w-full text-[14px]"
+                                placeholder="anthropic/claude-sonnet-4"
+                            />
+                        ) : null}
+                    </div>
+                    <div className="rounded-[14px] border-2 border-black bg-white p-4 shadow-brutal-sm">
+                        <p className="font-display text-[16px] font-bold tracking-[-0.01em]">
+                            Darstellung
+                        </p>
+                        <p className="mt-1 text-[14px] text-[var(--color-ink-soft)]">
+                            Sidebar oder schwebendes Fenster — gleicher Chat.
+                        </p>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                            <button
+                                type="button"
+                                onClick={() => patchAssistant({ layoutMode: 'sidebar' })}
+                                className={`ms-focus rounded-[8px] border-2 border-black px-3 py-2 font-display text-[13px] font-semibold shadow-[2px_2px_0_#000] ${
+                                    assistantSettings.layoutMode === 'sidebar'
+                                        ? 'bg-[var(--color-accent)]'
+                                        : 'bg-white'
+                                }`}
+                            >
+                                Sidebar
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => patchAssistant({ layoutMode: 'floating' })}
+                                className={`ms-focus rounded-[8px] border-2 border-black px-3 py-2 font-display text-[13px] font-semibold shadow-[2px_2px_0_#000] ${
+                                    assistantSettings.layoutMode === 'floating'
+                                        ? 'bg-[var(--color-accent)]'
+                                        : 'bg-white'
+                                }`}
+                            >
+                                Schwebend
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            ) : null}
         </main>
     );
 }

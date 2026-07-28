@@ -21,7 +21,7 @@ export default defineTool(
             theme: { accent: '#ff90e8', accentStrong: '#000', accentSoft: '#ffe3f7' },
             maturity: 'stable',
             areas: ['buchhaltung'],
-            storyIds: ['story-iban-vor-ueberweisung'],
+            storyIds: ['story-iban-vor-ueberweisung', 'story-freelancer-zahlung'],
         },
         page: IbanCheckTool,
     },

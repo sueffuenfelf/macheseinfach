@@ -19,7 +19,7 @@ const catalog = {
     theme: { accent: '#ff90e8', accentStrong: '#000', accentSoft: '#ffe3f7' },
     maturity: 'stable',
     areas: ['buchhaltung'],
-    storyIds: ['story-freelancer-girocode'],
+    storyIds: ['story-freelancer-girocode', 'story-freelancer-zahlung'],
 } as const;
 
 export default defineTool(

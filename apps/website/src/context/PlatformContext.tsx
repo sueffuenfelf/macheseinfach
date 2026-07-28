@@ -1,24 +1,23 @@
 import {
     createContext,
+    type ReactNode,
     useCallback,
     useContext,
     useEffect,
     useMemo,
     useState,
-    type ReactNode,
 } from 'react';
-import { useToast } from '../shell/toast';
 import {
+    type AreaId,
     allTools,
     getTool,
-    stories,
-    toolsForStory,
-    type AreaId,
     type StoryId,
     type Tool,
     type ToolId,
+    toolsForStory,
 } from '../data/catalog';
 import type { AppPage } from '../routing/paths';
+import { useToast } from '../shell/toast';
 
 export type PlatformFile = {
     name: string;
@@ -54,6 +53,8 @@ type PlatformContextValue = {
     favorites: ToolId[];
     selectArea: (areaId: AreaId) => void;
     selectStory: (storyId: StoryId) => void;
+    /** Alias for selectStory — preferred name for Flow / Vorhaben UI */
+    goToFlow: (storyId: StoryId) => void;
     selectTool: (toolId: ToolId) => void;
     clearTool: () => void;
     goHome: () => void;
@@ -176,7 +177,6 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
 
     const selectStory = useCallback(
         (storyId: StoryId) => {
-            const story = stories[storyId];
             setActiveStoryId(storyId);
             setFileState(null);
             const storyTools = toolsForStory(storyId);
@@ -291,6 +291,7 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
             favorites,
             selectArea,
             selectStory,
+            goToFlow: selectStory,
             selectTool,
             clearTool,
             goHome,

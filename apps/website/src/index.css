@@ -549,3 +549,11 @@ select {
         opacity: 1;
     }
 }
+
+/* Assistant sidebar — main content inset when panel open (desktop) */
+@media (min-width: 768px) {
+    html[data-assistant-sidebar="open"] .ms-shell-main {
+        padding-right: min(100%, 420px);
+        transition: padding-right 200ms ease;
+    }
+}

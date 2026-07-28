@@ -10,7 +10,9 @@ export { ExtractToolShell, type ExtractToolShellProps } from './ExtractToolShell
 export {
     FilePipelineToolShell,
     type FilePipelineToolShellProps,
+    usePipelineFile,
 } from './FilePipelineToolShell';
+export { FlowAwareField } from './FlowAwareField';
 export {
     CurrencyField,
     DateField,

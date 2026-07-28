@@ -21,12 +21,14 @@ export const AREA_IDS = [
 export type AreaId = (typeof AREA_IDS)[number];
 export type ToolId = string;
 
-/** User-Story-IDs — kategorisiert über areaId */
+/** User-Story-IDs — kategorisiert über areaId (P1: → FlowId / flow-*) */
 export const STORY_IDS = [
     'story-elster-pdf-limit',
     'story-vermieter-gehalt-schwaarzen',
+    'story-vermieter-nachweis',
     'story-formular-ausfuellen',
     'story-freelancer-girocode',
+    'story-freelancer-zahlung',
     'story-iban-vor-ueberweisung',
     'story-iban-aus-rechnung',
     'story-heic-portal',
@@ -34,6 +36,7 @@ export const STORY_IDS = [
     'story-bild-verkleinern',
     'story-bild-ausrichten',
     'story-bild-metadaten',
+    'story-portal-foto',
     'story-bewerbung-eine-pdf',
     'story-vertrag-unterschreiben',
     'story-scan-text-kopieren',
@@ -69,21 +72,114 @@ export type AreaDefinition = {
     readonly storyIds: readonly StoryId[];
 };
 
-/** User Story — UX-Einstieg; kann in mehreren Bereichen sichtbar sein */
-export type UserStory = {
+/** Generische Slot-Kinds — area-agnostisch, nicht PDF-spezifisch */
+export type FlowSlotKind =
+    | 'file' // einzelne Datei; accept via mime/ext
+    | 'files' // File[]
+    | 'image' // File, typischerweise image/* (Convenience über file+accept)
+    | 'text' // einzeilig
+    | 'multiline' // Textarea / Paste-Body
+    | 'currency' // number + DE-Rohstring optional
+    | 'iban' // normalisierter String
+    | 'url'
+    | 'date' // ISO date string
+    | 'json' // string (validiertes JSON) oder unknown
+    | 'password' // string — session-only, nie persistieren
+    | 'enum'; // string ∈ options
+
+export const FLOW_SLOT_KINDS = [
+    'file',
+    'files',
+    'image',
+    'text',
+    'multiline',
+    'currency',
+    'iban',
+    'url',
+    'date',
+    'json',
+    'password',
+    'enum',
+] as const satisfies readonly FlowSlotKind[];
+
+export type FlowSlotAccept = {
+    readonly mime?: readonly string[]; // e.g. ['application/pdf', 'image/*']
+    readonly ext?: readonly string[]; // e.g. ['.pdf', '.png']
+    readonly maxBytes?: number; // hard limit pro Slot
+};
+
+export type FlowSlotPersist = 'session-scalar' | 'memory' | 'never';
+
+export type FlowSlotDef = {
+    readonly id: string; // 'sourceDoc' | 'iban' | 'metaHtml' | …
+    readonly kind: FlowSlotKind;
+    readonly label: string;
+    readonly required?: boolean;
+    readonly accept?: FlowSlotAccept; // file/files/image
+    readonly options?: readonly { value: string; label: string }[]; // enum
+    /** password: immer sessionOnly; andere Slots default persistScalars */
+    readonly persist?: FlowSlotPersist;
+};
+
+export type FlowContextSchema = {
+    readonly slots: readonly FlowSlotDef[];
+};
+
+export type FlowStep = {
+    readonly toolId: ToolId;
+    readonly label: string;
+    readonly why?: string;
+    readonly optional?: boolean;
+};
+
+export type FlowRecommendation = {
+    readonly toolId: ToolId;
+    readonly reason: string;
+};
+
+/**
+ * toolId → { toolInputKey → flowSlotId }
+ * toolInputKey = Shell-Field-Id ODER bespoke Key ('pdf', 'source', 'paste', …)
+ */
+export type FlowStepBindings = Readonly<Record<ToolId, Readonly<Record<string, string>>>>;
+
+/**
+ * Vorhaben (UI) — Multi-Tool-Journey mit shared Context.
+ * IDs/Datei bleiben in P0 `story-*` / `stories.ts` (Rename in P1).
+ */
+export type FlowDefinition = {
     readonly id: StoryId;
-    /** URL-Segment unter /bereich/:areaSlug/:slug */
     readonly slug: string;
-    /** Primärer Bereich + optionale Querverweise (z. B. gleiche Story in Buchhaltung & Dokumente) */
-    readonly areaIds: readonly AreaId[];
+    readonly areaIds: readonly AreaId[]; // primary first
     readonly role: string;
     readonly want: string;
     readonly title: string;
+    /** Ausgangslage — Problemtext, nicht der Produktname „Vorhaben“ */
     readonly situation: string;
     readonly outcome: string;
-    readonly toolIds: readonly ToolId[];
     readonly status: 'ready' | 'planned';
+    readonly steps: readonly FlowStep[];
+    readonly recommended?: readonly FlowRecommendation[];
+    readonly context: FlowContextSchema;
+    readonly stepBindings: FlowStepBindings;
 };
+
+/** Alias während Migration (P0) */
+export type UserStory = FlowDefinition;
+
+/** Default-Persist-Policy pro Slot-Kind */
+export function defaultPersistForKind(kind: FlowSlotKind): FlowSlotPersist {
+    switch (kind) {
+        case 'password':
+            return 'never';
+        case 'file':
+        case 'files':
+        case 'image':
+            return 'memory';
+        default:
+            return 'session-scalar';
+    }
+}
 
 /** Tool — kann in mehreren Bereichen vorkommen (areas[]) */
 export type ToolDefinition = {

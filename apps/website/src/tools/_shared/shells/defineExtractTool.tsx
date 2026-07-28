@@ -27,5 +27,16 @@ export function defineExtractTool(def: ExtractToolDefinition, expectedId?: strin
             />
         );
     }
-    return defineTool({ catalog: def.catalog, page: Page }, expectedId);
+    return defineTool(
+        {
+            catalog: def.catalog,
+            page: Page,
+            shell: {
+                kind: 'extract',
+                extract: def.extract,
+                mode: def.mode ?? 'both',
+            },
+        },
+        expectedId,
+    );
 }

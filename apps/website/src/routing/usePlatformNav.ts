@@ -1,15 +1,17 @@
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import type { PlatformFile } from '../context/PlatformContext';
+import { usePlatform } from '../context/PlatformContext';
 import {
+    type AreaId,
     findToolsForFile,
     getTool,
-    toolsForStory,
-    type AreaId,
     type StoryId,
+    stories,
     type ToolId,
+    toolsForStory,
 } from '../data/catalog';
-import { usePlatform } from '../context/PlatformContext';
-import type { PlatformFile } from '../context/PlatformContext';
+import { firstRequiredStep, shouldUseFlowWorkspace } from '../flow/flow-workspace-policy';
 import { isConversionHubStory } from './conversion-hub';
 import {
     areaPath,
@@ -56,6 +58,13 @@ export function usePlatformNav() {
         (storyId: StoryId) => {
             const areaId = platform.activeAreaId;
             if (!areaId) return;
+            const story = stories[storyId];
+            // Flag ON + multi-step → open FlowWorkspace at first required step
+            if (story && shouldUseFlowWorkspace(story) && !isConversionHubStory(storyId)) {
+                const first = firstRequiredStep(story);
+                navigate(toolPath(areaId, storyId, first.toolId));
+                return;
+            }
             const storyTools = toolsForStory(storyId);
             if (storyTools.length === 1 && !isConversionHubStory(storyId)) {
                 navigate(toolPath(areaId, storyId, storyTools[0].id));
@@ -65,6 +74,9 @@ export function usePlatformNav() {
         },
         [navigate, platform.activeAreaId, platform.activeTags],
     );
+
+    /** Alias — Vorhaben öffnen (same as selectStory; preferred name for Flow UI). */
+    const goToFlow = selectStory;
 
     const selectTool = useCallback(
         (toolId: ToolId) => {
@@ -150,6 +162,7 @@ export function usePlatformNav() {
         closeSettings: goHome,
         selectArea,
         selectStory,
+        goToFlow,
         selectTool,
         goToSituation,
         goToArea,

@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 import type { ToolDefinition, ToolId } from '../data/catalog/types';
+import type { ToolShellRuntime } from './shell-runtime';
 
 export type ToolCatalogInput = ToolDefinition & { id: string };
 
@@ -20,6 +21,8 @@ export type ToolModule = {
     catalog: ToolCatalogInput;
     page?: ComponentType<{ tool: ToolDefinition }>;
     variants?: () => ToolVariant[];
+    /** Headless execution metadata for calc/check/generate/paste shells. */
+    shell?: ToolShellRuntime;
 };
 
 export function defineTool(module: ToolModule, expectedId?: string): ToolModule {

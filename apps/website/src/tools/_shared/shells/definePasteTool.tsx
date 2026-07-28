@@ -27,5 +27,8 @@ export function definePasteTool(def: PasteToolDefinition, expectedId?: string): 
             />
         );
     }
-    return defineTool({ catalog: def.catalog, page: Page }, expectedId);
+    return defineTool(
+        { catalog: def.catalog, page: Page, shell: { kind: 'paste', analyze: def.analyze } },
+        expectedId,
+    );
 }

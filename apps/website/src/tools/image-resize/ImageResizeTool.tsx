@@ -14,6 +14,7 @@ import { downloadBlob } from '../_shared/pdf/io';
 import { isUnitQuad, type Quad, UNIT_QUAD } from '../_shared/image/perspective';
 import type { ImageFormatId } from '../_shared/image/types';
 import { ContinueWithNextTool, useImageToolSession } from '../_shared/image/useImageToolSession';
+import { useFlowImageFile } from '../_shared/image/useFlowImageFile';
 import { ImageResizeCanvas } from './ImageResizeCanvas';
 
 type ImageResizeToolProps = {
@@ -75,7 +76,23 @@ export function ImageResizeTool({ tool }: ImageResizeToolProps) {
         processedRef.current.clear();
     }, []);
 
+    const flowFile = useFlowImageFile(tool.id, 'file');
+
     useImageToolSession({ toolId: tool.id, onIncomingFile: acceptIncomingFile });
+
+    useEffect(() => {
+        if (!flowFile.boundFile) return;
+        acceptIncomingFile(flowFile.boundFile);
+    }, [acceptIncomingFile, flowFile.boundFile]);
+
+    useEffect(() => {
+        if (jobStatus === 'completed' && jobDoneCount > 0) {
+            flowFile.reportSuccess();
+            const first = processedRef.current.values().next().value;
+            if (first) flowFile.writeBack(first.blob, first.filename);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- fire once per completed job
+    }, [jobStatus, jobDoneCount]);
 
     function parseLimit(value: string): number | undefined {
         const n = Number.parseInt(value, 10);
@@ -203,37 +220,47 @@ export function ImageResizeTool({ tool }: ImageResizeToolProps) {
                 className="ms-animate-fade mx-auto w-full max-w-3xl space-y-4 px-4 py-6 md:px-6"
                 aria-busy={working}
             >
-                <section
-                    className="ms-dropzone rounded-xl p-6 text-center"
-                    data-drag={dragOver}
-                    onDragOver={onDragOver}
-                    onDragLeave={onDragLeave}
-                    onDrop={onDrop}
-                >
-                    <p className="font-display text-[20px] font-bold tracking-[-0.02em]">
-                        {tool.title}
-                    </p>
-                    <p className="mt-2 text-[14px] text-[var(--color-ink-soft)]">
-                        Abmessungen reduzieren — Seitenverhältnis bleibt erhalten.
-                    </p>
-                    <button
-                        type="button"
-                        className="ms-btn mt-4"
-                        onClick={() => fileInputRef.current?.click()}
+                {flowFile.bound ? (
+                    <div className="mb-1">{flowFile.chip}</div>
+                ) : (
+                    <section
+                        className="ms-dropzone rounded-xl p-6 text-center"
+                        data-drag={dragOver}
+                        data-flow-source="local"
+                        data-testid="image-resize-dropzone"
+                        onDragOver={onDragOver}
+                        onDragLeave={onDragLeave}
+                        onDrop={onDrop}
                     >
-                        Dateien auswählen
-                    </button>
-                    <input
-                        ref={fileInputRef}
-                        className="ms-sr-only"
-                        type="file"
-                        multiple
-                        accept={accept}
-                        onChange={(e) => {
-                            if (e.target.files) appendFiles(e.target.files);
-                        }}
-                    />
-                </section>
+                        <p className="font-display text-[20px] font-bold tracking-[-0.02em]">
+                            {tool.title}
+                        </p>
+                        <p className="mt-2 text-[14px] text-[var(--color-ink-soft)]">
+                            Abmessungen reduzieren — Seitenverhältnis bleibt erhalten.
+                        </p>
+                        <button
+                            type="button"
+                            className="ms-btn mt-4"
+                            onClick={() => fileInputRef.current?.click()}
+                        >
+                            Dateien auswählen
+                        </button>
+                        <input
+                            ref={fileInputRef}
+                            className="ms-sr-only"
+                            type="file"
+                            multiple
+                            accept={accept}
+                            onChange={(e) => {
+                                if (e.target.files) {
+                                    appendFiles(e.target.files);
+                                    const first = e.target.files[0];
+                                    if (first) flowFile.onLocalFile(first);
+                                }
+                            }}
+                        />
+                    </section>
+                )}
 
                 {fileEntries.length ? (
                     <div className="flex flex-wrap gap-2">

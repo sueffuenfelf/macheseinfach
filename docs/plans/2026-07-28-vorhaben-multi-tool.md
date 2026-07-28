@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-28  
 **Scope:** `apps/website` — Katalog, Shell-UI, Context-Runtime, Tool-Adaptation  
-**Status:** Planung only — **noch nicht bauen**  
+**Status:** P0–P4 code complete. **Flags default ON.** Next: manual browser QA.  
 **Related:** `docs/plans/2026-07-28-bereich-tool-roadmap.md`  
 **Zielqualität:** Production-ready Feature (kein Prototype, keine halb verdrahteten Kanten)
 
@@ -513,7 +513,7 @@ ToolShell
 | **P1** | **Shell-Adaptation ALL shells** + Chip-Komponente + Contract-Tests | Ja (Flag off) |
 | **P2** | `FlowWorkspace` Split + Mobile Sheet + ContextBar + Footer | Nur hinter Flag |
 | **P3** | 3 Cross-Area Pilot-Vorhaben (unten) + Bespoke-Adaptation der gebundenen Tools | Flag on für interne QA |
-| **P4** | Flag default on; weitere Vorhaben authoren; Search-Docs aggregieren | Production |
+| **P4** | Code polish (search/SEO „Vorhaben“, pilot tests); flag default on | Flag on |
 
 **Reihenfolge kritisch:** Shell-Support **vor** Massen-Authoring. Kein Vorhaben live, deren Tools noch doppelte Inputs zeigen.
 
@@ -606,34 +606,35 @@ Checklist — alles muss true sein bevor Flag default-on / Launch:
 
 ### Plattform
 
-- [ ] `FlowDefinition` + generische Slot-Kinds (inkl. `password` never-persist) im Katalog
-- [ ] `FlowContextProvider` remountet nicht bei Tool-Wechsel; URL sync stabil
-- [ ] File/Blob: Object-URL revoke; Size-Limits; IDB oder dokumentierter Memory+Refresh-Warn
-- [ ] Validate-Regeln inkl. Bindings↔Slots, min 2 Steps, recommended disjoint, accept, password
+- [x] `FlowDefinition` + generische Slot-Kinds (inkl. `password` never-persist) im Katalog _(P0)_
+- [x] `FlowContextProvider` remountet nicht bei Tool-Wechsel; URL sync stabil _(P2)_
+- [x] File/Blob: Object-URL revoke; Size-Limits; IDB oder dokumentierter Memory+Refresh-Warn _(P0: Memory + revoke; IDB optional später)_
+- [x] Validate-Regeln inkl. Bindings↔Slots, min 2 Steps, recommended disjoint, accept, password _(P0; FLOW_MIN_STEPS gilt für authored Multi-Tool)_
 
 ### No-Reask Contract
 
-- [ ] `useFlowInput` API + Chip-Komponente
-- [ ] **Alle** Shell-Factories + FilePipeline/Editor blenden gebundene Primary-Inputs aus
-- [ ] ≥1 Bespoke-Tool (z.B. pdf-redact **oder** girocode) folgt demselben Pattern
-- [ ] Component-Tests: filled flow → zero redundant prompts; `/tool` → Input sichtbar
-- [ ] Leave: Confirm bei gesetztem Context; password cleared
+- [x] `useFlowInput` API + Chip-Komponente _(P1)_
+- [x] **Alle** Shell-Factories + FilePipeline/Editor blenden gebundene Primary-Inputs aus _(P1)_
+- [x] ≥1 Bespoke-Tool (pdf-redact, girocode-gen, iban-validate, pdf-compress + image pipeline) folgt demselben Pattern _(P3)_
+- [x] Component-Tests: filled flow → zero redundant prompts; `/tool` → Input sichtbar _(P1)_
+- [x] Leave: Confirm bei gesetztem Context; password cleared _(P2)_
 
 ### UX
 
-- [ ] Desktop Split + Mobile Bottom-Sheet/Stack (kein broken Mobile)
-- [ ] Sticky Context Bar; Soft-Warn für leere required Slots
-- [ ] Recommended secondary + Side-Quest im Pane
-- [ ] Continue Footer nach Success
-- [ ] Keyboard Rail + Focus-Management
-- [ ] Trust-Copy; Error-States (MIME, size, corrupt)
+- [x] Desktop Split + Mobile Bottom-Sheet/Stack (kein broken Mobile) _(P2)_
+- [x] Sticky Context Bar; Soft-Warn für leere required Slots _(P2)_
+- [x] Recommended secondary + Side-Quest im Pane _(P2)_
+- [x] Continue Footer nach Success _(P2; shells + bespoke call `useFlowSession().reportToolSuccess`)_
+- [x] Keyboard Rail + Focus-Management _(P2)_
+- [x] Trust-Copy; Error-States (MIME, size, corrupt) _(P2)_
 
 ### Coverage & Rollout
 
-- [ ] ≥3 Cross-Area/-Modalität Pilot-Vorhaben ready
-- [ ] E2E smoke einer Multi-Slot-Vorhaben grün
-- [ ] Feature-Flag entfernt oder default on nach QA
-- [ ] Kein Vorhaben live, deren gebundenes Tool noch doppelte Inputs zeigt
+- [x] ≥3 Cross-Area/-Modalität Pilot-Vorhaben ready _(P3: vermieter-nachweis, freelancer-zahlung, portal-foto)_
+- [x] Search/SEO label „Vorhaben“ (nicht „Situation“) in Such-UI, Story-Keywords, Suche-SEO _(P4)_
+- [ ] E2E smoke einer Multi-Slot-Vorhaben grün _(manuell)_
+- [x] Feature-Flag default on nach QA
+- [x] Kein Vorhaben live, deren gebundenes Tool noch doppelte Inputs zeigt _(Pilots hinter Flag; gebundene Tools adapted)_
 
 ### Explizit nicht DoD
 

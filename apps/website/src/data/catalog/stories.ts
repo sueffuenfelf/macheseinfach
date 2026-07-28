@@ -1,4 +1,8 @@
-import type { UserStory } from './types';
+import type { FlowContextSchema, FlowRecommendation, FlowStepBindings, UserStory } from './types';
+
+const emptyContext: FlowContextSchema = { slots: [] };
+const emptyBindings: FlowStepBindings = {};
+const emptyRecommended: readonly FlowRecommendation[] = [];
 
 export const stories = {
     'story-elster-pdf-limit': {
@@ -10,7 +14,10 @@ export const stories = {
         title: 'Als Steuerpflichtige:r will ich meine PDF unter 2 MB für Elster bringen',
         situation: 'Das Finanzamt-Portal lehnt die Datei ab — zu groß.',
         outcome: 'PDF für Behörden-Uploads verkleinern',
-        toolIds: ['pdf-compress'],
+        steps: [{ toolId: 'pdf-compress', label: 'PDF verkleinern' }],
+        recommended: emptyRecommended,
+        context: emptyContext,
+        stepBindings: emptyBindings,
         status: 'ready',
     },
     'story-vermieter-gehalt-schwaarzen': {
@@ -22,7 +29,75 @@ export const stories = {
         title: 'Als Mieter:in will ich Zeilen auf dem Gehaltsnachweis schwärzen',
         situation: 'Der Vermieter braucht den Nachweis, aber nicht jede Zahl.',
         outcome: 'Sensible Zeilen in PDFs unkenntlich machen',
-        toolIds: ['pdf-redact'],
+        steps: [{ toolId: 'pdf-redact', label: 'PDF schwärzen' }],
+        recommended: emptyRecommended,
+        context: emptyContext,
+        stepBindings: emptyBindings,
+        status: 'ready',
+    },
+    'story-vermieter-nachweis': {
+        id: 'story-vermieter-nachweis',
+        slug: 'vermieter-nachweis',
+        areaIds: ['wohnen', 'behoerden', 'bilder'],
+        role: 'Für die Mietbewerbung',
+        want: 'will ich Nachweise vorbereiten und sensible Stellen entfernen',
+        title: 'Als Mieter:in will ich Vermieter-Nachweise vorbereiten',
+        situation:
+            'Der Vermieter braucht Unterlagen — Gehalt schwärzen, optional Foto ohne Standort.',
+        outcome: 'Checkliste, geschwärztes PDF und bereinigtes Foto',
+        steps: [
+            {
+                toolId: 'landlord-docs-checklist',
+                label: 'Unterlagen-Checkliste',
+                why: 'Klarheit, was oft verlangt wird',
+            },
+            {
+                toolId: 'pdf-redact',
+                label: 'PDF schwärzen',
+                why: 'Sensible Zeilen im Nachweis unkenntlich machen',
+            },
+            {
+                toolId: 'image-exif-strip',
+                label: 'Foto bereinigen',
+                why: 'EXIF/GPS vor dem Upload entfernen',
+                optional: true,
+            },
+        ],
+        recommended: [
+            {
+                toolId: 'pdf-compress',
+                reason: 'Wenn das Portal ein Größenlimit hat',
+            },
+        ],
+        context: {
+            slots: [
+                {
+                    id: 'sourcePdf',
+                    kind: 'file',
+                    label: 'Nachweis-PDF',
+                    required: true,
+                    accept: {
+                        mime: ['application/pdf'],
+                        ext: ['.pdf'],
+                    },
+                },
+                {
+                    id: 'optionalPhoto',
+                    kind: 'image',
+                    label: 'Optional: Foto',
+                    required: false,
+                    accept: {
+                        mime: ['image/*'],
+                        ext: ['.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif'],
+                    },
+                },
+            ],
+        },
+        stepBindings: {
+            'pdf-redact': { pdf: 'sourcePdf' },
+            'image-exif-strip': { file: 'optionalPhoto' },
+            'pdf-compress': { file: 'sourcePdf' },
+        },
         status: 'ready',
     },
     'story-formular-ausfuellen': {
@@ -34,7 +109,10 @@ export const stories = {
         title: 'Als Antragsteller:in will ich ein Behörden-Formular ausfüllen',
         situation: 'Das Formular ist ein PDF mit Feldern — kein Acrobat zur Hand.',
         outcome: 'Ausfüllbare PDF-Formulare bearbeiten und speichern',
-        toolIds: ['pdf-form-fill'],
+        steps: [{ toolId: 'pdf-form-fill', label: 'PDF-Formular ausfüllen' }],
+        recommended: emptyRecommended,
+        context: emptyContext,
+        stepBindings: emptyBindings,
         status: 'ready',
     },
     'story-freelancer-girocode': {
@@ -46,7 +124,66 @@ export const stories = {
         title: 'Als Freelancer:in will ich einen GiroCode auf meine Rechnung',
         situation: 'Kund:innen sollen per QR überweisen können.',
         outcome: 'GiroCode für Überweisungen erzeugen',
-        toolIds: ['girocode-gen'],
+        steps: [{ toolId: 'girocode-gen', label: 'GiroCode' }],
+        recommended: emptyRecommended,
+        context: emptyContext,
+        stepBindings: emptyBindings,
+        status: 'ready',
+    },
+    'story-freelancer-zahlung': {
+        id: 'story-freelancer-zahlung',
+        slug: 'freelancer-zahlung',
+        areaIds: ['buchhaltung'],
+        role: 'Als Freelancer:in',
+        want: 'will ich IBAN prüfen, Betrag ausschreiben und GiroCode erzeugen',
+        title: 'Als Freelancer:in will ich eine Zahlung vorbereiten',
+        situation: 'Rechnung schreiben — IBAN sicher, Betrag in Worten, QR zum Scannen.',
+        outcome: 'Geprüfte IBAN, Betrag in Worten und GiroCode',
+        steps: [
+            {
+                toolId: 'iban-validate',
+                label: 'IBAN prüfen',
+                why: 'Prüfziffer und Bank offline prüfen',
+            },
+            {
+                toolId: 'amount-in-words',
+                label: 'Betrag in Worten',
+                why: 'Für Rechnungstext und Verträge',
+            },
+            {
+                toolId: 'girocode-gen',
+                label: 'GiroCode',
+                why: 'QR für die Überweisung erzeugen',
+            },
+        ],
+        recommended: [
+            {
+                toolId: 'vat-calculator',
+                reason: 'MwSt auf denselben Betrag nachrechnen',
+            },
+        ],
+        context: {
+            slots: [
+                {
+                    id: 'iban',
+                    kind: 'iban',
+                    label: 'IBAN',
+                    required: true,
+                },
+                {
+                    id: 'amount',
+                    kind: 'currency',
+                    label: 'Betrag (€)',
+                    required: true,
+                },
+            ],
+        },
+        stepBindings: {
+            'iban-validate': { iban: 'iban' },
+            'amount-in-words': { amount: 'amount' },
+            'girocode-gen': { iban: 'iban', amount: 'amount' },
+            'vat-calculator': { amount: 'amount' },
+        },
         status: 'ready',
     },
     'story-iban-vor-ueberweisung': {
@@ -58,7 +195,10 @@ export const stories = {
         title: 'Als Nutzer:in will ich eine IBAN vor der Überweisung prüfen',
         situation: 'Großer Betrag — ich traue Online-Rechnern nicht.',
         outcome: 'IBAN lokal validieren, inkl. Bankinfo',
-        toolIds: ['iban-validate'],
+        steps: [{ toolId: 'iban-validate', label: 'IBAN prüfen' }],
+        recommended: emptyRecommended,
+        context: emptyContext,
+        stepBindings: emptyBindings,
         status: 'ready',
     },
     'story-iban-aus-rechnung': {
@@ -70,7 +210,10 @@ export const stories = {
         title: 'Als Nutzer:in will ich die IBAN von einer Rechnung übernehmen',
         situation: '22 Stellen abtippen ist fehleranfällig.',
         outcome: 'IBAN aus PDF, Scan oder Eingabe auslesen',
-        toolIds: ['epc-read'],
+        steps: [{ toolId: 'epc-read', label: 'IBAN auslesen' }],
+        recommended: emptyRecommended,
+        context: emptyContext,
+        stepBindings: emptyBindings,
         status: 'planned',
     },
     'story-heic-portal': {
@@ -82,7 +225,10 @@ export const stories = {
         title: 'Als iPhone-Nutzer:in will ich HEIC-Fotos für Portale konvertieren',
         situation: 'Das Portal akzeptiert nur JPG oder PNG.',
         outcome: 'HEIC in JPG oder PNG umwandeln',
-        toolIds: ['image-convert'],
+        steps: [{ toolId: 'image-convert', label: 'Bild konvertieren' }],
+        recommended: emptyRecommended,
+        context: emptyContext,
+        stepBindings: emptyBindings,
         status: 'ready',
     },
     'story-bild-format-aendern': {
@@ -94,7 +240,10 @@ export const stories = {
         title: 'Als Nutzer:in will ich Bildformate konvertieren',
         situation: 'HEIC, PNG, JPG oder WebP — das Zielformat passt nicht.',
         outcome: 'Bilder zwischen Formaten umwandeln',
-        toolIds: ['image-convert'],
+        steps: [{ toolId: 'image-convert', label: 'Bild konvertieren' }],
+        recommended: emptyRecommended,
+        context: emptyContext,
+        stepBindings: emptyBindings,
         status: 'ready',
     },
     'story-bild-verkleinern': {
@@ -106,7 +255,13 @@ export const stories = {
         title: 'Als Nutzer:in will ich Bilder verkleinern',
         situation: 'Das Foto ist zu groß für Upload oder Speicher.',
         outcome: 'Dateigröße und Abmessungen reduzieren',
-        toolIds: ['image-compress', 'image-resize'],
+        steps: [
+            { toolId: 'image-compress', label: 'Bild komprimieren' },
+            { toolId: 'image-resize', label: 'Bild verkleinern' },
+        ],
+        recommended: emptyRecommended,
+        context: emptyContext,
+        stepBindings: emptyBindings,
         status: 'ready',
     },
     'story-bild-ausrichten': {
@@ -118,7 +273,10 @@ export const stories = {
         title: 'Als Nutzer:in will ich Bilder drehen oder spiegeln',
         situation: 'Das Foto liegt auf der Seite oder ist gespiegelt.',
         outcome: 'Bilder drehen und spiegeln',
-        toolIds: ['image-rotate'],
+        steps: [{ toolId: 'image-rotate', label: 'Bild ausrichten' }],
+        recommended: emptyRecommended,
+        context: emptyContext,
+        stepBindings: emptyBindings,
         status: 'ready',
     },
     'story-bild-metadaten': {
@@ -130,7 +288,58 @@ export const stories = {
         title: 'Als Nutzer:in will ich Bild-Metadaten entfernen',
         situation: 'Standort und Kamera-Daten sollen nicht mit hochgeladen werden.',
         outcome: 'EXIF/GPS vor Upload entfernen',
-        toolIds: ['image-exif-strip'],
+        steps: [{ toolId: 'image-exif-strip', label: 'Metadaten entfernen' }],
+        recommended: emptyRecommended,
+        context: emptyContext,
+        stepBindings: emptyBindings,
+        status: 'ready',
+    },
+    'story-portal-foto': {
+        id: 'story-portal-foto',
+        slug: 'portal-foto',
+        areaIds: ['bilder'],
+        role: 'Fürs Portal',
+        want: 'will ich mein Foto konvertieren, verkleinern und Metadaten entfernen',
+        title: 'Als Nutzer:in will ich ein Portal-Foto aufbereiten',
+        situation: 'Das Portal will JPG in passender Größe — ohne Standort-Daten.',
+        outcome: 'Konvertiert, skaliert und ohne EXIF/GPS',
+        steps: [
+            {
+                toolId: 'image-convert',
+                label: 'Bild konvertieren',
+                why: 'HEIC/PNG in das Zielformat bringen',
+            },
+            {
+                toolId: 'image-resize',
+                label: 'Bild verkleinern',
+                why: 'Abmessungen für Upload-Limits',
+            },
+            {
+                toolId: 'image-exif-strip',
+                label: 'Metadaten entfernen',
+                why: 'Standort und Kamera-Daten löschen',
+            },
+        ],
+        recommended: emptyRecommended,
+        context: {
+            slots: [
+                {
+                    id: 'photo',
+                    kind: 'image',
+                    label: 'Foto',
+                    required: true,
+                    accept: {
+                        mime: ['image/*'],
+                        ext: ['.heic', '.heif', '.jpg', '.jpeg', '.png', '.webp'],
+                    },
+                },
+            ],
+        },
+        stepBindings: {
+            'image-convert': { file: 'photo' },
+            'image-resize': { file: 'photo' },
+            'image-exif-strip': { file: 'photo' },
+        },
         status: 'ready',
     },
     'story-bewerbung-eine-pdf': {
@@ -142,7 +351,10 @@ export const stories = {
         title: 'Als Bewerber:in will ich alle Unterlagen in einer PDF',
         situation: 'Anschreiben, CV und Zeugnisse liegen einzeln vor.',
         outcome: 'Mehrere PDFs zu einer Datei zusammenfügen',
-        toolIds: ['pdf-merge'],
+        steps: [{ toolId: 'pdf-merge', label: 'PDFs mergen' }],
+        recommended: emptyRecommended,
+        context: emptyContext,
+        stepBindings: emptyBindings,
         status: 'ready',
     },
     'story-vertrag-unterschreiben': {
@@ -154,7 +366,10 @@ export const stories = {
         title: 'Als Nutzer:in will ich ein PDF digital unterschreiben',
         situation: 'Drucken und einscannen soll nicht nötig sein.',
         outcome: 'Unterschrift in ein PDF platzieren',
-        toolIds: ['pdf-sign'],
+        steps: [{ toolId: 'pdf-sign', label: 'Signieren' }],
+        recommended: emptyRecommended,
+        context: emptyContext,
+        stepBindings: emptyBindings,
         status: 'ready',
     },
     'story-scan-text-kopieren': {
@@ -166,7 +381,10 @@ export const stories = {
         title: 'Als Nutzer:in will ich Text aus einem Scan kopieren',
         situation: 'Die PDF ist nur ein Bild — nichts markierbar.',
         outcome: 'Texterkennung aus Bild-PDFs und Scans',
-        toolIds: ['ocr-local'],
+        steps: [{ toolId: 'ocr-local', label: 'OCR' }],
+        recommended: emptyRecommended,
+        context: emptyContext,
+        stepBindings: emptyBindings,
         status: 'planned',
     },
     'story-leak-email-passwort': {
@@ -178,7 +396,10 @@ export const stories = {
         title: 'Als Nutzer:in will ich prüfen, ob meine E-Mail in einem Leak war',
         situation: 'Nach einem Datenleck bin ich unsicher — ohne Passwort zu senden.',
         outcome: 'Prüfen, ob E-Mail oder Passwort in Leaks vorkommt',
-        toolIds: ['pwned-check'],
+        steps: [{ toolId: 'pwned-check', label: 'Leak-Check' }],
+        recommended: emptyRecommended,
+        context: emptyContext,
+        stepBindings: emptyBindings,
         status: 'planned',
     },
     'story-seo-meta-preview': {
@@ -190,7 +411,10 @@ export const stories = {
         title: 'Als Webmaster:in will ich Meta-Tags und Snippet-Vorschau prüfen',
         situation: 'Wie sieht meine Seite in Google aus?',
         outcome: 'Meta-Tags und Suchergebnis-Vorschau prüfen',
-        toolIds: ['seo-meta-preview'],
+        steps: [{ toolId: 'seo-meta-preview', label: 'Google-Vorschau' }],
+        recommended: emptyRecommended,
+        context: emptyContext,
+        stepBindings: emptyBindings,
         status: 'ready',
     },
     'story-seo-sitemap': {
@@ -202,9 +426,12 @@ export const stories = {
         title: 'Als Webmaster:in will ich meine Sitemap validieren',
         situation: 'Fehler in der Sitemap kosten Indexierung.',
         outcome: 'Sitemap validieren und Fehler finden',
-        toolIds: ['seo-sitemap-check'],
+        steps: [{ toolId: 'seo-sitemap-check', label: 'Sitemap prüfen' }],
+        recommended: emptyRecommended,
+        context: emptyContext,
+        stepBindings: emptyBindings,
         status: 'ready',
     },
-} as const satisfies Record<UserStory['id'], UserStory>;
+} satisfies Record<UserStory['id'], UserStory>;
 
 export type StoryId = keyof typeof stories;
