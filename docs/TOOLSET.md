@@ -27,8 +27,8 @@ Initial toolchain for this repo (see [issue #1](https://github.com/sueffuenfelf/
 
 | Tool | Role |
 | --- | --- |
-| **Dokploy (Nixpacks)** | Build + run via [`nixpacks.toml`](../nixpacks.toml) and [`Caddyfile`](../Caddyfile) |
-| **Deploy docs** | [`docs/DEPLOY.md`](./DEPLOY.md) — Dokploy settings (no publish directory) |
+| **Dokploy (Nixpacks)** | Build + `start` via [`nixpacks.toml`](../nixpacks.toml) (wie convent) |
+| **Deploy docs** | [`docs/DEPLOY.md`](./DEPLOY.md) — Publish directory muss leer sein |
 
 ## AI harness
 

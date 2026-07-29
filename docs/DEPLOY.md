@@ -1,47 +1,62 @@
 # Deploy — macheseinfa.ch (Dokploy + Nixpacks)
 
-Production runs the **Nixpacks image** with **Caddy** serving `apps/website/dist`. There is no Dockerfile or nginx config in this repo.
+Wie [`convent`](../../convent): Nixpacks baut das Image und startet danach ein **`start`-Script** im Container. Kein separates nginx-Image, kein Publish-Directory-Kopieren.
 
-## Dokploy application settings
+## Dokploy — Pflichtfelder
 
-| Setting | Value |
+| Feld | Wert |
 | --- | --- |
-| **Build type** | Nixpacks |
-| **Build path** | `/` (repo root) |
-| **Publish directory** | **empty** — do not set `apps/website/dist` or any `.next` path |
-| **Port** | `3000` (Caddy default in `Caddyfile`) |
+| **Build type** | `Nixpacks` |
+| **Build path** | `/` (Repo-Root) |
+| **Publish directory** | **leer lassen** |
+| **Port** | `3000` |
 
-If **Publish directory** is set, Dokploy ignores the Nixpacks runtime, copies files out of the build container, and starts its own **nginx** image instead. That breaks SPA routing and is not supported for this project.
+### Warum nginx in den Logs?
 
-## Build (Nixpacks)
+Wenn **Publish directory** gesetzt ist (z. B. `apps/cms/.next` oder `apps/website/dist`), macht Dokploy:
 
-Configured in [`nixpacks.toml`](../nixpacks.toml):
+1. Nixpacks-Build (OK)
+2. `docker cp` der Artefakte auf den Host
+3. Start eines **nginx**-Containers
 
-1. `bun install` (workspace root)
+Dann siehst du `/docker-entrypoint.sh` und `nginx/1.31.3` — **nicht** den App-Start.
+
+Ohne Publish directory läuft das **Nixpacks-Image** weiter und startet:
+
+```text
+> @macheseinfach/website start
+> vite preview --host 0.0.0.0 --port 3000
+```
+
+(convent-Äquivalent: `pnpm --filter cms start` → `next start`)
+
+## Build & Start (Repo)
+
+[`nixpacks.toml`](../nixpacks.toml):
+
+1. `bun install`
 2. `bun run --filter @macheseinfach/website build` → `apps/website/dist`
-3. Start: `caddy run --config Caddyfile`
+3. `bun run --filter @macheseinfach/website start` → `vite preview` auf `$PORT`
 
-## Environment variables
+## Umgebungsvariablen (optional)
 
-| Variable | Purpose |
+| Variable | Zweck |
 | --- | --- |
-| `PORT` | Set by Dokploy; Caddy listens here |
-| `VITE_SITE_URL` | Canonical URL for SEO (optional) |
-| `FF_DISALLOW_INDEXING` | `false` in production when indexing is allowed |
+| `PORT` | von Dokploy gesetzt (Standard `3000`) |
+| `VITE_SITE_URL` | Canonical URL für SEO |
+| `FF_DISALLOW_INDEXING` | `false` in Prod, wenn indexiert werden soll |
 
-## Local production smoke test
+## Lokal testen
 
 ```bash
 bun run --filter @macheseinfach/website build
-PORT=3000 caddy run --config Caddyfile --adapter caddyfile
+PORT=3000 bun run --filter @macheseinfach/website start
 ```
 
-## Search embeddings
+## Search-Embeddings
 
-After catalog/search document changes, regenerate locally and commit:
+Nach Katalog-Änderungen lokal regenerieren und committen:
 
 ```bash
 bun run --filter @macheseinfach/website build:embeddings
 ```
-
-Production builds skip this step and use the committed `apps/website/public/search/embeddings.json`.

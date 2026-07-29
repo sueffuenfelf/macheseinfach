@@ -1,17 +1,15 @@
-# Dokploy / Nixpacks — Bun monorepo, Vite SPA at apps/website/dist.
-# Runtime: Caddy (not Dokploy static/nginx). Leave Publish Directory empty in Dokploy.
+# Dokploy / Nixpacks — wie convent: build + start im Nixpacks-Image.
+# Wichtig: Publish Directory in Dokploy LEER lassen (sonst nginx statt App-Start).
 
 [variables]
 NIXPACKS_NODE_VERSION = "22"
-NIXPACKS_SPA_CADDY = "false"
 
 [phases.setup]
 nixpkgsArchive = "51ad838b03a05b1de6f9f2a0fffecee64a9788ee"
 nixLibs = ["...", "gcc-unwrapped.lib"]
-nixPkgs = ["...", "caddy"]
 
 [phases.build]
 cmds = ["bun run --filter @macheseinfach/website build"]
 
 [start]
-cmd = "exec caddy run --config Caddyfile --adapter caddyfile"
+cmd = "bun run --filter @macheseinfach/website start"

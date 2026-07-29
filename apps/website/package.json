@@ -9,6 +9,7 @@
         "build:seo-routes": "bun run src/seo/generate-routes.ts",
         "build:full": "bun run build:embeddings && bun run build:seo-routes && vite build",
         "build": "bun run build:seo-routes && vite build",
+        "start": "vite preview --host 0.0.0.0 --port ${PORT:-3000}",
         "preview": "vite preview"
     },
         "dependencies": {

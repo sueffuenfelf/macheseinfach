@@ -34,9 +34,7 @@ bun test
 
 Copy `.env.example` to `.env` for local overrides. Never commit `.env`.
 
-## Deploy
-
-Dokploy **Nixpacks** — see [`docs/DEPLOY.md`](./docs/DEPLOY.md). Leave **Publish directory** empty so Caddy from `nixpacks.toml` serves the SPA.
+Dokploy **Nixpacks** — siehe [`docs/DEPLOY.md`](./docs/DEPLOY.md). **Publish directory leer lassen**, sonst startet Dokploy nginx statt `vite preview`.
 
 ## AI / Cursor
 
