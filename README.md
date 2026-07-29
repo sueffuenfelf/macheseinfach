@@ -34,7 +34,9 @@ bun test
 
 Copy `.env.example` to `.env` for local overrides. Never commit `.env`.
 
-Production deploys use Dokploy **Nixpacks** (no Docker in this repo). Local deploy config (`dokploy.config.ts`) is gitignored.
+## Deploy
+
+Dokploy **Nixpacks** — see [`docs/DEPLOY.md`](./docs/DEPLOY.md). Leave **Publish directory** empty so Caddy from `nixpacks.toml` serves the SPA.
 
 ## AI / Cursor
 

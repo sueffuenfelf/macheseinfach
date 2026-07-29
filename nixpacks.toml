@@ -1,13 +1,17 @@
-# Dokploy / Nixpacks — Bun monorepo static site (apps/website).
-# Pin nixpkgs to avoid Node 18 (EOL/removed from current nixpkgs evaluations).
+# Dokploy / Nixpacks — Bun monorepo, Vite SPA at apps/website/dist.
+# Runtime: Caddy (not Dokploy static/nginx). Leave Publish Directory empty in Dokploy.
 
 [variables]
 NIXPACKS_NODE_VERSION = "22"
-NIXPACKS_SPA_OUT_DIR = "apps/website/dist"
+NIXPACKS_SPA_CADDY = "false"
 
 [phases.setup]
 nixpkgsArchive = "51ad838b03a05b1de6f9f2a0fffecee64a9788ee"
 nixLibs = ["...", "gcc-unwrapped.lib"]
+nixPkgs = ["...", "caddy"]
 
 [phases.build]
 cmds = ["bun run --filter @macheseinfach/website build"]
+
+[start]
+cmd = "exec caddy run --config Caddyfile --adapter caddyfile"

@@ -27,8 +27,8 @@ Initial toolchain for this repo (see [issue #1](https://github.com/sueffuenfelf/
 
 | Tool | Role |
 | --- | --- |
-| **Dokploy (Nixpacks)** | Production builds — no Dockerfile in repo |
-| **Dokploy config** | `dokploy.config.ts` — local only, gitignored |
+| **Dokploy (Nixpacks)** | Build + run via [`nixpacks.toml`](../nixpacks.toml) and [`Caddyfile`](../Caddyfile) |
+| **Deploy docs** | [`docs/DEPLOY.md`](./DEPLOY.md) — Dokploy settings (no publish directory) |
 
 ## AI harness
 
