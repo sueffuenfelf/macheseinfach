@@ -19,7 +19,7 @@ export function PageContainer({
 }: PageContainerProps) {
     return (
         <div
-            className={`mx-auto w-full px-5 py-5 md:px-6 md:py-6 ${
+            className={`mr-auto w-full px-5 py-5 md:px-6 md:py-6 max-w-6xl! ${
                 wide ? 'max-w-[1040px]' : 'max-w-[840px]'
             } ${fill ? 'flex min-h-0 flex-1 flex-col' : ''} ${className}`.trim()}
         >
