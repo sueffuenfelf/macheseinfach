@@ -27,5 +27,10 @@ export default defineConfig({
         },
     },
     server: {
-        allowedHosts: ['.kounds.local'], port: 5173 },
+        allowedHosts: ['.kounds.local'],
+        port: 5173,
+    },
+    preview: {
+        allowedHosts: ['.macheseinfa.ch', '.kounds.local'],
+    },
 });
