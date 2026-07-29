@@ -18,7 +18,7 @@ const catalog = {
     theme: { accent: '#ffc900', accentStrong: '#000', accentSoft: '#fff7cf' },
     maturity: 'stable',
     areas: ['behoerden'],
-    storyIds: [],
+    storyIds: ['story-passfoto-portal'],
 } as const;
 
 export default defineTool({ catalog, page: IdPhotoCheckTool }, 'id-photo-check');

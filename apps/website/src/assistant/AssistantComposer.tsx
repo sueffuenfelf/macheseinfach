@@ -1,7 +1,20 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { usePlatformNav } from '../routing/usePlatformNav';
+import {
+    buildComposerSlashDraft,
+    executeComposerSlash,
+    isComposerSlashMode,
+    type ComposerSlashCommand,
+} from './composer-commands';
 import { useAssistant } from './AssistantProvider';
+import { ComposerAttachMenu } from './ComposerAttachMenu';
+import { ComposerSlashPopover } from './ComposerSlashPopover';
 
 const DRAFT_KEY = 'msf.assistant.draft';
+
+const actionBtn =
+    'ms-focus inline-flex h-9 shrink-0 items-center justify-center rounded-[6px] border-2 border-black px-3 font-display text-[12px] font-semibold shadow-[1px_1px_0_#000] disabled:cursor-not-allowed disabled:opacity-45';
 
 function AttachmentChips() {
     const { attachments, removeAttachment } = useAssistant();
@@ -55,21 +68,94 @@ function writeDraft(value: string): void {
 }
 
 export function AssistantComposer() {
-    const { sendMessage, attachFiles, isRunning, settings, stopGeneration } = useAssistant();
+    const navigate = useNavigate();
+    const nav = usePlatformNav();
+    const {
+        sendMessage,
+        attachments,
+        isRunning,
+        settings,
+        stopGeneration,
+        startFreshThread,
+        injectLocalReply,
+        attachFromClipboard,
+    } = useAssistant();
     const [draft, setDraft] = useState(() => readDraft());
-    const fileInputRef = useRef<HTMLInputElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const disabled = !settings.openRouterApiKey.trim();
-    const canSend = !disabled && !isRunning && draft.trim().length > 0;
+    const canSend =
+        !disabled && !isRunning && (draft.trim().length > 0 || attachments.length > 0);
+
+    const commandContext = useCallback(
+        () => ({
+            startFreshThread,
+            selectArea: nav.selectArea,
+            selectStory: nav.selectStory,
+            selectTool: nav.selectTool,
+            goToFavorites: nav.goToFavorites,
+            goToSearch: nav.goToSearch,
+            goToVorhaben: nav.goToVorhaben,
+            attachFromClipboard,
+            injectAssistantReply: (text: string) => injectLocalReply(text, draft.trim() || undefined),
+            navigate: (href: string) => navigate(href),
+        }),
+        [
+            attachFromClipboard,
+            draft,
+            injectLocalReply,
+            nav.goToFavorites,
+            nav.goToSearch,
+            nav.goToVorhaben,
+            nav.selectArea,
+            nav.selectStory,
+            nav.selectTool,
+            navigate,
+            startFreshThread,
+        ],
+    );
+
+    const runSlashCommand = useCallback(
+        async (text: string) => {
+            const result = await executeComposerSlash(text, commandContext());
+            if (!result.handled) return false;
+            if (result.clearDraft) {
+                setDraft('');
+                writeDraft('');
+            }
+            return true;
+        },
+        [commandContext],
+    );
+
+    const onInstantCommand = useCallback(
+        async (cmd: ComposerSlashCommand) => {
+            const text = buildComposerSlashDraft(cmd);
+            await runSlashCommand(text);
+            setDraft('');
+            writeDraft('');
+        },
+        [runSlashCommand],
+    );
 
     useEffect(() => {
         writeDraft(draft);
+    }, [draft]);
+
+    useEffect(() => {
+        const el = textareaRef.current;
+        if (!el) return;
+        el.style.height = 'auto';
+        el.style.height = `${Math.min(el.scrollHeight, 128)}px`;
     }, [draft]);
 
     async function onSubmit(e: FormEvent) {
         e.preventDefault();
         if (!canSend) return;
         const text = draft;
+        if (isComposerSlashMode(text.trim())) {
+            const handled = await runSlashCommand(text.trim());
+            if (handled) return;
+        }
         setDraft('');
         writeDraft('');
         await sendMessage(text);
@@ -86,48 +172,18 @@ export function AssistantComposer() {
             }}
         >
             <AttachmentChips />
-            <div className="flex gap-2">
-                <input
-                    ref={fileInputRef}
-                    type="file"
-                    multiple
-                    className="sr-only"
-                    onChange={(e) => {
-                        void attachFiles(e.target.files);
-                        e.target.value = '';
-                    }}
+            <div className="relative flex items-end gap-1 rounded-[10px] border-2 border-black bg-white p-1.5 shadow-[2px_2px_0_#000]">
+                <ComposerSlashPopover
+                    draft={draft}
+                    textareaRef={textareaRef}
+                    onSelect={setDraft}
+                    onExecute={(cmd) => void onInstantCommand(cmd)}
                 />
-                <button
-                    type="button"
-                    disabled={disabled || isRunning}
-                    onClick={() => fileInputRef.current?.click()}
-                    className="ms-btn ms-focus h-[44px] shrink-0 self-end px-3 disabled:opacity-50"
-                    aria-label="Datei anhängen"
-                    title="Datei anhängen"
-                >
-                    <svg
-                        viewBox="0 0 24 24"
-                        className="h-4 w-4"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.2"
-                        aria-hidden="true"
-                    >
-                        <path d="M21.4 11.6l-8.5 8.5a5 5 0 0 1-7.1-7.1l9.2-9.2a3.2 3.2 0 0 1 4.5 4.5L10 17.8" />
-                    </svg>
-                </button>
+                <ComposerAttachMenu disabled={disabled} isRunning={isRunning} />
                 <textarea
                     ref={textareaRef}
                     value={draft}
                     onChange={(e) => setDraft(e.target.value)}
-                    onFocus={() => {
-                        window.requestAnimationFrame(() => {
-                            textareaRef.current?.scrollIntoView({
-                                block: 'nearest',
-                                behavior: 'smooth',
-                            });
-                        });
-                    }}
                     onKeyDown={(e) => {
                         if (e.key === 'Enter' && !e.shiftKey) {
                             e.preventDefault();
@@ -136,21 +192,22 @@ export function AssistantComposer() {
                             }
                         }
                     }}
-                    rows={2}
+                    rows={1}
                     disabled={disabled}
                     placeholder={
                         settings.openRouterApiKey.trim()
-                            ? 'Nachricht an den Assistenten …'
+                            ? 'Nachricht … oder / für Befehle'
                             : 'API-Key in Einstellungen hinterlegen'
                     }
-                    className="ms-input ms-focus min-h-[44px] flex-1 resize-none py-2 text-[14px]"
+                    className="min-h-9 min-w-0 flex-1 resize-none border-0 bg-transparent px-1 py-2 text-[14px] leading-snug placeholder:text-[var(--color-ink-muted)] focus:outline-none disabled:opacity-50"
+                    style={{ maxHeight: '8rem' }}
                     aria-label="Nachricht"
                 />
                 {isRunning ? (
                     <button
                         type="button"
                         onClick={stopGeneration}
-                        className="ms-btn ms-focus h-[44px] shrink-0 self-end border-[var(--color-danger)] px-4 text-[var(--color-danger)]"
+                        className={`${actionBtn} border-[var(--color-danger)] bg-white text-[var(--color-danger)]`}
                         aria-label="Antwort abbrechen"
                     >
                         Stop
@@ -159,15 +216,18 @@ export function AssistantComposer() {
                     <button
                         type="submit"
                         disabled={!canSend}
-                        className="ms-btn ms-focus h-[44px] shrink-0 self-end px-4 disabled:opacity-50"
+                        className={`${actionBtn} ${
+                            canSend
+                                ? 'bg-[var(--color-accent)] text-black'
+                                : 'bg-white text-[var(--color-ink-muted)]'
+                        }`}
                     >
                         Senden
                     </button>
                 )}
             </div>
             <p className="mt-2 text-[10px] leading-snug text-[var(--color-ink-muted)]">
-                Chat geht an OpenRouter; Dateien bleiben lokal außer du fügst Text ein. Enter
-                sendet, Shift+Enter neue Zeile.
+                `/hilfe` für Befehle · Dateien über + · Enter sendet, Shift+Enter neue Zeile.
             </p>
         </form>
     );

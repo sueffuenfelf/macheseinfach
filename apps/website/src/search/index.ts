@@ -1,11 +1,22 @@
 import { buildSearchDocuments } from './documents';
+import { documentMatchesFilters, parseSearchFilters } from './filters';
 import { resolveChromeIntent } from './intents-chrome';
 import { scoreLexical, normalizeLexicalScores } from './score-lexical';
 import { scoreSemantic, normalizeSemanticScores } from './score-semantic';
 import { mergeHybridScores, mergeWeightsForQuery, shouldTriggerChrome } from './score-merge';
-import type { ResolveSearchOptions, ScoredResult } from './types';
+import type { ResolveSearchOptions, ScoredResult, SearchDocument } from './types';
 
 const DEFAULT_LIMIT = 12;
+
+function filterDocuments(
+    documents: SearchDocument[],
+    options: ResolveSearchOptions,
+    rawQuery: string,
+): { documents: SearchDocument[]; textQuery: string } {
+    const filters = options.filters ?? parseSearchFilters(rawQuery);
+    const filtered = documents.filter((doc) => documentMatchesFilters(doc, filters));
+    return { documents: filtered, textQuery: filters.textQuery };
+}
 
 /**
  * Hybride 3-Stufen-Suche:
@@ -20,25 +31,23 @@ export async function resolveSearch(
     const trimmed = query.trim();
     const limit = options.limit ?? DEFAULT_LIMIT;
     const showBreakdown = options.showBreakdown ?? false;
+    const allDocuments = buildSearchDocuments();
+    const { documents, textQuery } = filterDocuments(allDocuments, options, trimmed);
 
-    if (!trimmed) {
-        return buildSearchDocuments()
-            .filter((doc) => doc.kind === 'tool')
-            .slice(0, limit)
-            .map((doc) => ({
-                document: doc,
-                score: 0,
-                source: 'lexical' as const,
-            }));
+    if (!textQuery) {
+        return documents.slice(0, limit).map((doc) => ({
+            document: doc,
+            score: 0,
+            source: 'lexical' as const,
+        }));
     }
 
-    const documents = buildSearchDocuments();
-    const lexicalRaw = scoreLexical(trimmed, documents);
+    const lexicalRaw = scoreLexical(textQuery, documents);
     const lexical = normalizeLexicalScores(lexicalRaw);
 
-    const semanticRaw = await scoreSemantic(trimmed, documents);
+    const semanticRaw = await scoreSemantic(textQuery, documents);
     const semantic = normalizeSemanticScores(semanticRaw);
-    const weights = mergeWeightsForQuery(trimmed);
+    const weights = mergeWeightsForQuery(textQuery);
 
     const merged = mergeHybridScores(lexical, semantic, lexicalRaw, weights);
 
@@ -75,7 +84,7 @@ export async function resolveSearch(
 
     const chromeEnabled = options.chromeAi !== false;
     if (chromeEnabled && shouldTriggerChrome(querySlots, topScore, topScores)) {
-        const chromeIntent = await resolveChromeIntent(trimmed);
+        const chromeIntent = await resolveChromeIntent(textQuery);
         if (chromeIntent && chromeIntent.documentIds.length > 0) {
             const chromeResults: ScoredResult[] = [];
             const seen = new Set<string>();
@@ -114,5 +123,7 @@ export async function resolveSearch(
 
 export { buildSearchDocuments } from './documents';
 export { chromeAiSearchAvailable } from './intents-chrome';
+export { documentMatchesFilters, filterHint, parseSearchFilters } from './filters';
 export { getSemanticScoreState } from './score-semantic';
+export type { ParsedSearchFilters } from './filters';
 export type { ScoredResult, SearchDocument, ResolveSearchOptions } from './types';

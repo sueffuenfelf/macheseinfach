@@ -22,7 +22,7 @@ export default defineGenerateTool(
             theme: KOMMUNIKATION_THEME,
             maturity: 'stable',
             areas: ['kommunikation'],
-            storyIds: [],
+            storyIds: ['story-whatsapp-link'],
         },
         fields: [
             { id: 'phone', type: 'text', label: 'Telefonnummer', placeholder: '0151 12345678' },

@@ -30,6 +30,7 @@ import {
 } from './AssistantInputRequestModal';
 import {
     addComposerAttachments,
+    addComposerTextAttachment,
     createAssistantHost,
     fulfillUserInputRequest,
     removeThreadAttachment,
@@ -72,11 +73,17 @@ type AssistantContextValue = {
     regenerateLast: () => Promise<void>;
     stopGeneration: () => void;
     attachFiles: (files: FileList | File[] | null) => Promise<void>;
+    attachText: (text: string, name?: string) => Promise<void>;
+    attachFromClipboard: () => Promise<void>;
     removeAttachment: (attachmentId: string) => void;
     clearError: () => void;
     newThread: () => void;
+    startFreshThread: () => void;
+    injectLocalReply: (assistantText: string, userText?: string) => void;
     selectThread: (threadId: string) => void;
     deleteThread: (threadId: string) => void;
+    renameThread: (threadId: string, title: string) => void;
+    canCreateNewThread: boolean;
     favoriteHits: ToolHit[];
 };
 
@@ -93,9 +100,17 @@ function deriveThreadTitle(thread: AssistantThread): string {
     const firstUser = thread.messages.find((m) => m.role === 'user' && m.content?.trim());
     if (firstUser?.content) {
         const trimmed = firstUser.content.trim();
+        if (trimmed === 'Siehe Anhang.') return 'Neuer Chat';
         return trimmed.length > 48 ? `${trimmed.slice(0, 45)}…` : trimmed;
     }
     return 'Neuer Chat';
+}
+
+function isThreadEmpty(thread: AssistantThread, draftAttachmentIds: string[]): boolean {
+    const hasChatMessages = thread.messages.some(
+        (m) => m.role === 'user' || m.role === 'assistant',
+    );
+    return !hasChatMessages && draftAttachmentIds.length === 0;
 }
 
 function openRouterErrorDe(error: unknown): string {
@@ -174,6 +189,7 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
     const [streamingContent, setStreamingContent] = useState<string | null>(null);
     const [canRetry, setCanRetry] = useState(false);
     const [inputRequest, setInputRequest] = useState<InputRequestState | null>(null);
+    const [draftAttachmentIds, setDraftAttachmentIds] = useState<string[]>([]);
     const threadRef = useRef(thread);
     threadRef.current = thread;
     const abortRef = useRef<AbortController | null>(null);
@@ -184,10 +200,12 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
         setThreads(loadThreadIndex(persistence));
     }, [persistence]);
 
-    const attachments = useMemo(
-        () => listThreadAttachments(thread),
-        [thread, thread.attachmentIds.length],
-    );
+    const attachments = useMemo(() => {
+        const store = persistence.attachments;
+        return draftAttachmentIds
+            .map((id) => store.get(id))
+            .filter((a): a is ChatAttachment => a !== null);
+    }, [draftAttachmentIds, persistence.attachments]);
 
     const canRegenerate = useMemo(() => {
         if (isRunning) return false;
@@ -208,7 +226,7 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
         (next: AssistantThread) => {
             const titled: AssistantThread = {
                 ...next,
-                title: deriveThreadTitle(next),
+                title: next.titleLocked ? next.title.trim() || 'Neuer Chat' : deriveThreadTitle(next),
                 updatedAt: Date.now(),
             };
             persistence.threads.save(titled);
@@ -457,7 +475,8 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
     const sendMessage = useCallback(
         async (text: string) => {
             const trimmed = text.trim();
-            if (!trimmed || isRunning) return;
+            const pendingIds = [...draftAttachmentIds];
+            if ((!trimmed && pendingIds.length === 0) || isRunning) return;
 
             if (!settings.openRouterApiKey.trim()) {
                 const msg =
@@ -473,23 +492,28 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
             setStreamingContent(null);
             setIsRunning(true);
 
+            const mergedAttachmentIds = [
+                ...threadRef.current.attachmentIds,
+                ...pendingIds.filter((id) => !threadRef.current.attachmentIds.includes(id)),
+            ];
+
             const userMessage: StoredMessage = {
                 id: crypto.randomUUID(),
                 role: 'user',
-                content: trimmed,
+                content: trimmed || (pendingIds.length ? 'Siehe Anhang.' : ''),
                 createdAt: Date.now(),
-                attachmentIds: threadRef.current.attachmentIds.length
-                    ? [...threadRef.current.attachmentIds]
-                    : undefined,
+                attachmentIds: pendingIds.length ? pendingIds : undefined,
             };
 
             const workingThread: AssistantThread = {
                 ...threadRef.current,
                 messages: [...threadRef.current.messages, userMessage],
+                attachmentIds: mergedAttachmentIds,
                 updatedAt: Date.now(),
             };
             threadRef.current = workingThread;
             setThread(workingThread);
+            setDraftAttachmentIds([]);
             persistThread(workingThread);
 
             try {
@@ -499,7 +523,15 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
                 if (!isAbortError(err)) reportError(err);
             }
         },
-        [isRunning, persistThread, reportError, runTurn, settings.openRouterApiKey, toast],
+        [
+            draftAttachmentIds,
+            isRunning,
+            persistThread,
+            reportError,
+            runTurn,
+            settings.openRouterApiKey,
+            toast,
+        ],
     );
 
     const retryTurn = useCallback(async () => {
@@ -556,20 +588,79 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
         async (files: FileList | File[] | null) => {
             if (!files?.length) return;
             const list = [...files];
-            await addComposerAttachments(
+            const created = await addComposerAttachments(
                 {
                     persistence,
                     getThread: () => threadRef.current,
                     updateThread: (patch) => patchThread(patch),
                 },
                 list,
+                { linkToThread: false },
             );
+            if (created.length) {
+                setDraftAttachmentIds((prev) => [
+                    ...prev,
+                    ...created.map((a) => a.id).filter((id) => !prev.includes(id)),
+                ]);
+            }
         },
         [patchThread, persistence],
     );
 
+    const attachText = useCallback(
+        async (text: string, name?: string) => {
+            const trimmed = text.trim();
+            if (!trimmed) return;
+            const attachment = await addComposerTextAttachment(
+                { persistence },
+                trimmed,
+                name,
+            );
+            setDraftAttachmentIds((prev) =>
+                prev.includes(attachment.id) ? prev : [...prev, attachment.id],
+            );
+        },
+        [persistence],
+    );
+
+    const attachFromClipboard = useCallback(async () => {
+        try {
+            if (navigator.clipboard?.read) {
+                const items = await navigator.clipboard.read();
+                for (const item of items) {
+                    const imageType = item.types.find((t) => t.startsWith('image/'));
+                    if (imageType) {
+                        const blob = await item.getType(imageType);
+                        const ext = imageType.split('/')[1] || 'png';
+                        const file = new File([blob], `zwischenablage-${Date.now()}.${ext}`, {
+                            type: imageType,
+                        });
+                        await attachFiles([file]);
+                        toast({ message: 'Bild aus Zwischenablage angehängt', variant: 'success' });
+                        return;
+                    }
+                }
+            }
+
+            const text = await navigator.clipboard.readText();
+            if (text.trim()) {
+                await attachText(text.trim(), 'Zwischenablage');
+                toast({ message: 'Text aus Zwischenablage angehängt', variant: 'success' });
+                return;
+            }
+
+            toast({ message: 'Zwischenablage ist leer', variant: 'error' });
+        } catch {
+            toast({
+                message: 'Zugriff auf Zwischenablage nicht möglich',
+                variant: 'error',
+            });
+        }
+    }, [attachFiles, attachText, toast]);
+
     const removeAttachment = useCallback(
         (attachmentId: string) => {
+            setDraftAttachmentIds((prev) => prev.filter((id) => id !== attachmentId));
             removeThreadAttachment(
                 {
                     persistence,
@@ -577,20 +668,92 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
                     updateThread: (patch) => patchThread(patch),
                 },
                 attachmentId,
+                { skipThreadUpdate: true },
             );
         },
         [patchThread, persistence],
     );
 
+    const canCreateNewThread = useMemo(
+        () => !isThreadEmpty(thread, draftAttachmentIds),
+        [thread, draftAttachmentIds],
+    );
+
     const newThread = useCallback(() => {
+        if (!canCreateNewThread) return;
         if (isRunning) stopGeneration();
         const next = createThread();
         persistThread(next);
+        setDraftAttachmentIds([]);
+        setError(null);
+        setCanRetry(false);
+        setToolSteps([]);
+        setStreamingContent(null);
+    }, [canCreateNewThread, isRunning, persistThread, stopGeneration]);
+
+    const startFreshThread = useCallback(() => {
+        if (isRunning) stopGeneration();
+        const next = createThread();
+        persistThread(next);
+        setDraftAttachmentIds([]);
         setError(null);
         setCanRetry(false);
         setToolSteps([]);
         setStreamingContent(null);
     }, [isRunning, persistThread, stopGeneration]);
+
+    const injectLocalReply = useCallback(
+        (assistantText: string, userText?: string) => {
+            const now = Date.now();
+            const nextMessages: StoredMessage[] = [...threadRef.current.messages];
+            if (userText?.trim()) {
+                nextMessages.push({
+                    id: crypto.randomUUID(),
+                    role: 'user',
+                    content: userText.trim(),
+                    createdAt: now,
+                });
+            }
+            nextMessages.push({
+                id: crypto.randomUUID(),
+                role: 'assistant',
+                content: assistantText,
+                createdAt: now + 1,
+            });
+            persistThread({
+                ...threadRef.current,
+                messages: nextMessages,
+                titleLocked: true,
+            });
+        },
+        [persistThread],
+    );
+
+    const renameThread = useCallback(
+        (threadId: string, title: string) => {
+            const trimmed = title.trim();
+            if (!trimmed) return;
+            const loaded = persistence.threads.get(threadId);
+            if (!loaded) return;
+            const next: AssistantThread = {
+                ...loaded,
+                title: trimmed,
+                titleLocked: true,
+                updatedAt: Date.now(),
+            };
+            persistence.threads.save(next);
+            persistence.threadIndex.upsert({
+                id: next.id,
+                title: next.title,
+                updatedAt: next.updatedAt,
+            });
+            if (threadRef.current.id === threadId) {
+                updateThreadState(next);
+            }
+            refreshThreadIndex();
+        },
+        [persistence.threadIndex, persistence.threads, refreshThreadIndex, updateThreadState],
+    );
 
     const selectThread = useCallback(
         (threadId: string) => {
@@ -599,6 +762,7 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
             const loaded = persistence.threads.get(threadId);
             if (!loaded) return;
             updateThreadState(loaded);
+            setDraftAttachmentIds([]);
             setError(null);
             setCanRetry(false);
             setToolSteps([]);
@@ -681,14 +845,20 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
             regenerateLast,
             stopGeneration,
             attachFiles,
+            attachText,
+            attachFromClipboard,
             removeAttachment,
             clearError: () => {
                 setError(null);
                 setCanRetry(false);
             },
             newThread,
+            startFreshThread,
+            injectLocalReply,
             selectThread,
             deleteThread,
+            renameThread,
+            canCreateNewThread,
             favoriteHits,
         }),
         [
@@ -709,10 +879,16 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
             regenerateLast,
             stopGeneration,
             attachFiles,
+            attachText,
+            attachFromClipboard,
             removeAttachment,
             newThread,
+            startFreshThread,
+            injectLocalReply,
             selectThread,
             deleteThread,
+            renameThread,
+            canCreateNewThread,
             favoriteHits,
         ],
     );

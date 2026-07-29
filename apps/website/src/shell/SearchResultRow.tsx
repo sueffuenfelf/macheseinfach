@@ -36,6 +36,7 @@ type SearchResultRowProps = {
     sourceLabel?: string;
     showBreakdown?: boolean;
     onClick: () => void;
+    onMouseEnter?: () => void;
 };
 
 export function SearchResultRow({
@@ -46,6 +47,7 @@ export function SearchResultRow({
     sourceLabel,
     showBreakdown = false,
     onClick,
+    onMouseEnter,
 }: SearchResultRowProps) {
     const { document: doc } = result;
     const areaId = doc.areaId as AreaId | undefined;
@@ -57,6 +59,7 @@ export function SearchResultRow({
         <button
             type="button"
             onClick={onClick}
+            onMouseEnter={onMouseEnter}
             className={`ms-focus relative w-full overflow-hidden text-left transition ${
                 compact
                     ? `rounded-[10px] px-3 py-2.5 ${

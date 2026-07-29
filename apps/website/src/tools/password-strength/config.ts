@@ -22,7 +22,7 @@ export default defineCheckTool(
             theme: SECURITY_THEME,
             maturity: 'stable',
             areas: ['security'],
-            storyIds: [],
+            storyIds: ['story-passwort-staerke'],
         },
         fields: [
             {

@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useSettings } from '../context/SettingsContext';
 import { chromeAiSearchAvailable } from '../search/intents-chrome';
 import { requestNotificationPermission } from './toast';
-import { BackButton } from './components/Primitives';
 import { isFeatureEnabled } from '../lib/featureFlags';
+import { AppPageHeader, PageContainer } from './PageContainer';
 import {
     CURATED_MODELS,
     isCuratedModel,
@@ -90,19 +90,13 @@ export function SettingsPage() {
     }
 
     return (
-        <main className="mx-auto w-full max-w-[640px] px-4 py-6 md:px-6 md:py-8">
-            <BackButton />
+        <PageContainer>
+            <AppPageHeader
+                title="Einstellungen"
+                subtitle="Deine Präferenzen werden lokal im Browser gespeichert."
+            />
 
-            <div className="mt-4">
-                <h1 className="font-display text-[30px] leading-[1.05] font-bold tracking-[-0.02em] sm:text-[34px]">
-                    Einstellungen
-                </h1>
-                <p className="mt-2 text-[15px] text-[var(--color-ink-soft)]">
-                    Deine Präferenzen werden lokal im Browser gespeichert.
-                </p>
-            </div>
-
-            <section className="mt-8 space-y-4" aria-label="Verhalten">
+            <section className="space-y-3" aria-label="Verhalten">
                 <h2 className="font-display text-[12px] font-bold tracking-[0.05em] uppercase text-[var(--color-ink-muted)]">
                     Schnellbefehle
                 </h2>
@@ -268,6 +262,6 @@ export function SettingsPage() {
                     </div>
                 </section>
             ) : null}
-        </main>
+        </PageContainer>
     );
 }

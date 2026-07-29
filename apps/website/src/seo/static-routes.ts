@@ -70,6 +70,12 @@ export function collectStaticRoutes(): RouteMeta[] {
                 'Finde Tools, Vorhaben und Bild-Varianten — lokal im Browser, ohne Upload.',
             canonical: absoluteUrl('/suche'),
         },
+        {
+            path: '/vorhaben',
+            title: `Vorhaben — ${SITE_NAME}`,
+            description: 'Alle Multi-Tool-Vorhaben auf macheseinfach — Schritt für Schritt im Browser.',
+            canonical: absoluteUrl('/vorhaben'),
+        },
     ];
 
     for (const areaId of areaOrder) {

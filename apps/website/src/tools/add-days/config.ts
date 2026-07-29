@@ -22,7 +22,7 @@ export default defineCalcTool(
             theme: ZEIT_THEME,
             maturity: 'stable',
             areas: ['zeit'],
-            storyIds: [],
+            storyIds: ['story-frist-tage'],
         },
         fields: [
             { id: 'start', type: 'date', label: 'Startdatum' },

@@ -23,7 +23,7 @@ export default defineCalcTool(
             theme: ZEIT_THEME,
             maturity: 'stable',
             areas: ['zeit'],
-            storyIds: [],
+            storyIds: ['story-feiertage'],
         },
         fields: [
             {

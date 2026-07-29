@@ -14,7 +14,7 @@ export default defineCalcTool(
             tags: ['Farbe', 'CSS', 'Umwandeln'],
             keywords: ['hex to rgb', 'rgb zu hex', 'farbcode umrechner'],
             fileHints: [], command: '/hex', entry: 'form', theme: KREATIV_THEME,
-            maturity: 'stable', areas: ['kreativ'], storyIds: [],
+            maturity: 'stable', areas: ['kreativ'], storyIds: ['story-hex-rgb'],
         },
         fields: [
             { id: 'mode', type: 'segment', label: 'Richtung', default: 'hex-to-rgb',

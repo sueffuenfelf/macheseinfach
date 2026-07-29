@@ -22,7 +22,7 @@ export default definePasteTool(
             theme: WEB_THEME,
             maturity: 'stable',
             areas: ['web'],
-            storyIds: [],
+            storyIds: ['story-json-format'],
         },
         analyze: analyzeJson,
         placeholder: '{\n  "hello": "world"\n}',

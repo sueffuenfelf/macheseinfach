@@ -22,7 +22,7 @@ export default defineCalcTool(
             theme: STEUERN_THEME,
             maturity: 'stable',
             areas: ['steuern'],
-            storyIds: [],
+            storyIds: ['story-homeoffice'],
         },
         fields: [
             {

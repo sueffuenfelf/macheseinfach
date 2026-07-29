@@ -23,7 +23,7 @@ export default defineCalcTool(
             theme: ZEIT_THEME,
             maturity: 'stable',
             areas: ['zeit'],
-            storyIds: [],
+            storyIds: ['story-werktage'],
         },
         fields: [
             { id: 'from', type: 'date', label: 'Von' },

@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { useAssistant } from './AssistantProvider';
 import { AssistantChrome, AssistantEmptyKeyState } from './AssistantChrome';
 import { AssistantComposer } from './AssistantComposer';
@@ -139,11 +140,24 @@ function AssistantPanel({
     hideLayoutToggle?: boolean;
 }) {
     return (
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="flex min-h-0 flex-1 flex-col">
             <AssistantChrome compact={compact} hideLayoutToggle={hideLayoutToggle} />
-            <AssistantPanelBody />
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                <AssistantPanelBody />
+            </div>
         </div>
     );
+}
+
+function AssistantPortal({ children }: { children: ReactNode }) {
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!mounted || typeof document === 'undefined') return null;
+    return createPortal(children, document.body);
 }
 
 export function AssistantLauncher() {
@@ -210,9 +224,8 @@ export function AssistantLauncher() {
         return null;
     }
 
-    if (!isOpen) {
-        return (
-            <button
+    const ui = !isOpen ? (
+        <button
                 type="button"
                 onClick={openPanel}
                 className="ms-focus fixed bottom-4 right-4 z-50 inline-flex min-h-11 items-center gap-2 rounded-[999px] border-2 border-black bg-[var(--color-accent)] px-4 py-2.5 font-display text-[14px] font-bold shadow-brutal-lg transition hover:-translate-x-[1px] hover:-translate-y-[1px] max-md:bottom-[max(1rem,env(safe-area-inset-bottom))] max-md:right-[max(1rem,env(safe-area-inset-right))]"
@@ -230,55 +243,39 @@ export function AssistantLauncher() {
                 </svg>
                 Assistent
             </button>
-        );
-    }
-
-    if (isMinimized) {
-        return (
-            <button
-                type="button"
-                onClick={openPanel}
-                className="ms-focus fixed bottom-4 right-4 z-50 inline-flex min-h-11 items-center gap-2 rounded-[999px] border-2 border-black bg-white px-4 py-2 font-display text-[13px] font-semibold shadow-brutal-lg max-md:bottom-[max(1rem,env(safe-area-inset-bottom))] max-md:right-[max(1rem,env(safe-area-inset-right))]"
-                aria-label="Assistent erweitern"
-            >
-                Assistent
-            </button>
-        );
-    }
-
-    // Mobile: always a fullscreen main chat overlay on top of the page.
-    if (!isDesktop) {
-        return (
-            <div
-                ref={panelRef}
-                className="assistant-mobile-panel fixed inset-0 z-50 flex flex-col bg-white"
-                role="dialog"
-                aria-label="Assistent"
-                aria-modal="true"
-                data-testid="assistant-mobile-overlay"
-            >
-                <AssistantPanel compact hideLayoutToggle />
-            </div>
-        );
-    }
-
-    if (layoutMode === 'sidebar') {
-        return (
-            <aside
-                ref={panelRef}
-                className="fixed inset-y-0 right-0 z-40 flex w-[min(100%,420px)] flex-col border-l-2 border-black bg-white shadow-brutal-lg transition-all duration-200"
-                role="dialog"
-                aria-label="Assistent"
-            >
-                <AssistantPanel />
-            </aside>
-        );
-    }
-
-    return (
+    ) : isMinimized ? (
+        <button
+            type="button"
+            onClick={openPanel}
+            className="ms-focus fixed bottom-4 right-4 z-50 inline-flex min-h-11 items-center gap-2 rounded-[999px] border-2 border-black bg-white px-4 py-2 font-display text-[13px] font-semibold shadow-brutal-lg max-md:bottom-[max(1rem,env(safe-area-inset-bottom))] max-md:right-[max(1rem,env(safe-area-inset-right))]"
+            aria-label="Assistent erweitern"
+        >
+            Assistent
+        </button>
+    ) : !isDesktop ? (
         <div
             ref={panelRef}
-            className="fixed bottom-4 right-4 z-40 flex h-[min(70vh,560px)] w-[min(calc(100%-2rem),400px)] flex-col overflow-hidden rounded-xl border-2 border-black bg-white shadow-brutal-lg transition-all duration-200"
+            className="assistant-mobile-panel fixed inset-0 z-50 flex flex-col bg-white"
+            role="dialog"
+            aria-label="Assistent"
+            aria-modal="true"
+            data-testid="assistant-mobile-overlay"
+        >
+            <AssistantPanel compact hideLayoutToggle />
+        </div>
+    ) : layoutMode === 'sidebar' ? (
+        <aside
+            ref={panelRef}
+            className="fixed top-0 right-0 z-40 flex h-dvh max-h-dvh w-[min(100%,420px)] flex-col border-l-2 border-black bg-white shadow-brutal-lg transition-all duration-200"
+            role="dialog"
+            aria-label="Assistent"
+        >
+            <AssistantPanel />
+        </aside>
+    ) : (
+        <div
+            ref={panelRef}
+            className="fixed bottom-4 right-4 z-40 flex h-[min(70dvh,560px)] w-[min(calc(100%-2rem),400px)] flex-col overflow-hidden rounded-xl border-2 border-black bg-white shadow-brutal-lg transition-all duration-200"
             role="dialog"
             aria-label="Assistent"
             aria-modal
@@ -286,6 +283,8 @@ export function AssistantLauncher() {
             <AssistantPanel compact />
         </div>
     );
+
+    return <AssistantPortal>{ui}</AssistantPortal>;
 }
 
 export function AssistantHost() {

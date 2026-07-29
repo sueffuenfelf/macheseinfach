@@ -22,7 +22,7 @@ export default defineGenerateTool(
             theme: KOMMUNIKATION_THEME,
             maturity: 'stable',
             areas: ['kommunikation'],
-            storyIds: [],
+            storyIds: ['story-email-signatur'],
         },
         fields: [
             { id: 'name', type: 'text', label: 'Name', placeholder: 'Max Mustermann' },

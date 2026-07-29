@@ -22,7 +22,7 @@ export default defineCheckTool(
             theme: A11Y_THEME,
             maturity: 'stable',
             areas: ['barrierefreiheit', 'kreativ'],
-            storyIds: [],
+            storyIds: ['story-kontrast'],
         },
         fields: [
             { id: 'fg', type: 'text', label: 'Textfarbe', placeholder: '#000000', default: '#000000' },

@@ -13,7 +13,7 @@ import {
 import { getVariantStoryBySlug, isVariantStorySlug } from '../data/catalog/variant-stories';
 import { getVariantBySlug } from '../tools/variant-registry';
 
-export type AppPage = 'home' | 'area' | 'story' | 'tool' | 'favorites' | 'settings' | 'search';
+export type AppPage = 'home' | 'area' | 'story' | 'tool' | 'favorites' | 'settings' | 'search' | 'vorhaben';
 
 export function homePath(): string {
     return '/';
@@ -30,6 +30,15 @@ export function settingsPath(): string {
 export function searchPath(query?: string): string {
     if (!query?.trim()) return '/suche';
     return `/suche?q=${encodeURIComponent(query.trim())}`;
+}
+
+export function vorhabenPath(areaSlug?: string): string {
+    if (!areaSlug?.trim()) return '/vorhaben';
+    return `/vorhaben?bereich=${encodeURIComponent(areaSlug.trim())}`;
+}
+
+export function parseVorhabenAreaParam(search: string): string {
+    return new URLSearchParams(search).get('bereich')?.trim() ?? '';
 }
 
 export function parseSearchQuery(search: string): string {
@@ -150,6 +159,16 @@ export function parsePathname(pathname: string, search: string): ParsedRoute {
     if (pathname === '/suche') {
         return {
             page: 'search',
+            areaId: null,
+            storyId: null,
+            toolId: null,
+            variantSlug: null,
+            tags: [],
+        };
+    }
+    if (pathname === '/vorhaben') {
+        return {
+            page: 'vorhaben',
             areaId: null,
             storyId: null,
             toolId: null,

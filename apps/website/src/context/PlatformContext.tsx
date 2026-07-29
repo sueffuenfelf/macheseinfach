@@ -136,7 +136,9 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
         if (
             snapshot.page === 'home' ||
             snapshot.page === 'favorites' ||
-            snapshot.page === 'settings'
+            snapshot.page === 'settings' ||
+            snapshot.page === 'search' ||
+            snapshot.page === 'vorhaben'
         ) {
             setFileState(null);
         }
@@ -163,6 +165,7 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
     const selectTool = useCallback(
         (toolId: ToolId) => {
             const tool = getTool(toolId);
+            if (!tool) return;
             setActiveAreaId((prev) =>
                 prev && tool.areas.includes(prev) ? prev : (tool.areas[0] ?? null),
             );

@@ -22,7 +22,7 @@ export default defineGenerateTool(
             theme: KOMMUNIKATION_THEME,
             maturity: 'stable',
             areas: ['kommunikation'],
-            storyIds: [],
+            storyIds: ['story-termin-einladung'],
         },
         fields: [
             { id: 'title', type: 'text', label: 'Titel', placeholder: 'Projekt-Abstimmung' },

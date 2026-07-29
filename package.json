@@ -14,9 +14,7 @@
         "build-storybook": "bun run --filter @macheseinfach/ui build-storybook",
         "test": "bun test",
         "lint": "biome lint .",
-        "format": "biome format --write .",
-        "env:decrypt": "sops -d .kounds/secrets.env > .env",
-        "env:encrypt": "sops -e .env > .kounds/secrets.env"
+        "format": "biome format --write ."
     },
     "devDependencies": {
         "@biomejs/biome": "^2.4.13",

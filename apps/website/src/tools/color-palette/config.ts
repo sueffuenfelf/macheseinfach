@@ -14,7 +14,7 @@ export default defineGenerateTool(
             tags: ['Farbe', 'CSS'],
             keywords: ['farbpalette generator', 'color palette', 'harmonische farben'],
             fileHints: [], command: '/palette', entry: 'form', theme: KREATIV_THEME,
-            maturity: 'stable', areas: ['kreativ'], storyIds: [],
+            maturity: 'stable', areas: ['kreativ'], storyIds: ['story-farbpalette'],
         },
         fields: [{ id: 'base', type: 'text', label: 'Basisfarbe', placeholder: '#9b5de5' }],
         generate: generateColorPalette,

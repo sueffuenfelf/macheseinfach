@@ -22,6 +22,7 @@ import {
     storyPath,
     toolPath,
     toolShortcutPath,
+    vorhabenPath,
 } from './paths';
 
 export function usePlatformNav() {
@@ -43,6 +44,13 @@ export function usePlatformNav() {
     const goToSearch = useCallback(
         (query?: string) => {
             navigate(searchPath(query));
+        },
+        [navigate],
+    );
+
+    const goToVorhaben = useCallback(
+        (areaSlug?: string) => {
+            navigate(vorhabenPath(areaSlug));
         },
         [navigate],
     );
@@ -81,6 +89,10 @@ export function usePlatformNav() {
     const selectTool = useCallback(
         (toolId: ToolId) => {
             const tool = getTool(toolId);
+            if (!tool) {
+                navigate(toolShortcutPath(toolId));
+                return;
+            }
             platform.pushRecent(toolId);
             const areaId =
                 platform.activeAreaId && tool.areas.includes(platform.activeAreaId)
@@ -158,6 +170,7 @@ export function usePlatformNav() {
         goToFavorites,
         goToSettings,
         goToSearch,
+        goToVorhaben,
         openSettings: goToSettings,
         closeSettings: goHome,
         selectArea,

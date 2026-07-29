@@ -1,8 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
-import type { StoredMessage } from '@macheseinfach/assistant-core';
+import type { ChatAttachment, StoredMessage } from '@macheseinfach/assistant-core';
 import { useToast } from '../shell/toast';
 import { useAssistant } from './AssistantProvider';
 import { AssistantMarkdown } from './AssistantMarkdown';
+import {
+    getAttachmentObjectUrl,
+    revokeAttachmentObjectUrl,
+} from './attachment-service';
+import { getAssistantPersistence } from './persistence';
 import { looksSensitiveContent } from './sensitive-content';
 
 const TOOL_LABELS: Record<string, string> = {
@@ -86,6 +91,85 @@ function MessageActions({
     );
 }
 
+function isImageMime(mime?: string): boolean {
+    return Boolean(mime?.startsWith('image/'));
+}
+
+function MessageAttachments({ attachmentIds }: { attachmentIds: string[] }) {
+    const persistence = getAssistantPersistence();
+    const [items, setItems] = useState<
+        Array<{ attachment: ChatAttachment; previewUrl?: string }>
+    >([]);
+    const previewIdsRef = useRef<string[]>([]);
+
+    useEffect(() => {
+        let cancelled = false;
+        const previousIds = previewIdsRef.current;
+        for (const id of previousIds) revokeAttachmentObjectUrl(id);
+        previewIdsRef.current = [];
+
+        async function load() {
+            const loaded: Array<{ attachment: ChatAttachment; previewUrl?: string }> = [];
+            const previewIds: string[] = [];
+            for (const id of attachmentIds) {
+                const attachment = persistence.attachments.get(id);
+                if (!attachment) continue;
+                let previewUrl: string | undefined;
+                if (attachment.kind === 'file' && attachment.blobKey && isImageMime(attachment.mime)) {
+                    const blob = await persistence.blobs.get(attachment.blobKey);
+                    if (blob) {
+                        previewUrl = getAttachmentObjectUrl(attachment.id, blob);
+                        previewIds.push(attachment.id);
+                    }
+                }
+                loaded.push({ attachment, previewUrl });
+            }
+            previewIdsRef.current = previewIds;
+            if (!cancelled) setItems(loaded);
+        }
+
+        void load();
+        return () => {
+            cancelled = true;
+            for (const id of previewIdsRef.current) revokeAttachmentObjectUrl(id);
+            previewIdsRef.current = [];
+        };
+    }, [attachmentIds, persistence.attachments, persistence.blobs]);
+
+    if (!items.length) return null;
+
+    return (
+        <div className="mb-2 flex flex-col gap-2">
+            {items.map(({ attachment, previewUrl }) => (
+                <div
+                    key={attachment.id}
+                    className="overflow-hidden rounded-[8px] border border-black/20 bg-white/60"
+                >
+                    {previewUrl ? (
+                        <img
+                            src={previewUrl}
+                            alt={attachment.name}
+                            className="max-h-48 w-full object-contain"
+                        />
+                    ) : (
+                        <div className="px-2 py-1.5 text-[12px]">
+                            <span className="font-medium">{attachment.name}</span>
+                            <span className="ml-1 text-[var(--color-ink-muted)]">
+                                {attachment.kind === 'file' ? 'Datei' : 'Text'}
+                            </span>
+                        </div>
+                    )}
+                    {previewUrl ? (
+                        <p className="truncate border-t border-black/10 px-2 py-1 text-[11px] text-[var(--color-ink-muted)]">
+                            {attachment.name}
+                        </p>
+                    ) : null}
+                </div>
+            ))}
+        </div>
+    );
+}
+
 function MessageBubble({
     message,
     isLastAssistant,
@@ -95,7 +179,10 @@ function MessageBubble({
 }) {
     const isUser = message.role === 'user';
     const content = message.content ?? '';
-    const sensitive = isUser && looksSensitiveContent(content);
+    const attachmentIds = message.attachmentIds ?? [];
+    const displayContent =
+        attachmentIds.length && content === 'Siehe Anhang.' ? '' : content;
+    const sensitive = isUser && displayContent && looksSensitiveContent(displayContent);
 
     return (
         <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
@@ -105,11 +192,16 @@ function MessageBubble({
                         isUser ? 'bg-[var(--color-accent)]' : 'bg-white'
                     }`}
                 >
-                    {isUser ? (
-                        <span className="whitespace-pre-wrap">{content}</span>
-                    ) : (
-                        <AssistantMarkdown content={content} />
-                    )}
+                    {attachmentIds.length ? (
+                        <MessageAttachments attachmentIds={attachmentIds} />
+                    ) : null}
+                    {displayContent ? (
+                        isUser ? (
+                            <span className="whitespace-pre-wrap">{displayContent}</span>
+                        ) : (
+                            <AssistantMarkdown content={displayContent} />
+                        )
+                    ) : null}
                 </div>
                 {!isUser ? (
                     <MessageActions content={content} showRegenerate={isLastAssistant} />

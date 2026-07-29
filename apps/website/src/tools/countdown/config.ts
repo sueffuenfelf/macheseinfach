@@ -22,7 +22,7 @@ export default defineCalcTool(
             theme: ZEIT_THEME,
             maturity: 'stable',
             areas: ['zeit'],
-            storyIds: [],
+            storyIds: ['story-countdown'],
         },
         fields: [
             { id: 'target', type: 'date', label: 'Zieldatum' },

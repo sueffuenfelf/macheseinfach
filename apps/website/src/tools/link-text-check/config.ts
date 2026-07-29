@@ -21,7 +21,7 @@ export default definePasteTool(
             theme: A11Y_THEME,
             maturity: 'stable',
             areas: ['barrierefreiheit'],
-            storyIds: [],
+            storyIds: ['story-link-text'],
         },
         analyze: analyzeLinkText,
         placeholder: '<a href="/kontakt">Kontakt aufnehmen</a>',

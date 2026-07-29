@@ -4,13 +4,15 @@ import { useSettings } from '../context/SettingsContext';
 import { EXAMPLE_SEARCH_CHIPS } from '../search/fixtures/queries';
 import {
     chromeAiSearchAvailable,
+    filterHint,
     getSemanticScoreState,
     resolveSearch,
     type ScoredResult,
 } from '../search';
 import { searchPath } from '../routing/paths';
 import { PageHead } from '../seo/PageHead';
-import { BackButton, BrutalInput, SectionLabel } from './components/Primitives';
+import { BrutalInput, SectionLabel } from './components/Primitives';
+import { AppPageHeader, PageContainer } from './PageContainer';
 import { SearchResultRow } from './SearchResultRow';
 
 function sourceLabel(source: ScoredResult['source']): string {
@@ -96,26 +98,25 @@ export function SearchPage() {
     }, [chromeAvailable, loading, semanticState, settings.chromeSearchAi]);
 
     return (
-        <main className="mx-auto w-full max-w-[840px] px-4 py-6 md:px-6 md:py-8">
+        <PageContainer>
             <PageHead
                 fallbackTitle="Suche"
                 description="Finde Tools, Situationen und Varianten auf macheseinfach — lokal im Browser."
                 canonicalPath={searchPath(localQuery || undefined)}
             />
-            <BackButton />
-
-            <div className="mt-4">
-                <h1 className="font-display text-[30px] leading-[1.05] font-bold tracking-[-0.02em] sm:text-[34px]">
-                    Suche
-                </h1>
-                <p className="mt-2 text-[15px] text-[var(--color-ink-soft)]">
-                    Stichwörter, Formate und ganze Sätze — wir finden passende Tools und
-                    Situationen.
-                </p>
-            </div>
+            <AppPageHeader
+                title="Suche"
+                subtitle={
+                    <>
+                        Stichwörter, Formate und ganze Sätze — mit Filtern wie{' '}
+                        <span className="font-mono text-[13px]">@tools</span> oder{' '}
+                        <span className="font-mono text-[13px]">@buchhaltung</span>.
+                    </>
+                }
+            />
 
             <form
-                className="mt-6"
+                className="mb-4"
                 onSubmit={(e) => {
                     e.preventDefault();
                     submitQuery(localQuery);
@@ -142,11 +143,13 @@ export function SearchPage() {
                         autoFocus
                         value={localQuery}
                         onChange={(e) => setLocalQuery(e.target.value)}
-                        placeholder="z. B. HEIC zu PNG, PDF verkleinern, IBAN prüfen …"
+                        placeholder="z. B. @tools heic png · PDF verkleinern …"
                         className="py-3 pr-3 pl-10"
                     />
                 </div>
-                <p className="mt-2 text-[12px] text-[var(--color-ink-muted)]">{statusHint}</p>
+                <p className="mt-2 text-[12px] text-[var(--color-ink-muted)]">
+                    {statusHint} · {filterHint()}
+                </p>
             </form>
 
             <div className="mt-4 flex flex-wrap gap-2">
@@ -204,6 +207,6 @@ export function SearchPage() {
                     </ul>
                 )}
             </section>
-        </main>
+        </PageContainer>
     );
 }

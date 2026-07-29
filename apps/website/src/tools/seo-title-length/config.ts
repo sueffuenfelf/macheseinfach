@@ -22,7 +22,7 @@ export default defineCalcTool(
             theme: SEO_THEME,
             maturity: 'stable',
             areas: ['seo'],
-            storyIds: [],
+            storyIds: ['story-seo-title'],
         },
         fields: [
             { id: 'title', type: 'text', label: 'Title-Tag', placeholder: 'Mein Seitentitel' },

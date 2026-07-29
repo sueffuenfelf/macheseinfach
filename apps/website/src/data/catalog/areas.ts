@@ -45,6 +45,7 @@ export const areas = {
             'story-freelancer-zahlung',
             'story-iban-vor-ueberweisung',
             'story-iban-aus-rechnung',
+            'story-skonto-rechnung',
         ],
     },
     behoerden: {
@@ -61,6 +62,7 @@ export const areas = {
             'story-vermieter-gehalt-schwaarzen',
             'story-vermieter-nachweis',
             'story-formular-ausfuellen',
+            'story-passfoto-portal',
         ],
     },
     bilder: {
@@ -73,13 +75,13 @@ export const areas = {
         accent: '#f4a261',
         icon: ICONS.bilder,
         storyIds: [
+            'story-vermieter-nachweis',
             'story-heic-portal',
             'story-bild-format-aendern',
             'story-bild-verkleinern',
             'story-bild-ausrichten',
             'story-bild-metadaten',
             'story-portal-foto',
-            'story-vermieter-nachweis',
         ],
     },
     dokumente: {
@@ -91,10 +93,11 @@ export const areas = {
         accent: '#90a8ed',
         icon: ICONS.dokumente,
         storyIds: [
+            'story-iban-aus-rechnung',
             'story-bewerbung-eine-pdf',
             'story-vertrag-unterschreiben',
             'story-scan-text-kopieren',
-            'story-iban-aus-rechnung',
+            'story-seiten-extrahieren',
         ],
     },
     security: {
@@ -105,7 +108,13 @@ export const areas = {
         description: 'Prüfungen ohne preisgegebene Passwörter — bin ich von einem Leak betroffen?',
         accent: '#23c9a0',
         icon: ICONS.security,
-        storyIds: ['story-leak-email-passwort'],
+        storyIds: [
+            'story-leak-email-passwort',
+            'story-passwort-staerke',
+            'story-passwort-erzeugen',
+            'story-phishing-link',
+            'story-phishing-email',
+        ],
     },
     seo: {
         id: 'seo',
@@ -115,7 +124,13 @@ export const areas = {
         description: 'Für kleine Websites — Snippet-Vorschau, Sitemap, Schema und mehr.',
         accent: '#c3aef0',
         icon: ICONS.seo,
-        storyIds: ['story-seo-meta-preview', 'story-seo-sitemap'],
+        storyIds: [
+            'story-seo-meta-preview',
+            'story-seo-sitemap',
+            'story-seo-robots',
+            'story-seo-og',
+            'story-seo-title',
+        ],
     },
     text: {
         id: 'text',
@@ -126,7 +141,13 @@ export const areas = {
             'Texte prüfen und umwandeln — Zeichenzähler, Groß/Klein, Diff, Lesbarkeit und mehr.',
         accent: '#7dd3c0',
         icon: ICONS.text,
-        storyIds: EMPTY_STORIES,
+        storyIds: [
+            'story-zeichen-zaehlen',
+            'story-woerter-zaehlen',
+            'story-text-diff',
+            'story-gross-klein',
+            'story-markdown-vorschau',
+        ],
     },
     zeit: {
         id: 'zeit',
@@ -136,7 +157,13 @@ export const areas = {
         description: 'Fristen, Werktage und Kalender — Tage zählen, KW, Feiertage und Countdown.',
         accent: '#ffb347',
         icon: ICONS.zeit,
-        storyIds: EMPTY_STORIES,
+        storyIds: [
+            'story-frist-tage',
+            'story-werktage',
+            'story-kalenderwoche',
+            'story-feiertage',
+            'story-countdown',
+        ],
     },
     wohnen: {
         id: 'wohnen',
@@ -146,7 +173,13 @@ export const areas = {
         description: 'Miete, Nebenkosten und Wohnalltag — Rechner und Checklisten für Mieter:innen.',
         accent: '#e8a0bf',
         icon: ICONS.wohnen,
-        storyIds: ['story-vermieter-nachweis'],
+        storyIds: [
+            'story-vermieter-nachweis',
+            'story-warm-kalt-miete',
+            'story-nebenkosten',
+            'story-kaution',
+            'story-kuendigung-miete',
+        ],
     },
     einheiten: {
         id: 'einheiten',
@@ -156,7 +189,13 @@ export const areas = {
         description: 'Maße, Währungen und Prozente — schnell umrechnen, lokal im Browser.',
         accent: '#a8dadc',
         icon: ICONS.einheiten,
-        storyIds: EMPTY_STORIES,
+        storyIds: [
+            'story-laenge-umrechnen',
+            'story-gewicht-umrechnen',
+            'story-prozent',
+            'story-temperatur',
+            'story-dateigroesse',
+        ],
     },
     web: {
         id: 'web',
@@ -166,7 +205,13 @@ export const areas = {
         description: 'Alltagswerkzeuge für Freelancer — Encode, Hash, JSON, CSS und mehr.',
         accent: '#457b9d',
         icon: ICONS.web,
-        storyIds: EMPTY_STORIES,
+        storyIds: [
+            'story-json-format',
+            'story-base64',
+            'story-url-encode',
+            'story-html-escape',
+            'story-uuid',
+        ],
     },
     steuern: {
         id: 'steuern',
@@ -177,7 +222,13 @@ export const areas = {
             'Grobe Steuer-Rechner zur Orientierung — MwSt, AfA, Pauschalen und Fristen. Keine Steuerberatung.',
         accent: '#e76f51',
         icon: ICONS.steuern,
-        storyIds: EMPTY_STORIES,
+        storyIds: [
+            'story-mwst-steuer',
+            'story-afa',
+            'story-homeoffice',
+            'story-pendlerpauschale',
+            'story-kleinunternehmer-steuer',
+        ],
     },
     recht: {
         id: 'recht',
@@ -188,7 +239,13 @@ export const areas = {
             'Fristen und Checklisten für Verträge und Alltag — Orientierung, keine Rechtsberatung.',
         accent: '#264653',
         icon: ICONS.recht,
-        storyIds: EMPTY_STORIES,
+        storyIds: [
+            'story-vertrag-kuendigen',
+            'story-widerruf',
+            'story-aufbewahrung',
+            'story-verjaehrung',
+            'story-probezeit',
+        ],
     },
     kommunikation: {
         id: 'kommunikation',
@@ -198,7 +255,13 @@ export const areas = {
         description: 'Kontakte, Signaturen und Links — vCard, WhatsApp, ICS und mehr.',
         accent: '#2a9d8f',
         icon: ICONS.kommunikation,
-        storyIds: EMPTY_STORIES,
+        storyIds: [
+            'story-vcard-qr',
+            'story-whatsapp-link',
+            'story-email-signatur',
+            'story-termin-einladung',
+            'story-abwesenheit',
+        ],
     },
     barrierefreiheit: {
         id: 'barrierefreiheit',
@@ -208,7 +271,13 @@ export const areas = {
         description: 'WCAG-Alltag für kleine Sites — Kontrast, Alt-Texte und Checklisten.',
         accent: '#e9c46a',
         icon: ICONS.barrierefreiheit,
-        storyIds: EMPTY_STORIES,
+        storyIds: [
+            'story-kontrast',
+            'story-alt-text-laenge',
+            'story-ueberschriften',
+            'story-fokus-sichtbar',
+            'story-link-text',
+        ],
     },
     kreativ: {
         id: 'kreativ',
@@ -218,7 +287,13 @@ export const areas = {
         description: 'Farben, Paletten und Design-Helfer — lokal im Browser.',
         accent: '#9b5de5',
         icon: ICONS.kreativ,
-        storyIds: EMPTY_STORIES,
+        storyIds: [
+            'story-hex-rgb',
+            'story-farbpalette',
+            'story-gradient-css',
+            'story-farbe-aufhellen',
+            'story-marken-kontrast',
+        ],
     },
 } as const satisfies Record<AreaDefinition['id'], AreaDefinition>;
 

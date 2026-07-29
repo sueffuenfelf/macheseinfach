@@ -14,7 +14,7 @@ export default defineCheckTool(
             tags: ['Farbe', 'Kontrast', 'WCAG', 'Prüfen'],
             keywords: ['logo farbe kontrast', 'brand color accessibility', 'markenfarbe text'],
             fileHints: [], command: '/brand-kontrast', entry: 'form', theme: KREATIV_THEME,
-            maturity: 'stable', areas: ['kreativ', 'barrierefreiheit'], storyIds: [],
+            maturity: 'stable', areas: ['kreativ', 'barrierefreiheit'], storyIds: ['story-marken-kontrast'],
         },
         fields: [
             { id: 'brand', type: 'text', label: 'Markenfarbe', placeholder: '#9b5de5' },

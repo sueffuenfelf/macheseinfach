@@ -21,7 +21,7 @@ export default definePasteTool(
             theme: A11Y_THEME,
             maturity: 'stable',
             areas: ['barrierefreiheit'],
-            storyIds: [],
+            storyIds: ['story-ueberschriften'],
         },
         analyze: analyzeHeadingA11y,
         placeholder: '<h1>Titel</h1>\n<h2>Abschnitt</h2>',

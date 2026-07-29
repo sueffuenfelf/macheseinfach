@@ -328,9 +328,23 @@ export function createAssistantHost(deps: AssistantHostDeps): AssistantHost {
     };
 }
 
+export async function addComposerTextAttachment(
+    deps: Pick<AssistantHostDeps, 'persistence'>,
+    text: string,
+    name?: string,
+): Promise<ChatAttachment> {
+    return saveTextAttachment({
+        store: deps.persistence.attachments,
+        text,
+        name: name ?? 'Eingefügter Text',
+        source: 'user_upload',
+    });
+}
+
 export async function addComposerAttachments(
     deps: Pick<AssistantHostDeps, 'persistence' | 'getThread' | 'updateThread'>,
     files: File[],
+    options?: { linkToThread?: boolean },
 ): Promise<ChatAttachment[]> {
     const thread = deps.getThread();
     const created: ChatAttachment[] = [];
@@ -346,7 +360,7 @@ export async function addComposerAttachments(
         created.push(attachment);
     }
 
-    if (created.length) {
+    if (created.length && options?.linkToThread !== false) {
         deps.updateThread({
             attachmentIds: [
                 ...thread.attachmentIds,
@@ -406,9 +420,11 @@ export async function fulfillUserInputRequest(
 export function removeThreadAttachment(
     deps: Pick<AssistantHostDeps, 'persistence' | 'getThread' | 'updateThread'>,
     attachmentId: string,
+    options?: { skipThreadUpdate?: boolean },
 ): void {
     const thread = deps.getThread();
     deps.persistence.attachments.delete(attachmentId);
+    if (options?.skipThreadUpdate) return;
     deps.updateThread({
         attachmentIds: thread.attachmentIds.filter((id) => id !== attachmentId),
     });

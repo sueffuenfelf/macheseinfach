@@ -27,6 +27,8 @@ export type StoredMessage = {
 export type AssistantThread = {
     id: string;
     title: string;
+    /** When true, title is kept on persist instead of auto-derived from first message. */
+    titleLocked?: boolean;
     createdAt: number;
     updatedAt: number;
     messages: StoredMessage[];

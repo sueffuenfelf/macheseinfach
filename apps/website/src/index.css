@@ -12,9 +12,15 @@
 }
 
 html,
-body {
+body,
+#root {
     margin: 0;
-    min-height: 100vh;
+    height: 100%;
+    min-height: 100dvh;
+}
+
+html {
+    overflow: hidden;
 }
 
 body {
@@ -23,6 +29,11 @@ body {
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    overflow: hidden;
+}
+
+#root {
+    min-height: 0;
 }
 
 input,
@@ -510,11 +521,6 @@ select {
     font-size: 0.92rem;
 }
 
-.pick-list-row--selected {
-    background: #ff90e8;
-    box-shadow: inset 0 0 0 2px #000;
-}
-
 @media (max-width: 767px) {
     .ms-session-splash__inner {
         padding: 1.5rem 1.25rem;
@@ -550,9 +556,18 @@ select {
     }
 }
 
+.ms-app-shell {
+    --ms-shell-chrome-h: 2.75rem; /* 44px — sidenav logo header */
+    min-height: 0;
+}
+
+.ms-shell-chrome {
+    box-sizing: border-box;
+}
+
 /* Assistant sidebar — main content inset when panel open (desktop) */
 @media (min-width: 768px) {
-    html[data-assistant-sidebar="open"] .ms-shell-main {
+    html[data-assistant-sidebar="open"] .ms-app-main {
         padding-right: min(100%, 420px);
         transition: padding-right 200ms ease;
     }
@@ -566,5 +581,4 @@ html[data-assistant-overlay="open"] {
 .assistant-mobile-panel {
     height: 100dvh;
     max-height: 100dvh;
-    padding-bottom: var(--assistant-keyboard-inset, 0px);
 }
