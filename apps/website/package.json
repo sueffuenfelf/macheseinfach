@@ -7,7 +7,8 @@
         "dev": "vite",
         "build:embeddings": "bun run src/search/embeddings/build-index.ts",
         "build:seo-routes": "bun run src/seo/generate-routes.ts",
-        "build": "bun run build:embeddings && bun run build:seo-routes && vite build",
+        "build:full": "bun run build:embeddings && bun run build:seo-routes && vite build",
+        "build": "bun run build:seo-routes && vite build",
         "preview": "vite preview"
     },
         "dependencies": {
