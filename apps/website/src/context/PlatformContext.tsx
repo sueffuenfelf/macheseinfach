@@ -135,7 +135,6 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
         setActiveTags([...snapshot.tags]);
         if (
             snapshot.page === 'home' ||
-            snapshot.page === 'favorites' ||
             snapshot.page === 'settings' ||
             snapshot.page === 'search' ||
             snapshot.page === 'vorhaben'

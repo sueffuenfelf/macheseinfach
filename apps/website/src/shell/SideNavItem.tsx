@@ -12,13 +12,7 @@ export type SideNavItemProps = {
 };
 
 const baseClass =
-    'ms-focus flex w-full items-center gap-2 rounded-[8px] border-2 px-2.5 py-1.5 font-display text-[13px] font-semibold transition';
-
-function stateClass(active: boolean): string {
-    return active
-        ? 'border-black bg-[var(--color-accent)] shadow-[2px_2px_0_#000]'
-        : 'border-transparent hover:border-black/20 hover:bg-[var(--color-chip)]';
-}
+    'ms-focus ms-sidenav-btn flex w-full items-center gap-2 px-2.5 py-1.5 font-display text-[13px] font-semibold';
 
 function SideNavItemContent({ icon, label, trailing }: Pick<SideNavItemProps, 'icon' | 'label' | 'trailing'>) {
     return (
@@ -31,18 +25,19 @@ function SideNavItemContent({ icon, label, trailing }: Pick<SideNavItemProps, 'i
 }
 
 export function SideNavItem({ to, onClick, active = false, icon, label, trailing }: SideNavItemProps) {
-    const className = `${baseClass} ${stateClass(active)}`;
+    const className = baseClass;
+    const activeProps = active ? { 'data-active': true as const } : {};
 
     if (to) {
         return (
-            <Link to={to} onClick={onClick} className={className}>
+            <Link to={to} onClick={onClick} className={className} {...activeProps}>
                 <SideNavItemContent icon={icon} label={label} trailing={trailing} />
             </Link>
         );
     }
 
     return (
-        <button type="button" onClick={onClick} className={className}>
+        <button type="button" onClick={onClick} className={className} {...activeProps}>
             <SideNavItemContent icon={icon} label={label} trailing={trailing} />
         </button>
     );
@@ -63,7 +58,8 @@ export function SideNavAreaItem({ to, onClick, active = false, accent, icon, lab
         <Link
             to={to}
             onClick={onClick}
-            className={`${baseClass} ${stateClass(active)} text-[12px]`}
+            className={`${baseClass} text-[12px]`}
+            {...(active ? { 'data-active': true as const } : {})}
         >
             <span
                 className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-[6px] border border-black/30"
@@ -74,5 +70,27 @@ export function SideNavAreaItem({ to, onClick, active = false, accent, icon, lab
             <span className="min-w-0 flex-1 truncate text-left">{label}</span>
             <span className="w-0 shrink-0" aria-hidden />
         </Link>
+    );
+}
+
+export type SideNavFavoriteItemProps = {
+    label: string;
+    icon: ReactNode;
+    active?: boolean;
+    onClick: () => void;
+};
+
+export function SideNavFavoriteItem({ label, icon, active = false, onClick }: SideNavFavoriteItemProps) {
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            className={`${baseClass} text-[12px]`}
+            {...(active ? { 'data-active': true as const } : {})}
+        >
+            <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center">{icon}</span>
+            <span className="min-w-0 flex-1 truncate text-left">{label}</span>
+            <span className="w-0 shrink-0" aria-hidden />
+        </button>
     );
 }

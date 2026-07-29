@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSettings } from '../context/SettingsContext';
 import { type ToolId } from '../data/catalog';
 import { filterHint, resolveSearch, type ScoredResult } from '../search';
-import { favoritesPath, homePath, settingsPath, vorhabenPath } from '../routing/paths';
+import { homePath, settingsPath, vorhabenPath } from '../routing/paths';
 import { copyToClipboard } from '../lib/format';
 import { useToast } from './toast';
 import { useDismissLayer } from './useDismissLayer';
@@ -82,12 +82,6 @@ export function CommandPalette({
                 label: 'Vorhaben-Übersicht',
                 hint: 'Flows',
                 run: () => navigate(vorhabenPath()),
-            },
-            {
-                id: 'favorites',
-                label: 'Favoriten',
-                hint: 'Tools',
-                run: () => navigate(favoritesPath()),
             },
             {
                 id: 'settings',

@@ -13,14 +13,10 @@ import {
 import { getVariantStoryBySlug, isVariantStorySlug } from '../data/catalog/variant-stories';
 import { getVariantBySlug } from '../tools/variant-registry';
 
-export type AppPage = 'home' | 'area' | 'story' | 'tool' | 'favorites' | 'settings' | 'search' | 'vorhaben';
+export type AppPage = 'home' | 'area' | 'story' | 'tool' | 'settings' | 'search' | 'vorhaben';
 
 export function homePath(): string {
     return '/';
-}
-
-export function favoritesPath(): string {
-    return '/favoriten';
 }
 
 export function settingsPath(): string {
@@ -137,14 +133,7 @@ export function parsePathname(pathname: string, search: string): ParsedRoute {
         return homeRoute();
     }
     if (pathname === '/favoriten') {
-        return {
-            page: 'favorites',
-            areaId: null,
-            storyId: null,
-            toolId: null,
-            variantSlug: null,
-            tags: [],
-        };
+        return homeRoute();
     }
     if (pathname === '/einstellungen') {
         return {

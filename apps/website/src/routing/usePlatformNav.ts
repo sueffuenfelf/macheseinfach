@@ -15,7 +15,6 @@ import { firstRequiredStep, shouldUseFlowWorkspace } from '../flow/flow-workspac
 import { isConversionHubStory } from './conversion-hub';
 import {
     areaPath,
-    favoritesPath,
     homePath,
     searchPath,
     settingsPath,
@@ -31,10 +30,6 @@ export function usePlatformNav() {
 
     const goHome = useCallback(() => {
         navigate(homePath());
-    }, [navigate]);
-
-    const goToFavorites = useCallback(() => {
-        navigate(favoritesPath());
     }, [navigate]);
 
     const goToSettings = useCallback(() => {
@@ -167,7 +162,6 @@ export function usePlatformNav() {
     return {
         ...platform,
         goHome,
-        goToFavorites,
         goToSettings,
         goToSearch,
         goToVorhaben,

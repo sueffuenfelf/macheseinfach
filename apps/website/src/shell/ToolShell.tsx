@@ -9,7 +9,6 @@ import { AppShell } from './AppShell';
 import { AreaStep } from './AreaStep';
 import { CommandPalette } from './CommandPalette';
 import { ConversionVariantHub } from './ConversionVariantHub';
-import { FavoritesPage } from './FavoritesPage';
 import { SearchPage } from './SearchPage';
 import { SettingsPage } from './SettingsPage';
 import { StoriesOverviewPage } from './StoriesOverviewPage';
@@ -26,7 +25,6 @@ function ShellMainContent() {
         return shouldUseFlowWorkspace(stories[activeStoryId]);
     })();
 
-    if (page === 'favorites') return <FavoritesPage />;
     if (page === 'settings') return <SettingsPage />;
     if (page === 'search') return <SearchPage />;
     if (page === 'vorhaben') return <StoriesOverviewPage />;

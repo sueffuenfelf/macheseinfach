@@ -3,7 +3,6 @@ import { Link, useLocation } from 'react-router-dom';
 import { areaOrder, areas } from '../data/catalog';
 import {
     areaPath,
-    favoritesPath,
     homePath,
     settingsPath,
     vorhabenPath,
@@ -12,6 +11,7 @@ import { usePlatformNav } from '../routing/usePlatformNav';
 import { BrandLogo } from './BrandLogo';
 import { Icon } from './Icon';
 import { SideNavAreaItem, SideNavItem } from './SideNavItem';
+import { SideNavFavoritesSection } from './SideNavFavoritesSection';
 
 function SearchIcon() {
     return (
@@ -26,14 +26,6 @@ function ListIcon() {
     return (
         <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
             <path d="M4 6h16M4 12h10M4 18h16" />
-        </svg>
-    );
-}
-
-function StarIcon() {
-    return (
-        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
-            <path d="M12 3.8l2.68 5.43 5.99.87-4.33 4.22 1.02 5.96L12 17.43l-5.36 2.83 1.02-5.96-4.33-4.22 5.99-.87z" />
         </svg>
     );
 }
@@ -62,7 +54,7 @@ type AppSideNavProps = {
 };
 
 export function AppSideNav({ onNavigate, className = '' }: AppSideNavProps) {
-    const { page, activeAreaId, openPalette, favorites } = usePlatformNav();
+    const { page, activeAreaId, activeTool, openPalette, favorites, selectTool } = usePlatformNav();
     const location = useLocation();
     const isInBereichRoute = page === 'area' || page === 'story' || page === 'tool';
     const [areasOpen, setAreasOpen] = useState(isInBereichRoute);
@@ -78,14 +70,15 @@ export function AppSideNav({ onNavigate, className = '' }: AppSideNavProps) {
                 <Link
                     to={homePath()}
                     onClick={dismiss}
-                    className="ms-focus block rounded-[8px] px-1"
+                    className="ms-sidenav-brand block select-none px-1"
                     aria-label="Zur Startseite"
+                    draggable={false}
                 >
                     <BrandLogo size={24} />
                 </Link>
             </div>
 
-            <div className="shrink-0 space-y-0.5 px-2 pt-2">
+            <div className="shrink-0 space-y-1 px-2 pt-2">
                 <SideNavItem
                     to={homePath()}
                     onClick={dismiss}
@@ -110,27 +103,20 @@ export function AppSideNav({ onNavigate, className = '' }: AppSideNavProps) {
                     icon={<ListIcon />}
                     label="Vorhaben"
                 />
-                <SideNavItem
-                    to={favoritesPath()}
-                    onClick={dismiss}
-                    active={page === 'favorites'}
-                    icon={<StarIcon />}
-                    label="Favoriten"
-                    trailing={
-                        favorites.length > 0 ? (
-                            <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-black bg-[#ffc900] px-1 font-display text-[10px] font-bold">
-                                {favorites.length}
-                            </span>
-                        ) : undefined
-                    }
-                />
             </div>
+
+            <SideNavFavoritesSection
+                favorites={favorites}
+                activeToolId={activeTool?.id ?? null}
+                onSelectTool={selectTool}
+                onNavigate={dismiss}
+            />
 
             <div className="mt-2 flex min-h-0 flex-1 flex-col px-2 pb-2">
                 <button
                     type="button"
                     onClick={() => setAreasOpen((v) => !v)}
-                    className="ms-focus flex w-full shrink-0 items-center justify-between rounded-[6px] px-2.5 py-1 font-display text-[11px] font-bold tracking-[0.05em] text-[var(--color-ink-muted)] uppercase"
+                    className="ms-focus ms-sidenav-btn flex w-full shrink-0 items-center justify-between px-2.5 py-1 font-display text-[11px] font-bold tracking-[0.05em] text-[var(--color-ink-muted)] uppercase"
                     aria-expanded={areasOpen}
                 >
                     Bereiche
@@ -147,7 +133,7 @@ export function AppSideNav({ onNavigate, className = '' }: AppSideNavProps) {
                 </button>
                 {areasOpen ? (
                     <ul
-                        className="mt-0.5 min-h-0 flex-1 space-y-0.5 overflow-y-auto px-1 pb-1"
+                        className="mt-1 min-h-0 flex-1 space-y-1 overflow-y-auto px-1 pb-1"
                         role="list"
                     >
                         {areaOrder.map((id) => {
@@ -172,7 +158,7 @@ export function AppSideNav({ onNavigate, className = '' }: AppSideNavProps) {
                 ) : null}
             </div>
 
-            <div className="shrink-0 space-y-0.5 border-t-2 border-black px-2 py-2">
+            <div className="shrink-0 space-y-1 border-t-2 border-black px-2 py-2">
                 <SideNavItem
                     to={settingsPath()}
                     onClick={dismiss}

@@ -186,6 +186,78 @@ select {
     background: #fff;
 }
 
+/* ---------- Sidebar nav buttons ---------- */
+
+.ms-sidenav-btn {
+    --ms-sidenav-shift-hover: 2px;
+    --ms-sidenav-shift-active: calc(var(--ms-sidenav-shift-hover) * 0.7);
+    border: 2px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    box-shadow: none;
+    transform: translate(0, 0);
+    transition:
+        transform 0.08s ease,
+        box-shadow 0.08s ease,
+        background 0.12s ease,
+        border-color 0.12s ease;
+}
+
+.ms-sidenav-btn:hover {
+    border-color: #000;
+    box-shadow: var(--shadow-brutal);
+    transform: translate(
+        calc(var(--ms-sidenav-shift-hover) * -1),
+        calc(var(--ms-sidenav-shift-hover) * -1)
+    );
+}
+
+.ms-sidenav-btn:active {
+    box-shadow: 1px 1px 0 #000;
+    transform: translate(1px, 1px);
+}
+
+.ms-sidenav-btn[data-active="true"] {
+    border-color: #000;
+    background: var(--color-accent);
+    box-shadow: var(--shadow-brutal);
+    transform: translate(
+        calc(var(--ms-sidenav-shift-active) * -1),
+        calc(var(--ms-sidenav-shift-active) * -1)
+    );
+}
+
+.ms-sidenav-btn[data-active="true"]:hover {
+    transform: translate(
+        calc(var(--ms-sidenav-shift-hover) * -1),
+        calc(var(--ms-sidenav-shift-hover) * -1)
+    );
+}
+
+.ms-sidenav-btn.ms-focus:focus-visible {
+    outline: none;
+    border-color: #000;
+    box-shadow: var(--shadow-brutal);
+    transform: translate(
+        calc(var(--ms-sidenav-shift-hover) * -1),
+        calc(var(--ms-sidenav-shift-hover) * -1)
+    );
+}
+
+.ms-sidenav-brand,
+.ms-sidenav-brand:hover,
+.ms-sidenav-brand:active,
+.ms-sidenav-brand:focus,
+.ms-sidenav-brand:focus-visible {
+    box-shadow: none;
+    transform: none;
+    outline: none;
+    border: none;
+    background: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
 .ms-kbd {
     display: inline-flex;
     align-items: center;
@@ -543,7 +615,12 @@ select {
     .ms-card-hover:hover:not(:disabled),
     .ms-btn:hover,
     .ms-btn-primary:hover,
-    .ms-input:focus {
+    .ms-input:focus,
+    .ms-sidenav-btn:hover,
+    .ms-sidenav-btn:active,
+    .ms-sidenav-btn[data-active="true"],
+    .ms-sidenav-btn[data-active="true"]:hover,
+    .ms-sidenav-btn.ms-focus:focus-visible {
         transform: none;
     }
     .ms-logo-draw .ms-logo-draw__m-stroke,

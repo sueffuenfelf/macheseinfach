@@ -2,20 +2,21 @@ import {
     areaOrder,
     areas,
     getAreaBySlug,
+    getTool,
     searchTools,
     stories,
     type AreaId,
     type StoryId,
     type ToolId,
 } from '../data/catalog';
-import { favoritesPath, searchPath, storyPath, vorhabenPath } from '../routing/paths';
+import { searchPath, storyPath, vorhabenPath } from '../routing/paths';
 
 export type ComposerCommandContext = {
     startFreshThread: () => void;
     selectArea: (areaId: AreaId) => void;
     selectStory: (storyId: StoryId) => void;
     selectTool: (toolId: ToolId) => void;
-    goToFavorites: () => void;
+    listFavorites: () => ToolId[];
     goToSearch: (query?: string) => void;
     goToVorhaben: (areaSlug?: string) => void;
     attachFromClipboard: () => Promise<void>;
@@ -248,8 +249,13 @@ export async function executeComposerSlash(
             return { handled: true, clearDraft: true };
         }
         case 'favorit': {
-            ctx.goToFavorites();
-            ctx.injectAssistantReply('Favoriten geöffnet.');
+            const ids = ctx.listFavorites();
+            if (ids.length === 0) {
+                ctx.injectAssistantReply('Noch keine Favoriten — markiere Tools mit dem Stern.');
+            } else {
+                const lines = ids.map((id) => `• ${getTool(id).shortTitle}`).join('\n');
+                ctx.injectAssistantReply(`Deine Favoriten in der Seitenleiste:\n${lines}`);
+            }
             return { handled: true, clearDraft: true };
         }
         case 'suche': {
