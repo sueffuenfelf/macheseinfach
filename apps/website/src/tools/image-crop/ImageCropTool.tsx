@@ -2,7 +2,6 @@ import { useCallback, useRef, useState } from 'react';
 import type { ToolDefinition as Tool } from '../../data/catalog/types';
 import { useFileDrop } from '../../hooks/useFileDrop';
 import { useToast } from '../../shell/toast';
-import { PageHead } from '../../seo/PageHead';
 import { ResultCard, StateHint } from '../_shared/_shared';
 import { IMAGE_ACCEPT } from '../_shared/image/accept';
 import { outputFilename } from '../_shared/image/convert';
@@ -61,7 +60,6 @@ export function ImageCropTool({ tool }: ImageCropToolProps) {
 
     return (
         <>
-            <PageHead fallbackTitle={tool.title} />
             <div className="ms-animate-fade mx-auto w-full max-w-3xl space-y-4 px-4 py-6 md:px-6">
                 {!file ? (
                     <section

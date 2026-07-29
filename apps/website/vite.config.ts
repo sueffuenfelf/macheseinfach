@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import { staticSeoPlugin } from './vite-plugin-static-seo';
 
 export default defineConfig({
+    envPrefix: ['VITE_', 'FF_'],
     plugins: [react(), tailwindcss(), staticSeoPlugin()],
     define: {
         'process.env': {},
@@ -25,5 +26,6 @@ export default defineConfig({
             },
         },
     },
-    server: { port: 5173 },
+    server: {
+        allowedHosts: ['.kounds.local'], port: 5173 },
 });

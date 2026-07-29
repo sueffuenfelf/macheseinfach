@@ -6,7 +6,6 @@ import { useToolVariant } from '../../hooks/useToolVariant';
 import { useJobQueue } from '../../shell/jobs';
 import { toolShortcutPath } from '../../routing/paths';
 import { useToast } from '../../shell/toast';
-import { PageHead } from '../../seo/PageHead';
 import { ProgressBar, ResultCard, StateHint } from '../_shared/_shared';
 import { IMAGE_ACCEPT } from '../_shared/image/accept';
 import { formatFromBlob } from '../_shared/image/canvas';
@@ -246,7 +245,6 @@ export function ImageConvertTool({ tool }: ImageConvertToolProps) {
 
     return (
         <>
-            <PageHead variant={variant} fallbackTitle={tool.title} />
             <div
                 className="ms-animate-fade mx-auto w-full max-w-3xl space-y-4 px-4 py-6 md:px-6"
                 aria-busy={working}

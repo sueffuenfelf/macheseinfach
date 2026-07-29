@@ -4,6 +4,7 @@ import { FlowWorkspace, shouldUseFlowWorkspace } from '../flow/FlowWorkspace';
 import { isFeatureEnabled } from '../lib/featureFlags';
 import { isConversionHubStory } from '../routing/conversion-hub';
 import { usePlatformNav } from '../routing/usePlatformNav';
+import { RouteHead } from '../seo/RouteHead';
 import { AppShell } from './AppShell';
 import { AreaStep } from './AreaStep';
 import { CommandPalette } from './CommandPalette';
@@ -85,6 +86,7 @@ export function ToolShell() {
 
     return (
         <>
+            <RouteHead />
             {assistantOn ? (
                 <AssistantProvider>
                     <ShellWithAssistant />

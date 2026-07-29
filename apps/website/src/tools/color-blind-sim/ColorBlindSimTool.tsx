@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import type { ToolDefinition } from '../../data/catalog/types';
-import { PageHead } from '../../seo/PageHead';
 import { ResultCard } from '../_shared/_shared';
 import {
     parseColor,
@@ -58,7 +57,6 @@ export function ColorBlindSimTool({ tool }: { tool: ToolDefinition }) {
 
     return (
         <>
-            <PageHead tool={tool} />
             <EditorToolShell tool={tool}>
                 <p className="mb-4 text-sm text-ink-soft">
                     Vereinfachte Farbblind-Simulation — zur groben Palette-Prüfung, nicht medizinisch.

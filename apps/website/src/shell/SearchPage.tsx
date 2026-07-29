@@ -10,7 +10,6 @@ import {
     type ScoredResult,
 } from '../search';
 import { searchPath } from '../routing/paths';
-import { PageHead } from '../seo/PageHead';
 import { BrutalInput, SectionLabel } from './components/Primitives';
 import { AppPageHeader, PageContainer } from './PageContainer';
 import { SearchResultRow } from './SearchResultRow';
@@ -99,11 +98,6 @@ export function SearchPage() {
 
     return (
         <PageContainer>
-            <PageHead
-                fallbackTitle="Suche"
-                description="Finde Tools, Situationen und Varianten auf macheseinfach — lokal im Browser."
-                canonicalPath={searchPath(localQuery || undefined)}
-            />
             <AppPageHeader
                 title="Suche"
                 subtitle={

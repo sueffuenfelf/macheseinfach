@@ -10,7 +10,6 @@ import {
     type StoryId,
 } from '../data/catalog';
 import { parseVorhabenAreaParam, storyPath, vorhabenPath } from '../routing/paths';
-import { PageHead } from '../seo/PageHead';
 import { BrutalInput, SectionLabel } from './components/Primitives';
 import { AppPageHeader, PageContainer } from './PageContainer';
 import { filterVisibleStories } from './filtering';
@@ -57,11 +56,6 @@ export function StoriesOverviewPage() {
 
     return (
         <PageContainer wide className="py-4 md:py-5">
-            <PageHead
-                fallbackTitle="Vorhaben"
-                description="Alle Multi-Tool-Vorhaben auf macheseinfach — Schritt für Schritt im Browser."
-                canonicalPath={vorhabenPath(areaSlug || undefined)}
-            />
             <AppPageHeader
                 className="mb-3"
                 title="Vorhaben"

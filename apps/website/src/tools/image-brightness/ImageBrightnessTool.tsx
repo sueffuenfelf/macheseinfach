@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ToolDefinition as Tool } from '../../data/catalog/types';
 import { useFileDrop } from '../../hooks/useFileDrop';
 import { useToast } from '../../shell/toast';
-import { PageHead } from '../../seo/PageHead';
 import { ResultCard, StateHint } from '../_shared/_shared';
 import { EditorToolShell } from '../_shared/shells/EditorToolShell';
 import {
@@ -103,7 +102,6 @@ export function ImageBrightnessTool({ tool }: ImageBrightnessToolProps) {
 
     return (
         <>
-            <PageHead fallbackTitle={tool.title} />
             <EditorToolShell tool={tool} footer={footer}>
                 {!file ? (
                     <section

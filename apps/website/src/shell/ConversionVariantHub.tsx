@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { areas, stories } from '../data/catalog';
 import { variantPath } from '../routing/paths';
-import { PageHead } from '../seo/PageHead';
 import { getVariantsForTool } from '../tools/variant-registry';
 import { AppPageHeader, PageContainer } from './PageContainer';
 
@@ -14,11 +13,6 @@ export function ConversionVariantHub() {
 
     return (
         <PageContainer wide>
-            <PageHead
-                fallbackTitle={story.outcome}
-                description={story.situation}
-                canonicalPath={`/bereich/${area.slug}/${story.slug}`}
-            />
             <AppPageHeader
                 showBack
                 title={story.outcome}
