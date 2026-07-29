@@ -6,11 +6,19 @@ import {
 } from '@macheseinfach/assistant-core';
 
 export const CURATED_MODELS = [
+    { id: 'openrouter/free', label: 'Openrouter Free Rotation' },
     { id: 'anthropic/claude-sonnet-4', label: 'Claude Sonnet 4' },
     { id: 'anthropic/claude-3.5-haiku', label: 'Claude 3.5 Haiku (günstiger)' },
     { id: 'google/gemini-2.5-flash-preview', label: 'Gemini 2.5 Flash' },
     { id: 'openai/gpt-4o-mini', label: 'GPT-4o mini' },
 ] as const;
+
+/** Dispatched on `window` after same-tab settings writes (storage events are cross-tab only). */
+export const ASSISTANT_SETTINGS_CHANGED_EVENT = 'msf-assistant-settings-changed';
+
+export function isCuratedModel(modelId: string): boolean {
+    return CURATED_MODELS.some((m) => m.id === modelId);
+}
 
 function readApiKey(): string {
     try {
@@ -70,6 +78,10 @@ export function writeAssistantSettings(patch: Partial<AssistantSettings>): Assis
         );
     } catch {
         /* quota / private mode */
+    }
+
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent(ASSISTANT_SETTINGS_CHANGED_EVENT));
     }
 
     return next;
