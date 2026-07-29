@@ -23,12 +23,12 @@ Initial toolchain for this repo (see [issue #1](https://github.com/sueffuenfelf/
 | **Tailwind CSS v4** | Utility-first styling in `@macheseinfach/ui` |
 | **React 19** | Website + component library |
 
-## Deploy (local)
+## Deploy
 
 | Tool | Role |
 | --- | --- |
-| **Docker** | Website image + OCR service (TBD) |
-| **Dokploy** | `dokploy.config.ts` — local only, gitignored |
+| **Dokploy (Nixpacks)** | Production builds — no Dockerfile in repo |
+| **Dokploy config** | `dokploy.config.ts` — local only, gitignored |
 
 ## AI harness
 
@@ -41,8 +41,6 @@ Initial toolchain for this repo (see [issue #1](https://github.com/sueffuenfelf/
 
 - **website** — public site + design system gallery
 - **cli** — `macheseinfach` dev commands (local services)
-- **ocr-service** — document OCR API (placeholder)
-- **beispiele** — copy-paste integration examples
 
 ## Out of scope (for now)
 

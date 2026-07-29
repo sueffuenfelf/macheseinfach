@@ -15,7 +15,7 @@ Monorepo-Apps leben unter `apps/*`, Name: `@macheseinfach/<name>`. Root-`workspa
 | Typ | Wann | Referenz |
 | --- | --- | --- |
 | **Vite + React** | SPA, öffentliche UI | `apps/website` |
-| **Bun HTTP-Service** | API, Worker, Stub | `apps/ocr-service` |
+| **Bun HTTP-Service** | API, Worker | minimal template below |
 | **CLI-Bin** | Dev-/Ops-Befehle | `apps/cli` |
 
 Shared Code → `packages/` (`macheseinfach-new-package`), nicht in die App kopieren.
@@ -51,7 +51,7 @@ Shared Code → `packages/` (`macheseinfach-new-package`), nicht in die App kopi
 }
 ```
 
-Referenz: `apps/ocr-service/package.json`.
+Referenz: `apps/cli/package.json` (schlankes Bun-Package).
 
 ## Vite + React (Kurz)
 

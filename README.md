@@ -20,7 +20,7 @@ bun test
 
 | Command | Description |
 | --- | --- |
-| `macheseinfach dev <app>` | Start `website`, `storybook`, `ocr-service`, … |
+| `macheseinfach dev <app>` | Start `website`, `storybook`, … |
 
 ## Structure
 
@@ -28,15 +28,13 @@ bun test
 | --- | --- |
 | `apps/website` | Marketing site |
 | `apps/cli` | Local dev & project management CLI |
-| `apps/ocr-service` | OCR pipeline stub (future Gemma/local model) |
-| `apps/beispiele` | Example integrations |
 | `packages/ui` | Gumroad-style design system + **Storybook** |
 
 ## Local env
 
 Copy `.env.example` to `.env` for local overrides. Never commit `.env`.
 
-Deploy config (`dokploy.config.ts`) is local-only — not tracked in git.
+Production deploys use Dokploy **Nixpacks** (no Docker in this repo). Local deploy config (`dokploy.config.ts`) is gitignored.
 
 ## AI / Cursor
 

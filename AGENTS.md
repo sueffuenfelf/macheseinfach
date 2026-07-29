@@ -6,8 +6,6 @@
 
 - `apps/website` — Vite + React showcase
 - `apps/cli` — Bun CLI entrypoint
-- `apps/ocr-service` — OCR stub
-- `apps/beispiele` — examples index
 - `packages/ui` — Gumroad-inspired design system
 
 ## Conventions

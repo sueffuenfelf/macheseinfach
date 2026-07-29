@@ -3,8 +3,6 @@ import { findRepoRoot } from '../root';
 /** App alias → workspace package name */
 export const DEV_APPS: Record<string, { package: string; script?: string }> = {
     website: { package: '@macheseinfach/website' },
-    'ocr-service': { package: '@macheseinfach/ocr-service' },
-    ocr: { package: '@macheseinfach/ocr-service' },
     storybook: { package: '@macheseinfach/ui', script: 'storybook' },
     ui: { package: '@macheseinfach/ui', script: 'storybook' },
     cli: { package: '@macheseinfach/cli', script: 'dev' },

@@ -52,7 +52,7 @@ Monorepo: Bun workspaces (`apps/*`, `packages/*`). Package-Namen: `@macheseinfac
 }
 ```
 
-Referenz: `packages/ui/package.json` (mit peerDeps für React), `apps/ocr-service/package.json` (schlankes TS-Package).
+Referenz: `packages/ui/package.json` (mit peerDeps für React), `packages/openrouter/package.json` (schlankes TS-Package).
 
 ## tsconfig.json
 
