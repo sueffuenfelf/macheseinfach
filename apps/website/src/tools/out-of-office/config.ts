@@ -22,7 +22,7 @@ export default defineGenerateTool(
             theme: KOMMUNIKATION_THEME,
             maturity: 'stable',
             areas: ['kommunikation'],
-            storyIds: [],
+            storyIds: ['story-abwesenheit'],
         },
         fields: [
             {

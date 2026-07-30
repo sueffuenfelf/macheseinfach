@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import type { ToolDefinition as Tool } from '../../data/catalog/types';
+import { FlowBoundChip } from '../../flow/FlowBoundChip';
+import { useFlowContext } from '../../flow/FlowContextProvider';
+import { useFlowSession } from '../../flow/FlowWorkspace';
+import { decodeFile } from '../../flow/slot-codec';
+import { useFlowInput } from '../../flow/useFlowInput';
 import { useFileDrop } from '../../hooks/useFileDrop';
 import { useToast } from '../../shell/toast';
 import {
@@ -83,6 +88,9 @@ function ShortcutKeys({ keys }: { keys: string[] }) {
 }
 
 export function PdfRedactTool({ tool }: PdfRedactToolProps) {
+    const pdfInput = useFlowInput(tool.id, 'pdf', decodeFile);
+    const flowCtx = useFlowContext();
+    const flowSession = useFlowSession();
     const [file, setFile] = useState<File | null>(null);
     const [pageCount, setPageCount] = useState(1);
     const [pageIndex, setPageIndex] = useState(0);
@@ -104,9 +112,12 @@ export function PdfRedactTool({ tool }: PdfRedactToolProps) {
     const jsDocRef = useRef<Awaited<ReturnType<typeof loadPdfJsDocument>> | null>(null);
     const inputRef = useRef<HTMLInputElement | null>(null);
     const pageCountRef = useRef(pageCount);
+    const loadedNameRef = useRef<string | null>(null);
     const { toast } = useToast();
 
     pageCountRef.current = pageCount;
+
+    const flowPdf = pdfInput.source === 'flow' ? pdfInput.value : null;
 
     useEffect(() => {
         if (!file) return;
@@ -186,7 +197,7 @@ export function PdfRedactTool({ tool }: PdfRedactToolProps) {
         void loadFile(Array.from(files)[0]);
     });
 
-    async function loadFile(next: File | undefined) {
+    async function loadFile(next: File | undefined, opts?: { fromFlow?: boolean }) {
         if (!next) return;
         try {
             const pdf = await loadPdfDocument(next);
@@ -195,15 +206,26 @@ export function PdfRedactTool({ tool }: PdfRedactToolProps) {
             const first = pdf.getPage(0);
             const { width, height } = first.getSize();
             setFile(next);
+            loadedNameRef.current = next.name;
             setPageCount(pdf.getPageCount());
             setPageIndex(0);
             setPageSize({ width, height });
             resetBoxes([]);
             setDraft(null);
+            if (!opts?.fromFlow && pdfInput.source === 'local') {
+                pdfInput.setValue(next);
+            }
         } catch {
             toast({ message: 'PDF konnte nicht geladen werden.', variant: 'error' });
         }
     }
+
+    useEffect(() => {
+        if (!flowPdf) return;
+        if (loadedNameRef.current === flowPdf.name && file === flowPdf) return;
+        void loadFile(flowPdf, { fromFlow: true });
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- load when Vorhaben PDF changes
+    }, [flowPdf]);
 
     function clientToRel(clientX: number, clientY: number): { relX: number; relY: number } | null {
         if (!previewRef.current) return null;
@@ -278,7 +300,18 @@ export function PdfRedactTool({ tool }: PdfRedactToolProps) {
                     height,
                 })),
             );
-            downloadPdfBytes(bytes, swapBaseFilename(file.name, '-geschwaerzt'));
+            const outName = swapBaseFilename(file.name, '-geschwaerzt');
+            downloadPdfBytes(bytes, outName);
+            if (pdfInput.source === 'flow' && flowCtx) {
+                const outFile = new File([bytes], outName, { type: 'application/pdf' });
+                flowCtx.setSlot(pdfInput.slotId, {
+                    kind: 'file',
+                    file: outFile,
+                    name: outFile.name,
+                    byteSize: outFile.size,
+                });
+            }
+            flowSession?.reportToolSuccess(tool.id);
             toast({ message: 'Geschwärzte PDF heruntergeladen', variant: 'success' });
         } catch {
             toast({ message: 'Export fehlgeschlagen.', variant: 'error' });
@@ -328,10 +361,17 @@ export function PdfRedactTool({ tool }: PdfRedactToolProps) {
 
     return (
         <ToolStickyFooterLayout footer={footer}>
-            {!file ? (
+            {pdfInput.source === 'flow' ? (
+                <div className="mb-3">
+                    <FlowBoundChip label={pdfInput.value.name} onEdit={pdfInput.editInFlow} />
+                </div>
+            ) : null}
+            {!file && pdfInput.source !== 'flow' ? (
                 <section
                     className="ms-dropzone rounded-xl p-8 text-center"
                     data-drag={dragOver}
+                    data-flow-source="local"
+                    data-testid="pdf-redact-dropzone"
                     onDragOver={onDragOver}
                     onDragLeave={onDragLeave}
                     onDrop={onDrop}
@@ -352,7 +392,7 @@ export function PdfRedactTool({ tool }: PdfRedactToolProps) {
                         onChange={(e) => void loadFile(e.target.files?.[0])}
                     />
                 </section>
-            ) : (
+            ) : file ? (
                 <section className="rounded-xl border-2 border-black bg-white p-4 shadow-brutal-lg md:p-5">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                         <h3 className="font-display text-[12px] font-bold uppercase tracking-[0.05em] text-[var(--color-ink-soft)]">
@@ -431,7 +471,7 @@ export function PdfRedactTool({ tool }: PdfRedactToolProps) {
                         <ShortcutKeys keys={['←', '→']} /> Seiten wechseln.
                     </p>
                 </section>
-            )}
+            ) : null}
         </ToolStickyFooterLayout>
     );
 }

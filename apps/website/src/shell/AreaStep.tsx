@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { areaOrder, areas, getTool, toolsInArea } from '../data/catalog';
-import { searchPath } from '../routing/paths';
+import { searchPath, vorhabenPath } from '../routing/paths';
 import { usePlatformNav } from '../routing/usePlatformNav';
+import { areaCardTextColors } from './areaCardText';
 import { BrutalInput } from './components/Primitives';
 import { Icon } from './Icon';
+import { AppPageHeader, PageContainer } from './PageContainer';
 
 function toolCountLabel(count: number, planned: boolean): string {
     if (planned) return `${count} Tools geplant`;
@@ -19,17 +21,26 @@ export function AreaStep() {
     const showRecent = !activeAreaId && recentTools.length > 0;
 
     return (
-        <main className="mx-auto w-full max-w-[1040px] px-4 py-6 md:px-6 md:py-11">
-            <h1 className="max-w-[16ch] font-display text-[34px] leading-[1.02] font-bold tracking-[-0.03em] text-[var(--color-ink)] sm:text-[44px]">
-                Was willst du erledigen?
-            </h1>
-            <p className="mt-3 max-w-[52ch] text-[15px] leading-relaxed text-[var(--color-ink-soft)] sm:mt-4 sm:text-[17px]">
-                Wähle erst deinen Bereich. Danach zeigen wir dir passende Situationen und öffnen das
-                richtige Tool direkt.
-            </p>
+        <PageContainer wide className="py-4 md:py-5">
+            <AppPageHeader
+                className="mb-3"
+                title="Was willst du erledigen?"
+                subtitle={
+                    <>
+                        Wähle einen Bereich — oder starte mit{' '}
+                        <Link
+                            to={vorhabenPath()}
+                            className="ms-focus font-semibold text-[var(--color-ink)] underline decoration-[var(--color-line)] underline-offset-2"
+                        >
+                            allen Vorhaben
+                        </Link>
+                        .
+                    </>
+                }
+            />
 
             <form
-                className="mt-6 max-w-[520px]"
+                className="mb-3 max-w-[480px]"
                 onSubmit={(e) => {
                     e.preventDefault();
                     navigate(searchPath(searchQuery));
@@ -41,7 +52,7 @@ export function AreaStep() {
                 <div className="relative">
                     <svg
                         viewBox="0 0 24 24"
-                        className="pointer-events-none absolute top-1/2 left-3.5 h-4.5 w-4.5 -translate-y-1/2 text-[var(--color-ink-soft)]"
+                        className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-[var(--color-ink-soft)]"
                         fill="none"
                         stroke="currentColor"
                         strokeWidth="2.2"
@@ -55,55 +66,63 @@ export function AreaStep() {
                         type="search"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Oder direkt suchen: HEIC, PDF verkleinern, IBAN …"
-                        className="py-3 pr-3 pl-10"
+                        placeholder="Direkt suchen: HEIC, PDF, IBAN …"
+                        className="py-2.5 pr-3 pl-9 text-[14px]"
                     />
                 </div>
             </form>
 
-            <ul className="ms-stagger mt-8 grid grid-cols-1 items-stretch gap-5 md:grid-cols-2">
+            <ul className="ms-stagger grid grid-cols-1 items-stretch gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
                 {areaOrder.map((id) => {
                     const area = areas[id];
                     const areaTools = toolsInArea(id);
                     const liveCount = areaTools.filter((t) => t.maturity !== 'planned').length;
                     const planned = liveCount === 0 && areaTools.length > 0;
                     const count = planned ? areaTools.length : liveCount;
+                    const textColors = areaCardTextColors(area.accent);
                     return (
                         <li key={id} className="h-full">
                             <button
                                 type="button"
                                 onClick={() => selectArea(id)}
-                                style={{ background: area.accent }}
-                                className={`ms-focus ms-card ms-card-hover flex h-full w-full cursor-pointer flex-col p-4 text-left sm:p-[22px] ${
+                                style={{
+                                    background: area.accent,
+                                    color: textColors.title,
+                                }}
+                                className={`ms-focus ms-card ms-card-hover flex h-full w-full cursor-pointer flex-col p-3 text-left ${
                                     planned ? 'opacity-[0.82]' : ''
                                 }`}
                             >
-                                <span className="flex items-start justify-between gap-4">
-                                    <span className="inline-flex h-[46px] w-[46px] items-center justify-center rounded-[11px] border-2 border-black bg-white">
-                                        <Icon svg={area.icon} size={24} />
+                                <span className="flex items-start justify-between gap-3">
+                                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-[9px] border-2 border-black bg-white">
+                                        <Icon svg={area.icon} size={20} />
                                     </span>
                                     {planned ? (
-                                        <span className="ms-badge bg-black text-white">
+                                        <span className="ms-badge bg-black text-white text-[10px]">
                                             Geplant
                                         </span>
                                     ) : null}
                                 </span>
-                                <span className="mt-3 block font-display text-[21px] leading-tight font-bold tracking-[-0.02em] sm:mt-4 sm:text-[24px]">
+                                <span className="mt-2.5 block font-display text-[17px] leading-tight font-bold tracking-[-0.02em]">
                                     {area.label}
                                 </span>
-                                <span className="mt-2 line-clamp-2 min-h-[2.9em] max-w-[34ch] text-[14.5px] leading-relaxed text-[var(--color-ink-soft)]">
+                                <span
+                                    className="mt-1.5 line-clamp-2 text-[13px] leading-relaxed"
+                                    style={{ color: textColors.description }}
+                                >
                                     {area.description}
                                 </span>
-                                <span className="mt-auto flex items-center justify-between gap-3 pt-5">
-                                    <span className="rounded-full border-2 border-black bg-black px-3 py-1 font-display text-[12px] font-semibold text-white">
+                                <span className="mt-auto flex items-center justify-between gap-2 pt-3">
+                                    <span className="rounded-full border-2 border-black bg-black px-2.5 py-0.5 font-display text-[11px] font-semibold text-white">
                                         {toolCountLabel(count, planned)}
                                     </span>
                                     <svg
                                         viewBox="0 0 24 24"
-                                        className="h-5 w-5"
+                                        className="h-4 w-4"
                                         fill="none"
                                         stroke="currentColor"
                                         strokeWidth="2.4"
+                                        aria-hidden
                                     >
                                         <path d="M5 12h14" />
                                         <path d="M13 6l6 6-6 6" />
@@ -116,11 +135,11 @@ export function AreaStep() {
             </ul>
 
             {showRecent ? (
-                <section className="mt-10">
-                    <h2 className="font-display text-[16px] font-semibold tracking-[-0.01em]">
+                <section className="mt-8">
+                    <h2 className="font-display text-[13px] font-semibold tracking-[-0.01em] text-[var(--color-ink-muted)]">
                         Zuletzt genutzt
                     </h2>
-                    <div className="mt-3 flex flex-wrap gap-2.5">
+                    <div className="mt-2 flex flex-wrap gap-2">
                         {recentTools.map((toolId) => {
                             const tool = getTool(toolId);
                             return (
@@ -128,7 +147,7 @@ export function AreaStep() {
                                     key={tool.id}
                                     type="button"
                                     onClick={() => selectTool(tool.id)}
-                                    className="ms-focus inline-flex items-center rounded-full border-2 border-black bg-white px-3 py-1.5 font-display text-[13px] font-semibold shadow-brutal-sm transition hover:-translate-x-[1px] hover:-translate-y-[1px] hover:shadow-brutal"
+                                    className="ms-focus inline-flex items-center rounded-full border-2 border-black bg-white px-2.5 py-1 font-display text-[12px] font-semibold shadow-brutal-sm transition hover:-translate-x-[1px] hover:-translate-y-[1px] hover:shadow-brutal"
                                 >
                                     {tool.shortTitle}
                                 </button>
@@ -137,6 +156,6 @@ export function AreaStep() {
                     </div>
                 </section>
             ) : null}
-        </main>
+        </PageContainer>
     );
 }

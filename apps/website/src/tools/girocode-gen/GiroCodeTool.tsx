@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ToolDefinition as Tool } from '../../data/catalog/types';
+import { FlowBoundChip } from '../../flow/FlowBoundChip';
+import { useFlowSession } from '../../flow/FlowWorkspace';
+import { decodeFormString } from '../../flow/slot-codec';
+import { useFlowInput } from '../../flow/useFlowInput';
 import { validateIban } from '../../lib/iban';
 import { downloadDataUrl, parseGermanNumber } from '../../lib/format';
 import { buildEpcPayload, generateQrDataUrl, type GiroCodeData } from '../../lib/qr';
@@ -10,13 +14,20 @@ type GiroCodeToolProps = {
 };
 
 export function GiroCodeTool({ tool }: GiroCodeToolProps) {
+    const ibanInput = useFlowInput(tool.id, 'iban', decodeFormString);
+    const amountInput = useFlowInput(tool.id, 'amount', decodeFormString);
+    const flowSession = useFlowSession();
     const [name, setName] = useState('');
-    const [iban, setIban] = useState('');
-    const [amount, setAmount] = useState('');
+    const [localIban, setLocalIban] = useState('');
+    const [localAmount, setLocalAmount] = useState('');
     const [purpose, setPurpose] = useState('');
     const [loadingQr, setLoadingQr] = useState(false);
     const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
     const { toast } = useToast();
+
+    const iban = ibanInput.source === 'flow' ? ibanInput.value : (ibanInput.value ?? localIban);
+    const amount =
+        amountInput.source === 'flow' ? amountInput.value : (amountInput.value ?? localAmount);
 
     const ibanResult = useMemo(() => {
         if (!iban.trim()) return null;
@@ -48,7 +59,10 @@ export function GiroCodeTool({ tool }: GiroCodeToolProps) {
         setLoadingQr(true);
         void generateQrDataUrl(payload, 300)
             .then((url) => {
-                if (!cancelled) setQrDataUrl(url);
+                if (!cancelled) {
+                    setQrDataUrl(url);
+                    flowSession?.reportToolSuccess(tool.id);
+                }
             })
             .finally(() => {
                 if (!cancelled) setLoadingQr(false);
@@ -56,7 +70,7 @@ export function GiroCodeTool({ tool }: GiroCodeToolProps) {
         return () => {
             cancelled = true;
         };
-    }, [amountValue, iban, isReady, name, purpose]);
+    }, [amountValue, flowSession, iban, isReady, name, purpose, tool.id]);
 
     return (
         <div className="ms-animate-fade mx-auto grid w-full max-w-3xl gap-5 px-4 py-6 md:grid-cols-[1.2fr_1fr] md:px-6">
@@ -83,15 +97,30 @@ export function GiroCodeTool({ tool }: GiroCodeToolProps) {
                     >
                         IBAN
                     </label>
-                    <input
-                        id="giro-iban"
-                        className="ms-input font-mono tracking-[0.04em]"
-                        data-invalid={ibanInvalid}
-                        value={iban}
-                        onChange={(e) => setIban(e.target.value)}
-                        placeholder="DE89 3704 0044 0532 0130 00"
-                    />
-                    {ibanInvalid ? (
+                    {ibanInput.source === 'flow' ? (
+                        <FlowBoundChip label={ibanInput.value} onEdit={ibanInput.editInFlow} />
+                    ) : (
+                        <>
+                            <input
+                                id="giro-iban"
+                                className="ms-input font-mono tracking-[0.04em]"
+                                data-invalid={ibanInvalid}
+                                data-flow-source="local"
+                                value={iban}
+                                onChange={(e) => {
+                                    setLocalIban(e.target.value);
+                                    ibanInput.setValue(e.target.value);
+                                }}
+                                placeholder="DE89 3704 0044 0532 0130 00"
+                            />
+                            {ibanInvalid ? (
+                                <p className="mt-1 text-[12.5px] font-semibold text-[var(--color-danger-ink)]">
+                                    IBAN-Format ist ungültig. Bitte prüfen.
+                                </p>
+                            ) : null}
+                        </>
+                    )}
+                    {ibanInput.source === 'flow' && ibanInvalid ? (
                         <p className="mt-1 text-[12.5px] font-semibold text-[var(--color-danger-ink)]">
                             IBAN-Format ist ungültig. Bitte prüfen.
                         </p>
@@ -104,13 +133,21 @@ export function GiroCodeTool({ tool }: GiroCodeToolProps) {
                     >
                         Betrag (€)
                     </label>
-                    <input
-                        id="giro-amount"
-                        className="ms-input"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        placeholder="149,90"
-                    />
+                    {amountInput.source === 'flow' ? (
+                        <FlowBoundChip label={amountInput.value} onEdit={amountInput.editInFlow} />
+                    ) : (
+                        <input
+                            id="giro-amount"
+                            className="ms-input"
+                            data-flow-source="local"
+                            value={amount}
+                            onChange={(e) => {
+                                setLocalAmount(e.target.value);
+                                amountInput.setValue(e.target.value);
+                            }}
+                            placeholder="149,90"
+                        />
+                    )}
                 </div>
                 <div>
                     <label

@@ -21,7 +21,7 @@ export default defineCalcTool(
             theme: { accent: '#ff90e8', accentStrong: '#000', accentSoft: '#ffe3f7' },
             maturity: 'stable',
             areas: ['buchhaltung', 'steuern'],
-            storyIds: [],
+            storyIds: ['story-freelancer-zahlung', 'story-mwst-steuer'],
         },
         fields: [
             {

@@ -21,7 +21,7 @@ export default defineCalcTool(
             theme: A11Y_THEME,
             maturity: 'stable',
             areas: ['barrierefreiheit'],
-            storyIds: [],
+            storyIds: ['story-alt-text-laenge'],
         },
         fields: [
             { id: 'text', type: 'textarea', label: 'Alt-Text', placeholder: 'Beschreibung des Bildes …', rows: 4 },

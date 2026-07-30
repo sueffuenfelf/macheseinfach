@@ -22,7 +22,7 @@ export default defineCalcTool(
             theme: RECHT_THEME,
             maturity: 'stable',
             areas: ['recht'],
-            storyIds: [],
+            storyIds: ['story-verjaehrung'],
         },
         fields: [{ id: 'eventDate', type: 'date', label: 'Ereignis / Forderung entstanden' }],
         compute: computeLimitationPeriodHint,

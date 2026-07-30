@@ -22,7 +22,7 @@ export default defineGenerateTool(
             theme: WEB_THEME,
             maturity: 'stable',
             areas: ['web'],
-            storyIds: [],
+            storyIds: ['story-url-encode'],
         },
         fields: [
             {

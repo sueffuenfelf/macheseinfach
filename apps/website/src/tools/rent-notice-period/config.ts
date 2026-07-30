@@ -35,7 +35,7 @@ export default defineCalcTool(
             theme: WOHNEN_THEME,
             maturity: 'stable',
             areas: ['wohnen'],
-            storyIds: [],
+            storyIds: ['story-kuendigung-miete'],
         },
         fields: [
             {

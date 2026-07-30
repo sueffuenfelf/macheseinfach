@@ -27,7 +27,7 @@ export default defineCalcTool(
             theme: WOHNEN_THEME,
             maturity: 'stable',
             areas: ['wohnen'],
-            storyIds: [],
+            storyIds: ['story-warm-kalt-miete'],
         },
         fields: [
             {

@@ -18,7 +18,7 @@ const catalog = {
     theme: { accent: '#f4a261', accentStrong: '#000', accentSoft: '#fde8d4' },
     maturity: 'beta',
     areas: ['bilder'],
-    storyIds: ['story-bild-verkleinern'],
+    storyIds: ['story-bild-verkleinern', 'story-portal-foto'],
 } as const;
 
 export default defineTool(

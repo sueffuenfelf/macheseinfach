@@ -21,7 +21,7 @@ export default defineGenerateTool(
             theme: A11Y_THEME,
             maturity: 'stable',
             areas: ['barrierefreiheit'],
-            storyIds: [],
+            storyIds: ['story-fokus-sichtbar'],
         },
         fields: [
             {

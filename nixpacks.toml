@@ -1,0 +1,15 @@
+# Dokploy / Nixpacks — wie convent: build + start im Nixpacks-Image.
+# Wichtig: Publish Directory in Dokploy LEER lassen (sonst nginx statt App-Start).
+
+[variables]
+NIXPACKS_NODE_VERSION = "22"
+
+[phases.setup]
+nixpkgsArchive = "51ad838b03a05b1de6f9f2a0fffecee64a9788ee"
+nixLibs = ["...", "gcc-unwrapped.lib"]
+
+[phases.build]
+cmds = ["bun run --filter @macheseinfach/website build"]
+
+[start]
+cmd = "bun run --filter @macheseinfach/website start"

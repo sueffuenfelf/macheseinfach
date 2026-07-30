@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ToolDefinition as Tool } from '../../data/catalog/types';
+import { FlowBoundChip } from '../../flow/FlowBoundChip';
+import { useFlowSession } from '../../flow/FlowWorkspace';
+import { decodeFile } from '../../flow/slot-codec';
+import { useFlowInput } from '../../flow/useFlowInput';
 import { useFileDrop } from '../../hooks/useFileDrop';
 import { formatBytes } from '../../lib/format';
 import { useToast } from '../../shell/toast';
@@ -55,6 +59,8 @@ function statusLabel(status: CompressStatus, targetBytes: number): string {
 }
 
 export function PdfCompressTool({ tool }: PdfCompressToolProps) {
+    const fileInput = useFlowInput(tool.id, 'file', decodeFile);
+    const flowSession = useFlowSession();
     const [file, setFile] = useState<File | null>(null);
     const [preset, setPreset] = useState<SizePreset>('elster');
     const [customTargetMb, setCustomTargetMb] = useState('2');
@@ -104,7 +110,15 @@ export function PdfCompressTool({ tool }: PdfCompressToolProps) {
         setFile(next);
         setResult(null);
         setPreviewSize(null);
+        if (fileInput.source === 'local') fileInput.setValue(next);
     }
+
+    useEffect(() => {
+        if (fileInput.source !== 'flow') return;
+        setFile(fileInput.value);
+        setResult(null);
+        setPreviewSize(null);
+    }, [fileInput.source === 'flow' ? fileInput.value : null, fileInput.source]);
 
     useEffect(() => {
         if (!file) return;
@@ -175,6 +189,7 @@ export function PdfCompressTool({ tool }: PdfCompressToolProps) {
             });
             setResult(compressed);
             setPreviewSize(compressed.compressedSize);
+            flowSession?.reportToolSuccess(tool.id);
             toast({
                 message:
                     compressed.status === 'under_limit'
@@ -200,10 +215,15 @@ export function PdfCompressTool({ tool }: PdfCompressToolProps) {
             className="ms-animate-fade mx-auto w-full max-w-2xl space-y-4 px-4 py-6 md:px-6"
             aria-busy={working || previewing || fitting}
         >
-            {!file ? (
+            {fileInput.source === 'flow' ? (
+                <FlowBoundChip label={fileInput.value.name} onEdit={fileInput.editInFlow} />
+            ) : null}
+            {!file && fileInput.source !== 'flow' ? (
                 <section
                     className="ms-dropzone cursor-pointer rounded-xl p-8 text-center"
                     data-drag={dragOver}
+                    data-flow-source="local"
+                    data-testid="pdf-compress-dropzone"
                     onDragOver={onDragOver}
                     onDragLeave={onDragLeave}
                     onDrop={onDrop}
@@ -251,9 +271,14 @@ export function PdfCompressTool({ tool }: PdfCompressToolProps) {
                             type="button"
                             className="ms-btn"
                             onClick={() => {
+                                if (fileInput.source === 'flow') {
+                                    fileInput.editInFlow();
+                                    return;
+                                }
                                 setFile(null);
                                 setResult(null);
                                 setPreviewSize(null);
+                                if (fileInput.source === 'local') fileInput.setValue(null);
                             }}
                         >
                             Wechseln

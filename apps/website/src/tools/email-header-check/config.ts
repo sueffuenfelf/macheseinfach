@@ -22,7 +22,7 @@ export default definePasteTool(
             theme: SECURITY_THEME,
             maturity: 'stable',
             areas: ['security'],
-            storyIds: [],
+            storyIds: ['story-phishing-email'],
         },
         analyze: analyzeEmailHeaders,
         placeholder: 'Received: from mail.example.com …\nFrom: …\nAuthentication-Results: …',

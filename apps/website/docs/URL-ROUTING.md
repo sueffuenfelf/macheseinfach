@@ -11,7 +11,6 @@ Die Website nutzt **react-router-dom** (BrowserRouter). Der Pfad ist die Quelle 
 | Situation (Tool-Auswahl bei mehreren Tools) | `/bereich/:areaSlug/:storySlug` | `/bereich/buchhaltung/rechnung` |
 | Tool (voller Pfad) | `/bereich/:areaSlug/:storySlug/:toolSlug` | `/bereich/buchhaltung/rechnung/girocode-gen` |
 | Tool (Kurzlink) | `/tool/:toolSlug` | `/tool/pdf-compress` |
-| Favoriten | `/favoriten` | `/favoriten` |
 | Einstellungen | `/einstellungen` | `/einstellungen` |
 
 ## Slugs im Katalog
@@ -63,4 +62,4 @@ bun run --filter @macheseinfach/website build
 - `src/routing/PlatformRouterSync.tsx` — URL → State
 - `src/routing/TagUrlSync.tsx` — Tags → URL
 - `src/routing/usePlatformNav.ts` — State-Aktionen → navigate()
-- `src/shell/FavoritesPage.tsx` — `/favoriten`
+- `src/shell/SideNavFavoritesSection.tsx` — Favoriten in der Seitenleiste

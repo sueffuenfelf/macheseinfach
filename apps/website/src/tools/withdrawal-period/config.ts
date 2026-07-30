@@ -22,7 +22,7 @@ export default defineCalcTool(
             theme: RECHT_THEME,
             maturity: 'stable',
             areas: ['recht'],
-            storyIds: [],
+            storyIds: ['story-widerruf'],
         },
         fields: [
             { id: 'startDate', type: 'date', label: 'Beginn der Frist' },

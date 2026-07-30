@@ -27,7 +27,7 @@ export default defineCalcTool(
             theme: { accent: '#a8dadc', accentStrong: '#000', accentSoft: '#e8f6f7' },
             maturity: 'stable',
             areas: ['einheiten'],
-            storyIds: [],
+            storyIds: ['story-prozent'],
         },
         fields: [
             {

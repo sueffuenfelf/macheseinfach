@@ -22,7 +22,7 @@ export default defineGenerateTool(
             theme: SECURITY_THEME,
             maturity: 'stable',
             areas: ['security'],
-            storyIds: [],
+            storyIds: ['story-passwort-erzeugen'],
         },
         fields: [
             {

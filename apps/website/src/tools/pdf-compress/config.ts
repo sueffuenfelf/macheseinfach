@@ -19,7 +19,7 @@ const catalog = {
     theme: { accent: '#ffc900', accentStrong: '#000', accentSoft: '#fff7cf' },
     maturity: 'stable',
     areas: ['behoerden'],
-    storyIds: ['story-elster-pdf-limit'],
+    storyIds: ['story-elster-pdf-limit', 'story-vermieter-nachweis'],
 } as const;
 
 export default defineTool(

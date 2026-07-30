@@ -2,7 +2,6 @@ import { useRef, useState } from 'react';
 import type { ToolDefinition as Tool } from '../../data/catalog/types';
 import { useFileDrop } from '../../hooks/useFileDrop';
 import { useToast } from '../../shell/toast';
-import { PageHead } from '../../seo/PageHead';
 import { ProgressBar, ResultCard, StateHint } from '../_shared/_shared';
 import { IMAGE_ACCEPT, isAcceptedImageFile } from '../_shared/image/accept';
 import { imagesPdfFilename, imagesToPdf } from '../_shared/image/to-pdf';
@@ -77,7 +76,6 @@ export function ImageToPdfTool({ tool }: ImageToPdfToolProps) {
 
     return (
         <>
-            <PageHead fallbackTitle={tool.title} />
             <div
                 className="ms-animate-fade mx-auto w-full max-w-3xl space-y-4 px-4 py-6 md:px-6"
                 aria-busy={working}

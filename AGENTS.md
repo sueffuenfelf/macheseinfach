@@ -1,20 +1,18 @@
 # Macheseinfach — agent handbook
 
-**Macheseinfach** is a Bun monorepo for creator-commerce experiments. Stack: TypeScript, Biome, Tailwind v4 (`@macheseinfach/ui`), SOPS/age secrets.
+**Macheseinfach** is a Bun monorepo for creator-commerce experiments. Stack: TypeScript, Biome, Tailwind v4 (`@macheseinfach/ui`).
 
 ## Repo layout
 
 - `apps/website` — Vite + React showcase
 - `apps/cli` — Bun CLI entrypoint
-- `apps/ocr-service` — OCR stub
-- `apps/beispiele` — examples index
 - `packages/ui` — Gumroad-inspired design system
 
 ## Conventions
 
 - **Runtime:** Bun — prefer `bun run`, `bun test`, `bun install`.
 - **Formatting:** Biome — run `bun run format` before PRs.
-- **Secrets:** Never commit `.env` or `.kounds/age.key`. Use SOPS workflow in README.
+- **Secrets:** Never commit `.env` or `dokploy.config.ts`.
 - **License:** PolyForm Noncommercial — no commercial use without a separate license.
 
 ## Cursor

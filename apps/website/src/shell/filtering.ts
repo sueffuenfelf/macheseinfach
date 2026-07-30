@@ -89,7 +89,9 @@ export function storiesForAreaFiltered(
  * Shown as “Direkt zum Tool” entries so areas without (or with incomplete) stories stay usable.
  */
 export function orphanToolsInArea(areaId: AreaId): ToolDefinition[] {
-    const covered = new Set(storiesInArea(areaId).flatMap((story) => story.toolIds));
+    const covered = new Set(
+        storiesInArea(areaId).flatMap((story) => story.steps.map((s) => s.toolId)),
+    );
     return toolsInArea(areaId).filter((tool) => !covered.has(tool.id));
 }
 

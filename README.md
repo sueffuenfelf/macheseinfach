@@ -1,6 +1,6 @@
 # Macheseinfach!
 
-Monorepo for creator-commerce tooling — Bun workspaces, Gumroad-inspired UI, SOPS secrets.
+Monorepo for creator-commerce tooling — Bun workspaces, Gumroad-inspired UI.
 
 ## Quick start
 
@@ -13,7 +13,6 @@ bun run --filter @macheseinfach/cli dev   # CLI help
 # or via CLI from anywhere in the repo:
 bun run apps/cli/src/index.ts dev website
 bun run apps/cli/src/index.ts dev storybook
-bun run apps/cli/src/index.ts env check
 bun test
 ```
 
@@ -21,10 +20,7 @@ bun test
 
 | Command | Description |
 | --- | --- |
-| `macheseinfach dev <app>` | Start `website`, `storybook`, `ocr-service`, … |
-| `macheseinfach env check` | Verify sops, age-keygen, local age key |
-| `macheseinfach env decrypt` | `.kounds/secrets.env` → `.env` |
-| `macheseinfach env encrypt` | `.env` → `.kounds/secrets.env` |
+| `macheseinfach dev <app>` | Start `website`, `storybook`, … |
 
 ## Structure
 
@@ -32,18 +28,13 @@ bun test
 | --- | --- |
 | `apps/website` | Marketing site |
 | `apps/cli` | Local dev & project management CLI |
-| `apps/ocr-service` | OCR pipeline stub (future Gemma/local model) |
-| `apps/beispiele` | Example integrations |
 | `packages/ui` | Gumroad-style design system + **Storybook** |
 
-## Secrets (SOPS + age)
+## Local env
 
-1. Generate a key (once per machine): `age-keygen -o .kounds/age.key`
-2. Add the **public** key to `.sops.yaml` if you rotate keys.
-3. Decrypt: `bun run env:decrypt` → `.env` (gitignored)
-4. Encrypt: edit `.env`, then `bun run env:encrypt`
+Copy `.env.example` to `.env` for local overrides. Never commit `.env`.
 
-Never commit `.kounds/age.key` or cleartext `.env`.
+Dokploy **Nixpacks** — siehe [`docs/DEPLOY.md`](./docs/DEPLOY.md). **Publish directory leer lassen**, sonst startet Dokploy nginx statt `vite preview`.
 
 ## AI / Cursor
 

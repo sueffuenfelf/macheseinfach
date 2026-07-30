@@ -7,5 +7,6 @@ storybook-static/
 *.log
 .env
 .env.local
-.kounds/
+dokploy.config.ts
 Macheseinfa.ch Plattform.zip
+apps/website/src/seo/.generated-routes.json

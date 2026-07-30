@@ -13,6 +13,41 @@ export function BrutalButton({ className = '', children, ...props }: BrutalButto
     );
 }
 
+const backChevron = (
+    <svg
+        viewBox="0 0 24 24"
+        className="h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        aria-hidden
+    >
+        <path d="M15 5l-7 7 7 7" />
+    </svg>
+);
+
+/** Inline Zurück — icon-only for `AppPageHeader` strip. */
+export function BackButtonCompact({
+    className = '',
+    onClick,
+}: {
+    className?: string;
+    onClick?: () => void;
+}) {
+    const { goBack } = usePlatformNav();
+
+    return (
+        <button
+            type="button"
+            onClick={onClick ?? goBack}
+            aria-label="Zurück"
+            className={`ms-focus inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[8px] border-2 border-black bg-white shadow-[2px_2px_0_#000] transition hover:-translate-x-[1px] hover:-translate-y-[1px] hover:shadow-brutal active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0_#000] ${className}`.trim()}
+        >
+            {backChevron}
+        </button>
+    );
+}
+
 /** Einheitlicher Zurück-Button — `history.back()` mit Fallback (siehe `usePlatformNav`). */
 export function BackButton({ className = '' }: { className?: string }) {
     const { goBack } = usePlatformNav();
@@ -23,16 +58,7 @@ export function BackButton({ className = '' }: { className?: string }) {
             onClick={goBack}
             className={`ms-focus inline-flex items-center gap-2 rounded-[8px] border-2 border-black bg-white px-3 py-2 font-display text-[14px] font-semibold shadow-[2px_2px_0_#000] transition hover:-translate-x-[2px] hover:-translate-y-[2px] hover:shadow-brutal active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0_#000] ${className}`.trim()}
         >
-            <svg
-                viewBox="0 0 24 24"
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.4"
-                aria-hidden
-            >
-                <path d="M15 5l-7 7 7 7" />
-            </svg>
+            {backChevron}
             Zurück
         </button>
     );

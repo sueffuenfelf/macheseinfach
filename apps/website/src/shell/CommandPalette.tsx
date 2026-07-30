@@ -1,8 +1,16 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+    type KeyboardEvent,
+} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSettings } from '../context/SettingsContext';
-import { getTool, type Tool } from '../data/catalog';
-import { resolveSearch, type ScoredResult } from '../search';
+import { type ToolId } from '../data/catalog';
+import { filterHint, resolveSearch, type ScoredResult } from '../search';
+import { homePath, settingsPath, vorhabenPath } from '../routing/paths';
 import { copyToClipboard } from '../lib/format';
 import { useToast } from './toast';
 import { useDismissLayer } from './useDismissLayer';
@@ -17,11 +25,23 @@ import {
 } from './commands';
 import { Badge, SectionLabel } from './components/Primitives';
 import { SearchResultRow } from './SearchResultRow';
+import { resolvePaletteSearchSelection } from './command-palette-selection';
+
+type NavShortcut = {
+    id: string;
+    label: string;
+    hint: string;
+    run: () => void;
+};
+
+type PaletteRow =
+    | { kind: 'search'; entry: ScoredResult }
+    | { kind: 'nav'; item: NavShortcut };
 
 type CommandPaletteProps = {
     open: boolean;
     onClose: () => void;
-    onSelectScenario: (tool: Tool) => void;
+    onSelectScenario: (toolId: ToolId) => void;
     onSelectResult?: (result: ScoredResult) => void;
 };
 
@@ -40,6 +60,7 @@ export function CommandPalette({
     const [running, setRunning] = useState(false);
     const [searchResults, setSearchResults] = useState<ScoredResult[]>([]);
     const [searchLoading, setSearchLoading] = useState(false);
+    const inputRef = useRef<HTMLInputElement>(null);
     const resultRef = useRef(result);
     resultRef.current = result;
 
@@ -52,6 +73,35 @@ export function CommandPalette({
     });
 
     const commandMode = isCommandMode(localQuery);
+
+    const navShortcuts = useMemo<NavShortcut[]>(
+        () => [
+            { id: 'home', label: 'Startseite', hint: 'Home', run: () => navigate(homePath()) },
+            {
+                id: 'vorhaben',
+                label: 'Vorhaben-Übersicht',
+                hint: 'Flows',
+                run: () => navigate(vorhabenPath()),
+            },
+            {
+                id: 'settings',
+                label: 'Einstellungen',
+                hint: 'Settings',
+                run: () => navigate(settingsPath()),
+            },
+        ],
+        [navigate],
+    );
+
+    const filteredNav = useMemo(() => {
+        if (commandMode) return [];
+        const q = localQuery.trim().toLowerCase();
+        if (!q) return navShortcuts;
+        return navShortcuts.filter(
+            (item) =>
+                item.label.toLowerCase().includes(q) || item.hint.toLowerCase().includes(q),
+        );
+    }, [commandMode, localQuery, navShortcuts]);
 
     useEffect(() => {
         if (!open || commandMode) {
@@ -89,6 +139,14 @@ export function CommandPalette({
 
     const listItems = commandMode ? commandResults : searchResults;
 
+    const paletteRows = useMemo<PaletteRow[]>(() => {
+        if (commandMode) return [];
+        return [
+            ...searchResults.map((entry) => ({ kind: 'search' as const, entry })),
+            ...filteredNav.map((item) => ({ kind: 'nav' as const, item })),
+        ];
+    }, [commandMode, filteredNav, searchResults]);
+
     const resetState = useCallback(() => {
         setLocalQuery('');
         setActiveIndex(0);
@@ -101,13 +159,20 @@ export function CommandPalette({
     }, [open, resetState]);
 
     useEffect(() => {
+        if (!open) return;
+        const frame = requestAnimationFrame(() => inputRef.current?.focus());
+        return () => cancelAnimationFrame(frame);
+    }, [open]);
+
+    useEffect(() => {
         if (result) return;
-        if (listItems.length === 0) {
+        const count = commandMode ? listItems.length : paletteRows.length;
+        if (count === 0) {
             setActiveIndex(0);
             return;
         }
-        setActiveIndex((prev) => Math.min(prev, listItems.length - 1));
-    }, [listItems, result]);
+        setActiveIndex((prev) => Math.min(prev, count - 1));
+    }, [commandMode, listItems, paletteRows, result]);
 
     const copyResult = useCallback(
         async (next: CommandResult) => {
@@ -165,77 +230,96 @@ export function CommandPalette({
         [localQuery],
     );
 
-    useEffect(() => {
-        if (!open) return;
-        const onKey = (e: KeyboardEvent) => {
+    const activateSearchResult = useCallback(
+        (entry: ScoredResult) => {
+            if (onSelectResult) {
+                onSelectResult(entry);
+                return;
+            }
+            const selection = resolvePaletteSearchSelection(entry);
+            if (selection.kind === 'tool') {
+                onSelectScenario(selection.toolId);
+            } else {
+                navigate(selection.href);
+            }
+        },
+        [navigate, onSelectResult, onSelectScenario],
+    );
+
+    const activateSelection = useCallback(() => {
+        if (commandMode) {
+            if (exactCommand) {
+                void runCommand(buildQueryForCommand(exactCommand));
+                return;
+            }
+            const selected = commandResults[activeIndex];
+            if (selected) {
+                void runCommand(buildQueryForCommand(selected));
+                return;
+            }
+            void runCommand(localQuery);
+            return;
+        }
+        const row = paletteRows[activeIndex];
+        if (!row) return;
+        if (row.kind === 'nav') {
+            row.item.run();
+            onClose();
+            return;
+        }
+        const entry = row.entry;
+        activateSearchResult(entry);
+        onClose();
+    }, [
+        activeIndex,
+        activateSearchResult,
+        buildQueryForCommand,
+        commandMode,
+        commandResults,
+        exactCommand,
+        localQuery,
+        onClose,
+        paletteRows,
+        runCommand,
+    ]);
+
+    const handleInputKeyDown = useCallback(
+        (e: KeyboardEvent<HTMLInputElement>) => {
             if (result) {
-                if (e.key === 'Enter') {
+                if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
                     void runCommand(localQuery);
                 }
                 return;
             }
+
+            const count = commandMode ? listItems.length : paletteRows.length;
+
             if (e.key === 'ArrowDown') {
                 e.preventDefault();
-                setActiveIndex((prev) =>
-                    listItems.length === 0 ? 0 : (prev + 1) % listItems.length,
-                );
+                setActiveIndex((prev) => (count === 0 ? 0 : (prev + 1) % count));
                 return;
             }
             if (e.key === 'ArrowUp') {
                 e.preventDefault();
-                setActiveIndex((prev) =>
-                    listItems.length === 0 ? 0 : (prev - 1 + listItems.length) % listItems.length,
-                );
+                setActiveIndex((prev) => (count === 0 ? 0 : (prev - 1 + count) % count));
                 return;
             }
-            if (e.key === 'Enter') {
+            if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                if (commandMode) {
-                    if (exactCommand) {
-                        void runCommand(buildQueryForCommand(exactCommand));
-                        return;
-                    }
-                    const selected = commandResults[activeIndex];
-                    if (selected) {
-                        void runCommand(buildQueryForCommand(selected));
-                        return;
-                    }
-                    void runCommand(localQuery);
-                    return;
-                }
-                const entry = searchResults[activeIndex];
-                if (entry) {
-                    if (onSelectResult) {
-                        onSelectResult(entry);
-                    } else if (entry.document.toolId) {
-                        onSelectScenario(getTool(entry.document.toolId));
-                    } else {
-                        navigate(entry.document.href);
-                    }
-                    onClose();
-                }
+                activateSelection();
             }
-        };
-        window.addEventListener('keydown', onKey);
-        return () => window.removeEventListener('keydown', onKey);
-    }, [
-        activeIndex,
-        buildQueryForCommand,
-        commandMode,
-        commandResults,
-        exactCommand,
-        listItems.length,
-        localQuery,
-        onClose,
-        onSelectScenario,
-        open,
-        result,
-        runCommand,
-        searchResults,
-        navigate,
-        onSelectResult,
-    ]);
+        },
+        [
+            activateSelection,
+            commandMode,
+            listItems.length,
+            localQuery,
+            paletteRows.length,
+            result,
+            runCommand,
+        ],
+    );
 
     if (!open) return null;
 
@@ -286,18 +370,25 @@ export function CommandPalette({
                             )}
                         </svg>
                         <input
+                            ref={inputRef}
                             id="command-search"
                             type="search"
                             autoFocus
-                            placeholder="Tool oder /befehl …"
+                            placeholder="Suchen … @tools heic · /befehl"
                             value={localQuery}
                             onChange={(e) => {
                                 setLocalQuery(e.target.value);
                                 setResult(null);
                             }}
+                            onKeyDown={handleInputKeyDown}
                             className="ms-input ms-focus py-3 pr-3 pl-10"
                         />
                     </div>
+                    {!commandMode && !result ? (
+                        <p className="mt-2 font-mono text-[11px] text-[var(--color-ink-muted)]">
+                            Filter: {filterHint()}
+                        </p>
+                    ) : null}
                     {commandMode && !result && (
                         <p className="mt-2 font-mono text-[11px] text-[var(--color-ink-muted)]">
                             {parsed?.commandName
@@ -374,6 +465,7 @@ export function CommandPalette({
                                                     ? 'bg-[var(--color-success)]'
                                                     : 'hover:bg-[var(--color-chip)]'
                                             }`}
+                                            onMouseEnter={() => setActiveIndex(index)}
                                             onClick={() =>
                                                 void runCommand(buildQueryForCommand(cmd))
                                             }
@@ -409,16 +501,9 @@ export function CommandPalette({
                                             result={entry}
                                             compact
                                             active={index === activeIndex}
+                                            onMouseEnter={() => setActiveIndex(index)}
                                             onClick={() => {
-                                                if (onSelectResult) {
-                                                    onSelectResult(entry);
-                                                } else if (entry.document.toolId) {
-                                                    onSelectScenario(
-                                                        getTool(entry.document.toolId),
-                                                    );
-                                                } else {
-                                                    navigate(entry.document.href);
-                                                }
+                                                activateSearchResult(entry);
                                                 onClose();
                                             }}
                                         />
@@ -427,9 +512,45 @@ export function CommandPalette({
                             </ul>
                             {searchResults.length === 0 && !searchLoading ? (
                                 <p className="px-3 py-4 text-sm text-[var(--color-ink-muted)]">
-                                    Kein Tool gefunden. Für Schnellbefehle mit{' '}
-                                    <span className="font-mono">/</span> beginnen.
+                                    Kein Treffer. Filter: {filterHint()} · Schnellbefehle mit{' '}
+                                    <span className="font-mono">/</span>.
                                 </p>
+                            ) : null}
+                            {filteredNav.length > 0 ? (
+                                <>
+                                    <SectionLabel className="px-2 py-2">Navigation</SectionLabel>
+                                    <ul>
+                                        {filteredNav.map((item, navIndex) => {
+                                            const rowIndex = searchResults.length + navIndex;
+                                            return (
+                                                <li key={item.id}>
+                                                    <button
+                                                        type="button"
+                                                        className={`ms-focus w-full rounded-[10px] px-3 py-2.5 text-left transition ${
+                                                            rowIndex === activeIndex
+                                                                ? 'bg-[var(--color-success)]'
+                                                                : 'hover:bg-[var(--color-chip)]'
+                                                        }`}
+                                                        onMouseEnter={() => setActiveIndex(rowIndex)}
+                                                        onClick={() => {
+                                                            item.run();
+                                                            onClose();
+                                                        }}
+                                                    >
+                                                    <span className="flex items-center justify-between gap-2">
+                                                        <span className="font-display text-[14px] font-semibold text-[var(--color-ink)]">
+                                                            {item.label}
+                                                        </span>
+                                                        <span className="font-mono text-[11px] text-[var(--color-ink-muted)]">
+                                                            {item.hint}
+                                                        </span>
+                                                    </span>
+                                                    </button>
+                                                </li>
+                                            );
+                                        })}
+                                    </ul>
+                                </>
                             ) : null}
                         </>
                     )}

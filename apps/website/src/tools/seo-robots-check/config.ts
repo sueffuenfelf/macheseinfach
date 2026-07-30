@@ -22,7 +22,7 @@ export default definePasteTool(
             theme: SEO_THEME,
             maturity: 'stable',
             areas: ['seo'],
-            storyIds: [],
+            storyIds: ['story-seo-robots'],
         },
         analyze: analyzeRobotsTxt,
         placeholder: 'User-agent: *\nDisallow: /admin/\nSitemap: https://beispiel.de/sitemap.xml',

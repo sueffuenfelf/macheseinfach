@@ -22,7 +22,7 @@ export default defineGenerateTool(
             theme: SEO_THEME,
             maturity: 'stable',
             areas: ['seo'],
-            storyIds: [],
+            storyIds: ['story-seo-og'],
         },
         fields: [
             { id: 'title', type: 'text', label: 'og:title', placeholder: 'Artikel-Titel' },

@@ -1,26 +1,22 @@
 import {
+    type AreaId,
     areas,
     getAreaBySlug,
     getStoryBySlug,
     getTool,
     getToolBySlug,
-    stories,
-    toolsForStory,
-    type AreaId,
     type StoryId,
+    stories,
     type ToolId,
+    toolsForStory,
 } from '../data/catalog';
 import { getVariantStoryBySlug, isVariantStorySlug } from '../data/catalog/variant-stories';
 import { getVariantBySlug } from '../tools/variant-registry';
 
-export type AppPage = 'home' | 'area' | 'story' | 'tool' | 'favorites' | 'settings' | 'search';
+export type AppPage = 'home' | 'area' | 'story' | 'tool' | 'settings' | 'search' | 'vorhaben';
 
 export function homePath(): string {
     return '/';
-}
-
-export function favoritesPath(): string {
-    return '/favoriten';
 }
 
 export function settingsPath(): string {
@@ -30,6 +26,15 @@ export function settingsPath(): string {
 export function searchPath(query?: string): string {
     if (!query?.trim()) return '/suche';
     return `/suche?q=${encodeURIComponent(query.trim())}`;
+}
+
+export function vorhabenPath(areaSlug?: string): string {
+    if (!areaSlug?.trim()) return '/vorhaben';
+    return `/vorhaben?bereich=${encodeURIComponent(areaSlug.trim())}`;
+}
+
+export function parseVorhabenAreaParam(search: string): string {
+    return new URLSearchParams(search).get('bereich')?.trim() ?? '';
 }
 
 export function parseSearchQuery(search: string): string {
@@ -128,14 +133,7 @@ export function parsePathname(pathname: string, search: string): ParsedRoute {
         return homeRoute();
     }
     if (pathname === '/favoriten') {
-        return {
-            page: 'favorites',
-            areaId: null,
-            storyId: null,
-            toolId: null,
-            variantSlug: null,
-            tags: [],
-        };
+        return homeRoute();
     }
     if (pathname === '/einstellungen') {
         return {
@@ -150,6 +148,16 @@ export function parsePathname(pathname: string, search: string): ParsedRoute {
     if (pathname === '/suche') {
         return {
             page: 'search',
+            areaId: null,
+            storyId: null,
+            toolId: null,
+            variantSlug: null,
+            tags: [],
+        };
+    }
+    if (pathname === '/vorhaben') {
+        return {
+            page: 'vorhaben',
             areaId: null,
             storyId: null,
             toolId: null,
@@ -252,7 +260,18 @@ export function parsePathname(pathname: string, search: string): ParsedRoute {
         }
     }
 
-    if (!tool.storyIds.includes(story.id as StoryId) || !tool.areas.includes(area.id)) {
+    // Allow tools listed on the flow (steps ∪ recommended) even if tool.storyIds
+    // does not yet include this story (cross-area side-quests / P3 pilots).
+    const flowToolIds = new Set([
+        ...story.steps.map((s) => s.toolId),
+        ...(story.recommended ?? []).map((r) => r.toolId),
+    ]);
+    const onThisFlow = flowToolIds.has(tool.id);
+
+    if (
+        (!tool.storyIds.includes(story.id as StoryId) && !onThisFlow) ||
+        (!tool.areas.includes(area.id) && !onThisFlow)
+    ) {
         const storyTools = toolsForStory(story.id as StoryId);
         if (storyTools.length === 1) {
             return {

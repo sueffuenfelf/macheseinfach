@@ -14,7 +14,7 @@ export default defineGenerateTool(
             tags: ['Farbe', 'CSS'],
             keywords: ['css gradient generator', 'verlauf generator', 'linear gradient'],
             fileHints: [], command: '/gradient', entry: 'form', theme: KREATIV_THEME,
-            maturity: 'stable', areas: ['kreativ'], storyIds: [],
+            maturity: 'stable', areas: ['kreativ'], storyIds: ['story-gradient-css'],
         },
         fields: [
             { id: 'type', type: 'segment', label: 'Typ', default: 'linear',

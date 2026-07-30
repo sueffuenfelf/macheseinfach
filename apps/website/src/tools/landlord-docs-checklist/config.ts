@@ -27,7 +27,7 @@ export default defineGenerateTool(
             theme: WOHNEN_THEME,
             maturity: 'stable',
             areas: ['wohnen'],
-            storyIds: [],
+            storyIds: ['story-vermieter-nachweis'],
         },
         fields: [
             {

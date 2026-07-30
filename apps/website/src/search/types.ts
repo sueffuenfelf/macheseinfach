@@ -46,12 +46,16 @@ export type QuerySlots = {
     multiStep: boolean;
 };
 
+import type { ParsedSearchFilters } from './filters';
+
 export type ResolveSearchOptions = {
     /** Chrome Prompt API für Stage 3 (default: true wenn verfügbar) */
     chromeAi?: boolean;
     /** Score-Aufschlüsselung in Ergebnissen */
     showBreakdown?: boolean;
     limit?: number;
+    /** Pre-parsed @filters — wenn gesetzt, überschreibt parseSearchFilters(query) */
+    filters?: ParsedSearchFilters;
 };
 
 export type ChromeIntentResult = {

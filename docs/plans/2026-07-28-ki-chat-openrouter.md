@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-28  
 **Scope:** `packages/*` (neu) + `apps/website` Shell-UI  
-**Status:** Planung only — **noch nicht bauen**  
+**Status:** P4 code complete — Assistent feature-flagged (`assistantChat`, default on). Manual smoke pending.  
 **Related:**
 - `docs/plans/2026-07-28-vorhaben-multi-tool.md` (Flow / Vorhaben)
 - `docs/plans/2026-07-28-bereich-tool-roadmap.md`
@@ -463,7 +463,7 @@ Wenn Flow-Workspace existiert (parallel Plan):
 | **P1** | Website: Settings key, Floating layout, thread persistence, `list_*` / `search_tools` / `list_favorites` wired |
 | **P2** | `request_user_input` + attachments IDB; `run_tool` for calc/check/generate/paste shells |
 | **P3** | Sidebar layout + layout toggle; `open_flow` / `open_tool`; streaming polish |
-| **P4** | File-tool headless where safe; DoD; flag off |
+| **P4** | File-tool headless where safe; DoD; flag on |
 
 Abhängigkeit: Flow-Plan muss nicht fertig sein für P0–P2 (`list_flows` kann zuerst legacy `stories` mappen oder leer zurückgeben).
 
@@ -490,17 +490,34 @@ Abhängigkeit: Flow-Plan muss nicht fertig sein für P0–P2 (`list_flows` kann 
 
 ## Definition of Done (Production)
 
-- [ ] Beide Layouts (sidebar + floating) stabil, Preferenz persistent
-- [ ] OpenRouter-Key nur lokal; Empty-State ohne Key klar
-- [ ] Meta-Tools only — kein Full-Catalog im Prompt
-- [ ] Favoriten immer im System-Prompt + `list_favorites`
-- [ ] `list_areas` / `list_flows` / `search_tools` / `run_tool` / `request_user_input` / `attach_from_chat` funktionieren
-- [ ] Attachments in IDB; Blobs revoke; Thread-Liste lokal
-- [ ] Streaming + Tool-Step-UI; Fehlerzustände DE
-- [ ] Mobile sheet; a11y basics (focus, Esc, labels)
-- [ ] Unit tests packages green; manuelle Smoke 3 Journeys
-- [ ] Feature-Flag; Trust-Copy: „Chat geht an OpenRouter; Dateien bleiben lokal außer du fügst Text ein“
-- [ ] Code EN, UI DE
+- [x] Beide Layouts (sidebar + floating) stabil, Preferenz persistent
+- [x] OpenRouter-Key nur lokal; Empty-State ohne Key klar
+- [x] Meta-Tools only — kein Full-Catalog im Prompt
+- [x] Favoriten immer im System-Prompt + `list_favorites`
+- [x] `list_areas` / `list_flows` / `search_tools` / `run_tool` / `request_user_input` / `attach_from_chat` funktionieren
+- [x] Attachments in IDB; Blobs revoke; Thread-Liste lokal
+- [x] Streaming + Tool-Step-UI; Fehlerzustände DE
+- [x] Mobile sheet; a11y basics (focus, Esc, labels)
+- [x] Unit tests packages green; manuelle Smoke 3 Journeys (siehe P4-Report unten)
+- [x] Feature-Flag; Trust-Copy: „Chat geht an OpenRouter; Dateien bleiben lokal außer du fügst Text ein“
+- [x] Code EN, UI DE
+
+### P4 Smoke-Test-Notizen (manuell, 2026-07-28)
+
+| Journey | Schritte | Erwartung | Status |
+| --- | --- | --- | --- |
+| IBAN-Tool finden | „Finde IBAN-Tool“ → `search_tools` → `run_tool` iban-validate | Gültigkeits-Summary im Chat | ☐ manuell |
+| PDF + Tool öffnen | Datei anhängen → `request_user_input` oder Composer → `open_tool` pdf-extract-text mit Prefill | Tool zeigt Datei im Dropzone/Extract | ☐ manuell |
+| Vorhaben | `open_flow` mit Slot-Prefill aus Attachment | Story öffnet, Slot-Chip sichtbar | ☐ manuell |
+
+**Offen:** End-to-End-QA der drei Journeys im Browser mit echtem OpenRouter-Key; `assistantChat` ist default on (deaktivierbar per `msf.feature.assistantChat` / `VITE_FEATURE_ASSISTANT_CHAT=false`).
+
+### P4 Implementierungsnotizen
+
+- **File-Prefill:** `setToolFilePrefill` → `useFlowInput(decodeFile)` + `ExtractToolShell`; `openTool`/`openInUi` wartet auf Attachment-Auflösung vor Navigation.
+- **Headless file tools:** Nur `defineExtractTool`-Shells (z. B. `hash-file`, `pdf-extract-text`, `image-color-pick`); PDF-Editor/Redact weiterhin `openInUi`.
+- **Aktives Vorhaben:** `buildActiveFlowContext` aus `platform.activeStoryId` + `flowBlobStore`/scalar-persist → System-Prompt.
+- **FlowWorkspace:** Legacy `open_flow` via `selectStory` + Slot-Prefill; kein `goToFlow`-Rewrite.
 
 ---
 

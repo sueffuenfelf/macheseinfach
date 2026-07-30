@@ -12,9 +12,15 @@
 }
 
 html,
-body {
+body,
+#root {
     margin: 0;
-    min-height: 100vh;
+    height: 100%;
+    min-height: 100dvh;
+}
+
+html {
+    overflow: hidden;
 }
 
 body {
@@ -23,6 +29,11 @@ body {
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    overflow: hidden;
+}
+
+#root {
+    min-height: 0;
 }
 
 input,
@@ -173,6 +184,78 @@ select {
     line-height: 1;
     color: #000;
     background: #fff;
+}
+
+/* ---------- Sidebar nav buttons ---------- */
+
+.ms-sidenav-btn {
+    --ms-sidenav-shift-hover: 2px;
+    --ms-sidenav-shift-active: calc(var(--ms-sidenav-shift-hover) * 0.7);
+    border: 2px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    box-shadow: none;
+    transform: translate(0, 0);
+    transition:
+        transform 0.08s ease,
+        box-shadow 0.08s ease,
+        background 0.12s ease,
+        border-color 0.12s ease;
+}
+
+.ms-sidenav-btn:hover {
+    border-color: #000;
+    box-shadow: var(--shadow-brutal);
+    transform: translate(
+        calc(var(--ms-sidenav-shift-hover) * -1),
+        calc(var(--ms-sidenav-shift-hover) * -1)
+    );
+}
+
+.ms-sidenav-btn:active {
+    box-shadow: 1px 1px 0 #000;
+    transform: translate(1px, 1px);
+}
+
+.ms-sidenav-btn[data-active="true"] {
+    border-color: #000;
+    background: var(--color-accent);
+    box-shadow: var(--shadow-brutal);
+    transform: translate(
+        calc(var(--ms-sidenav-shift-active) * -1),
+        calc(var(--ms-sidenav-shift-active) * -1)
+    );
+}
+
+.ms-sidenav-btn[data-active="true"]:hover {
+    transform: translate(
+        calc(var(--ms-sidenav-shift-hover) * -1),
+        calc(var(--ms-sidenav-shift-hover) * -1)
+    );
+}
+
+.ms-sidenav-btn.ms-focus:focus-visible {
+    outline: none;
+    border-color: #000;
+    box-shadow: var(--shadow-brutal);
+    transform: translate(
+        calc(var(--ms-sidenav-shift-hover) * -1),
+        calc(var(--ms-sidenav-shift-hover) * -1)
+    );
+}
+
+.ms-sidenav-brand,
+.ms-sidenav-brand:hover,
+.ms-sidenav-brand:active,
+.ms-sidenav-brand:focus,
+.ms-sidenav-brand:focus-visible {
+    box-shadow: none;
+    transform: none;
+    outline: none;
+    border: none;
+    background: transparent;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 .ms-kbd {
@@ -510,11 +593,6 @@ select {
     font-size: 0.92rem;
 }
 
-.pick-list-row--selected {
-    background: #ff90e8;
-    box-shadow: inset 0 0 0 2px #000;
-}
-
 @media (max-width: 767px) {
     .ms-session-splash__inner {
         padding: 1.5rem 1.25rem;
@@ -537,7 +615,12 @@ select {
     .ms-card-hover:hover:not(:disabled),
     .ms-btn:hover,
     .ms-btn-primary:hover,
-    .ms-input:focus {
+    .ms-input:focus,
+    .ms-sidenav-btn:hover,
+    .ms-sidenav-btn:active,
+    .ms-sidenav-btn[data-active="true"],
+    .ms-sidenav-btn[data-active="true"]:hover,
+    .ms-sidenav-btn.ms-focus:focus-visible {
         transform: none;
     }
     .ms-logo-draw .ms-logo-draw__m-stroke,
@@ -548,4 +631,31 @@ select {
     .ms-logo-draw .ms-logo-draw__m-fill {
         opacity: 1;
     }
+}
+
+.ms-app-shell {
+    --ms-shell-chrome-h: 2.75rem; /* 44px — sidenav logo header */
+    min-height: 0;
+}
+
+.ms-shell-chrome {
+    box-sizing: border-box;
+}
+
+/* Assistant sidebar — main content inset when panel open (desktop) */
+@media (min-width: 768px) {
+    html[data-assistant-sidebar="open"] .ms-app-main {
+        padding-right: min(100%, 420px);
+        transition: padding-right 200ms ease;
+    }
+}
+
+/* Assistant mobile fullscreen chat overlay */
+html[data-assistant-overlay="open"] {
+    overflow: hidden;
+}
+
+.assistant-mobile-panel {
+    height: 100dvh;
+    max-height: 100dvh;
 }

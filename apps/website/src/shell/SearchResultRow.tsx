@@ -9,7 +9,7 @@ function kindLabel(kind: ScoredResult['document']['kind']): string {
         case 'variant':
             return 'Variante';
         case 'story':
-            return 'Situation';
+            return 'Vorhaben';
         case 'area':
             return 'Bereich';
     }
@@ -36,6 +36,7 @@ type SearchResultRowProps = {
     sourceLabel?: string;
     showBreakdown?: boolean;
     onClick: () => void;
+    onMouseEnter?: () => void;
 };
 
 export function SearchResultRow({
@@ -46,18 +47,19 @@ export function SearchResultRow({
     sourceLabel,
     showBreakdown = false,
     onClick,
+    onMouseEnter,
 }: SearchResultRowProps) {
     const { document: doc } = result;
     const areaId = doc.areaId as AreaId | undefined;
     const accent = areaId ? areas[areaId].accent : '#e5e5e5';
     const isArea = doc.kind === 'area';
-    const command =
-        doc.toolId && doc.kind !== 'area' ? getTool(doc.toolId).command : null;
+    const command = doc.toolId && doc.kind !== 'area' ? getTool(doc.toolId).command : null;
 
     return (
         <button
             type="button"
             onClick={onClick}
+            onMouseEnter={onMouseEnter}
             className={`ms-focus relative w-full overflow-hidden text-left transition ${
                 compact
                     ? `rounded-[10px] px-3 py-2.5 ${

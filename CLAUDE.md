@@ -11,7 +11,7 @@ Claude Code context for **macheseinfach**. Conventions: **`AGENTS.md`**.
 
 - Bun workspaces — not pnpm
 - Design tokens: `packages/ui/src/styles/theme.css`
-- Secrets: SOPS + age (see README)
+- Local env: `.env` (gitignored; see `.env.example`)
 
 ## Permissions
 

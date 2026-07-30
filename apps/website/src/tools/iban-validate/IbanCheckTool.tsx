@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ToolDefinition as Tool } from '../../data/catalog/types';
+import { FlowBoundChip } from '../../flow/FlowBoundChip';
+import { useFlowSession } from '../../flow/FlowWorkspace';
+import { decodeFormString } from '../../flow/slot-codec';
+import { useFlowInput } from '../../flow/useFlowInput';
 import { formatIban, ibanCountryName, validateIban, type IbanResult } from '../../lib/iban';
 import { InfoGrid, ResultCard } from '../_shared/_shared';
 
@@ -15,18 +19,43 @@ const ERROR_TEXT: Record<'format' | 'length' | 'checksum' | 'country', string> =
 };
 
 export function IbanCheckTool({ tool }: IbanCheckToolProps) {
-    const [value, setValue] = useState('');
+    const ibanInput = useFlowInput(tool.id, 'iban', decodeFormString);
+    const flowSession = useFlowSession();
+    const [localValue, setLocalValue] = useState('');
     const [isChecking, setIsChecking] = useState(false);
     const [result, setResult] = useState<IbanResult | null>(null);
     const timerRef = useRef<number | null>(null);
     const inputRef = useRef<HTMLInputElement | null>(null);
 
+    const value = ibanInput.source === 'flow' ? ibanInput.value : (ibanInput.value ?? localValue);
+    const hidePrimary = ibanInput.source === 'flow';
+
     useEffect(() => {
-        inputRef.current?.focus();
+        if (!hidePrimary) inputRef.current?.focus();
         return () => {
             if (timerRef.current) window.clearTimeout(timerRef.current);
         };
-    }, []);
+    }, [hidePrimary]);
+
+    useEffect(() => {
+        if (ibanInput.source !== 'flow') return;
+        const next = ibanInput.value.trim();
+        if (!next) {
+            setResult(null);
+            return;
+        }
+        if (timerRef.current) window.clearTimeout(timerRef.current);
+        setIsChecking(true);
+        timerRef.current = window.setTimeout(() => {
+            const checked = validateIban(next);
+            setResult(checked);
+            setIsChecking(false);
+            if (checked.ok) flowSession?.reportToolSuccess(tool.id);
+        }, 300);
+        return () => {
+            if (timerRef.current) window.clearTimeout(timerRef.current);
+        };
+    }, [ibanInput.source, ibanInput.source === 'flow' ? ibanInput.value : '', flowSession, tool.id]);
 
     function onSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -35,34 +64,47 @@ export function IbanCheckTool({ tool }: IbanCheckToolProps) {
         if (timerRef.current) window.clearTimeout(timerRef.current);
         setIsChecking(true);
         timerRef.current = window.setTimeout(() => {
-            setResult(validateIban(next));
+            const checked = validateIban(next);
+            setResult(checked);
             setIsChecking(false);
+            if (checked.ok) flowSession?.reportToolSuccess(tool.id);
         }, 500);
+    }
+
+    function onChange(next: string) {
+        setLocalValue(next);
+        if (ibanInput.source === 'local') ibanInput.setValue(next);
+        setResult(null);
     }
 
     return (
         <div className="ms-animate-fade mx-auto w-full max-w-2xl space-y-4 px-4 py-6 md:px-6">
-            <form onSubmit={onSubmit} className="flex flex-col gap-2 sm:flex-row sm:items-end">
-                <div className="w-full">
-                    <label
-                        htmlFor={`${tool.id}-input`}
-                        className="mb-1 block font-display text-[12px] font-bold uppercase tracking-[0.05em]"
-                    >
-                        IBAN
-                    </label>
-                    <input
-                        ref={inputRef}
-                        id={`${tool.id}-input`}
-                        className="ms-input font-mono [font-variant-numeric:tabular-nums]"
-                        value={value}
-                        onChange={(e) => setValue(e.target.value)}
-                        placeholder="DE89 3704 0044 0532 0130 00"
-                    />
-                </div>
-                <button type="submit" className="ms-btn-primary h-[44px] sm:min-w-[130px]">
-                    Prüfen
-                </button>
-            </form>
+            {hidePrimary ? (
+                <FlowBoundChip label={ibanInput.value} onEdit={ibanInput.editInFlow} />
+            ) : (
+                <form onSubmit={onSubmit} className="flex flex-col gap-2 sm:flex-row sm:items-end">
+                    <div className="w-full">
+                        <label
+                            htmlFor={`${tool.id}-input`}
+                            className="mb-1 block font-display text-[12px] font-bold uppercase tracking-[0.05em]"
+                        >
+                            IBAN
+                        </label>
+                        <input
+                            ref={inputRef}
+                            id={`${tool.id}-input`}
+                            className="ms-input font-mono [font-variant-numeric:tabular-nums]"
+                            data-flow-source="local"
+                            value={value}
+                            onChange={(e) => onChange(e.target.value)}
+                            placeholder="DE89 3704 0044 0532 0130 00"
+                        />
+                    </div>
+                    <button type="submit" className="ms-btn-primary h-[44px] sm:min-w-[130px]">
+                        Prüfen
+                    </button>
+                </form>
+            )}
 
             {isChecking ? <p className="ms-pulse text-[14px] font-semibold">Prüfe …</p> : null}
 

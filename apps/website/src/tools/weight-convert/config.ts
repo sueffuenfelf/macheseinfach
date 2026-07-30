@@ -22,7 +22,7 @@ export default defineCalcTool(
             theme: EINHEITEN_THEME,
             maturity: 'stable',
             areas: ['einheiten'],
-            storyIds: [],
+            storyIds: ['story-gewicht-umrechnen'],
         },
         fields: [
             {

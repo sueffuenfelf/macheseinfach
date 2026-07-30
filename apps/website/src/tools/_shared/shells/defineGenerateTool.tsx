@@ -25,5 +25,17 @@ export function defineGenerateTool(def: GenerateToolDefinition, expectedId?: str
             />
         );
     }
-    return defineTool({ catalog: def.catalog, page: Page }, expectedId);
+    return defineTool(
+        {
+            catalog: def.catalog,
+            page: Page,
+            shell: {
+                kind: 'generate',
+                fields: def.fields,
+                generate: def.generate,
+                isReady: def.isReady,
+            },
+        },
+        expectedId,
+    );
 }

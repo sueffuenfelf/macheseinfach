@@ -5,7 +5,6 @@ import { useFileDrop } from '../../hooks/useFileDrop';
 import { toolShortcutPath } from '../../routing/paths';
 import { useJobQueue } from '../../shell/jobs';
 import { useToast } from '../../shell/toast';
-import { PageHead } from '../../seo/PageHead';
 import { ProgressBar, ResultCard, StateHint } from '../_shared/_shared';
 import { compressImage } from '../_shared/image/compress';
 import { getFormat, IMAGE_FORMATS } from '../_shared/image/formats';
@@ -170,7 +169,6 @@ export function ImageCompressTool({ tool }: ImageCompressToolProps) {
 
     return (
         <>
-            <PageHead fallbackTitle={tool.title} />
             <div
                 className="ms-animate-fade mx-auto w-full max-w-3xl space-y-4 px-4 py-6 md:px-6"
                 aria-busy={working}

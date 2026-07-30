@@ -22,7 +22,7 @@ export default defineGenerateTool(
             theme: RECHT_THEME,
             maturity: 'stable',
             areas: ['recht'],
-            storyIds: [],
+            storyIds: ['story-vertrag-kuendigen'],
         },
         fields: [
             {

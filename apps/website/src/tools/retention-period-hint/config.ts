@@ -22,7 +22,7 @@ export default defineCheckTool(
             theme: RECHT_THEME,
             maturity: 'stable',
             areas: ['recht'],
-            storyIds: [],
+            storyIds: ['story-aufbewahrung'],
         },
         fields: [
             {

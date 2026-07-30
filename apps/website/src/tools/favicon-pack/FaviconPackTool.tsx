@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react';
 import type { ToolDefinition } from '../../data/catalog/types';
-import { PageHead } from '../../seo/PageHead';
 import { ResultCard, StateHint } from '../_shared/_shared';
 import { downloadBlob } from '../_shared/pdf/io';
 import { EditorToolShell } from '../_shared/shells';
@@ -44,7 +43,6 @@ export function FaviconPackTool({ tool }: { tool: ToolDefinition }) {
 
     return (
         <>
-            <PageHead tool={tool} />
             <EditorToolShell tool={tool}>
                 <p className="mb-4 text-sm text-ink-soft">
                     Quadratisches Logo oder Icon hochladen — PNG in Standardgrößen exportieren.

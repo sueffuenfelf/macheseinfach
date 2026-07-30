@@ -14,7 +14,7 @@ export default defineCalcTool(
             tags: ['Farbe', 'CSS'],
             keywords: ['farbe aufhellen', 'shade tint generator', 'hover farbe'],
             fileHints: [], command: '/tint', entry: 'form', theme: KREATIV_THEME,
-            maturity: 'stable', areas: ['kreativ'], storyIds: [],
+            maturity: 'stable', areas: ['kreativ'], storyIds: ['story-farbe-aufhellen'],
         },
         fields: [
             { id: 'mode', type: 'segment', label: 'Modus', default: 'tint',

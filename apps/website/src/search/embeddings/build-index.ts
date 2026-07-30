@@ -1,6 +1,7 @@
 /**
  * Build-time script: embeds SearchDocuments → public/search/embeddings.json
- * Run: bun run apps/website/src/search/embeddings/build-index.ts
+ * Run after catalog/search document changes: bun run build:embeddings
+ * (Production deploy uses the committed public/search/embeddings.json.)
  */
 import fs from 'node:fs';
 import path from 'node:path';

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import type { ToolDefinition as Tool } from '../../data/catalog/types';
 import { useFileDrop } from '../../hooks/useFileDrop';
-import { PageHead } from '../../seo/PageHead';
 import { InfoGrid, ResultCard, StateHint } from '../_shared/_shared';
 import { IMAGE_ACCEPT } from '../_shared/image/accept';
 import { checkImageDpi } from '../_shared/image/dpi';
@@ -68,7 +67,6 @@ export function ImageDpiCheckTool({ tool }: ImageDpiCheckToolProps) {
 
     return (
         <>
-            <PageHead fallbackTitle={tool.title} />
             <div className="ms-animate-fade mx-auto w-full max-w-2xl space-y-4 px-4 py-6 md:px-6">
                 <section
                     className="ms-dropzone rounded-xl p-6 text-center"
