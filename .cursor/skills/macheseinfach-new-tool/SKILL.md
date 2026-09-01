@@ -62,7 +62,6 @@ export default defineCalcTool(
       theme: { accent: '#…', accentStrong: '#000', accentSoft: '#…' },
       maturity: 'beta',
       areas: ['einheiten'],
-      storyIds: [],
     },
     fields: [/* FieldDef */],
     compute: computeX,
@@ -91,9 +90,7 @@ Beispiel: `image-resize/config.ts` + `ImageResizeTool.tsx`.
 
 ## Catalog-Pflichtfelder
 
-`catalog.id` **muss** dem Ordnernamen entsprechen. Pflicht: `slug`, `shortTitle`, `title`, `sub`, `pain`, `solution`, `trust`, `tags`, `keywords`, `fileHints`, `command`, `entry`, `theme`, `maturity`, `areas`, `storyIds`.
-
-`storyIds` leer `[]` ist ok für direkte Bereichs-Tools. Bei Story-Verknüpfung: IDs aus `STORY_IDS` in `types.ts`; Story muss Tool in `toolIds` listen (bidirektionale Validierung).
+`catalog.id` **muss** dem Ordnernamen entsprechen. Pflicht: `slug`, `shortTitle`, `title`, `sub`, `pain`, `solution`, `trust`, `tags`, `keywords`, `fileHints`, `command`, `entry`, `theme`, `maturity`, `areas`.
 
 ## Tests
 

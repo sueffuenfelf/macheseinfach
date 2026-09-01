@@ -14,7 +14,12 @@ export default defineCalcTool(
             solution: 'Kündigungsdatum und Wochen eingeben — frühestes Monatsende anzeigen.',
             trust: TRUST_LOCAL,
             tags: ['Zeit', 'Frist', 'Vertrag'],
-            keywords: ['kündigungsfrist berechnen', 'frist monatsende', 'kündigung frist', 'wochenfrist'],
+            keywords: [
+                'kündigungsfrist berechnen',
+                'frist monatsende',
+                'kündigung frist',
+                'wochenfrist',
+            ],
             fileHints: [],
             command: '/kuendigungsfrist',
             entry: 'form',
@@ -22,7 +27,6 @@ export default defineCalcTool(
             theme: ZEIT_THEME,
             maturity: 'stable',
             areas: ['zeit'],
-            storyIds: [],
         },
         fields: [
             { id: 'noticeDate', type: 'date', label: 'Kündigungsdatum' },

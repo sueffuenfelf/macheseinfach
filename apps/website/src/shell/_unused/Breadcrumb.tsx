@@ -19,7 +19,7 @@ function Pill({
         'relative z-10 ms-focus rounded-full border-2 px-3 py-1.5 font-display text-[13px] font-semibold transition-[background-color,border-color,color,box-shadow] duration-150';
 
     const activeClass =
-        'border-black bg-[var(--color-area-behoerden)] text-black shadow-brutal-sm cursor-default';
+        'border-black bg-[var(--color-area-bilder)] text-black shadow-brutal-sm cursor-default';
 
     const inactiveClass =
         'border-[#ccc] bg-white text-[var(--color-ink-muted)] cursor-pointer hover:border-black/70 hover:bg-[var(--color-chip)] hover:text-[var(--color-ink)] hover:shadow-[1px_1px_0_rgba(0,0,0,0.35)]';

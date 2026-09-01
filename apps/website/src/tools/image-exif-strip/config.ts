@@ -18,7 +18,6 @@ const catalog = {
     theme: { accent: '#f4a261', accentStrong: '#000', accentSoft: '#fde8d4' },
     maturity: 'beta',
     areas: ['bilder'],
-    storyIds: ['story-bild-metadaten', 'story-portal-foto', 'story-vermieter-nachweis'],
 } as const;
 
 export default defineTool(

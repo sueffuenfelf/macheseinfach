@@ -15,7 +15,12 @@ export default defineCalcTool(
             solution: 'Datum oder Jahr wählen — Feiertage nach Bundesland anzeigen.',
             trust: TRUST_LOCAL,
             tags: ['Zeit', 'Feiertage', 'Prüfen'],
-            keywords: ['feiertage 2026', 'feiertage bayern', 'ist heute feiertag', 'feiertag deutschland'],
+            keywords: [
+                'feiertage 2026',
+                'feiertage bayern',
+                'ist heute feiertag',
+                'feiertag deutschland',
+            ],
             fileHints: [],
             command: '/feiertage',
             entry: 'form',
@@ -23,7 +28,6 @@ export default defineCalcTool(
             theme: ZEIT_THEME,
             maturity: 'stable',
             areas: ['zeit'],
-            storyIds: ['story-feiertage'],
         },
         fields: [
             {

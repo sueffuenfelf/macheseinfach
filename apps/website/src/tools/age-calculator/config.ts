@@ -14,7 +14,12 @@ export default defineCalcTool(
             solution: 'Geburtsdatum und Stichtag wählen — Alter erscheint sofort.',
             trust: TRUST_LOCAL,
             tags: ['Zeit', 'Zähler'],
-            keywords: ['alter berechnen', 'wie alt bin ich', 'alter stichtag', 'geburtsdatum alter'],
+            keywords: [
+                'alter berechnen',
+                'wie alt bin ich',
+                'alter stichtag',
+                'geburtsdatum alter',
+            ],
             fileHints: [],
             command: '/alter',
             entry: 'form',
@@ -22,7 +27,6 @@ export default defineCalcTool(
             theme: ZEIT_THEME,
             maturity: 'stable',
             areas: ['zeit'],
-            storyIds: [],
         },
         fields: [
             { id: 'birth', type: 'date', label: 'Geburtsdatum' },

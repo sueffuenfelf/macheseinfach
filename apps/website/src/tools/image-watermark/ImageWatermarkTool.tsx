@@ -15,10 +15,7 @@ import { getFormat, IMAGE_FORMATS } from '../_shared/image/formats';
 import { downloadBlob } from '../_shared/pdf/io';
 import type { ImageFormatId } from '../_shared/image/types';
 import { ContinueWithNextTool, useImageToolSession } from '../_shared/image/useImageToolSession';
-import {
-    watermarkImage,
-    type WatermarkPosition,
-} from '../_shared/image/watermark';
+import { watermarkImage, type WatermarkPosition } from '../_shared/image/watermark';
 
 type ImageWatermarkToolProps = {
     tool: Tool;
@@ -200,7 +197,10 @@ export function ImageWatermarkTool({ tool }: ImageWatermarkToolProps) {
                                             left: '50%',
                                             transform: 'translateX(-50%)',
                                         }),
-                                        ...(position === 'bottom-right' && { bottom: 12, right: 12 }),
+                                        ...(position === 'bottom-right' && {
+                                            bottom: 12,
+                                            right: 12,
+                                        }),
                                     }}
                                 >
                                     {text}
@@ -261,7 +261,9 @@ export function ImageWatermarkTool({ tool }: ImageWatermarkToolProps) {
                                 />
                             </label>
                             <label className="space-y-1">
-                                <span className="font-display text-[13px] font-bold">Zielformat</span>
+                                <span className="font-display text-[13px] font-bold">
+                                    Zielformat
+                                </span>
                                 <select
                                     className="ms-input w-full"
                                     value={outputFormat}

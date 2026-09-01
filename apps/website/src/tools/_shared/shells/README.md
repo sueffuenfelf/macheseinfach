@@ -5,13 +5,13 @@ Shared UX frames for form-only tools. Category agents add **logic + labels**; th
 ## Quick start (calc)
 
 ```ts
-// tools/vat-calculator/config.ts
+// tools/percent-calc/config.ts
 import { defineCalcTool } from '../_shared/shells';
-import { computeVat } from './compute';
+import { computePercent } from './compute';
 
 export default defineCalcTool(
   {
-    catalog: { /* id, slug, title, areas: ['buchhaltung'], … */ },
+    catalog: { /* id, slug, title, areas: ['einheiten'], … */ },
     fields: [
       { id: 'amount', type: 'currency', label: 'Betrag', placeholder: '119,00' },
       {
@@ -52,6 +52,8 @@ Put pure logic in `compute.ts` and test it with `bun test`. No `*Tool.tsx` page 
 | `defineExtractTool` | `ExtractToolShell` | File/text → copyable fields |
 
 `FilePipelineToolShell` / `EditorToolShell` are thin layout helpers — keep using `_shared/image/*` and `_shared/pdf/*` for engines.
+
+**Image tools** use `ImageWorkbenchShell`: left thumb rail, center `ImageDisplayStage` (`fit` · `compare-slider`, more kinds later), right control rail. Job progress lives in bottom-right toasts only.
 
 ## Field types
 

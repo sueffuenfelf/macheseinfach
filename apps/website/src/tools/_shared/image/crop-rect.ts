@@ -9,12 +9,7 @@ export type CropRect = {
 export const FULL_CROP: CropRect = { x: 0, y: 0, width: 1, height: 1 };
 
 export function isFullCrop(rect: CropRect): boolean {
-    return (
-        rect.x <= 0.001 &&
-        rect.y <= 0.001 &&
-        rect.width >= 0.999 &&
-        rect.height >= 0.999
-    );
+    return rect.x <= 0.001 && rect.y <= 0.001 && rect.width >= 0.999 && rect.height >= 0.999;
 }
 
 export function clampCropRect(rect: CropRect): CropRect {

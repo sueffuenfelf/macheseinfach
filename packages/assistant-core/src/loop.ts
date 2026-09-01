@@ -2,7 +2,7 @@ import type { ChatMessage, OpenRouterClient } from '@macheseinfach/openrouter';
 import type { AssistantEventHandler } from './events';
 import type { AssistantHost } from './host';
 import { META_TOOL_NAMES, metaToolsToDefinitions } from './meta-tools';
-import { buildSystemPrompt, type ActiveFlowContext } from './system-prompt';
+import { buildSystemPrompt } from './system-prompt';
 import type { AssistantThread, ChatAttachment, StoredMessage, ToolHit } from './types';
 
 const DEFAULT_MAX_TOOL_ROUNDS = 8;
@@ -14,7 +14,6 @@ export type RunAssistantTurnArgs = {
     host: AssistantHost;
     favorites: ToolHit[];
     attachments?: ChatAttachment[];
-    activeFlow?: ActiveFlowContext;
     onEvent: AssistantEventHandler;
     maxToolRounds?: number;
     /** When true, token deltas are emitted via `stream` events (final message still stored). */
@@ -54,7 +53,6 @@ export function buildTurnMessages(args: {
     thread: AssistantThread;
     favorites: ToolHit[];
     attachments?: ChatAttachment[];
-    activeFlow?: ActiveFlowContext;
 }): ChatMessage[] {
     const messages: ChatMessage[] = [
         {
@@ -62,7 +60,6 @@ export function buildTurnMessages(args: {
             content: buildSystemPrompt({
                 favorites: args.favorites,
                 locale: 'de',
-                activeFlow: args.activeFlow,
             }),
         },
     ];
@@ -103,15 +100,6 @@ async function executeMetaTool(
         case 'get_area': {
             const areaId = String(args.areaId ?? '');
             return host.getArea(areaId);
-        }
-        case 'list_flows':
-            return host.listFlows({
-                areaId: args.areaId ? String(args.areaId) : undefined,
-                query: args.query ? String(args.query) : undefined,
-            });
-        case 'get_flow': {
-            const flowId = String(args.flowId ?? '');
-            return host.getFlow(flowId);
         }
         case 'search_tools':
             return host.searchTools(String(args.query ?? ''), {
@@ -162,15 +150,6 @@ async function executeMetaTool(
                 };
             }
             return host.runTool(toolId, input);
-        }
-        case 'open_flow': {
-            const flowId = String(args.flowId ?? '');
-            const slotValues =
-                typeof args.slotValues === 'object' && args.slotValues !== null
-                    ? (args.slotValues as Record<string, unknown>)
-                    : undefined;
-            host.openFlow(flowId, slotValues);
-            return { ok: true, flowId, summary: 'Vorhaben in der Oberfläche geöffnet.' };
         }
         case 'open_tool': {
             const toolId = String(args.toolId ?? '');
@@ -243,7 +222,6 @@ export async function runAssistantTurn(args: RunAssistantTurnArgs): Promise<void
         thread: args.thread,
         favorites: args.favorites,
         attachments: args.attachments,
-        activeFlow: args.activeFlow,
     });
 
     try {

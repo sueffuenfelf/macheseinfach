@@ -26,12 +26,7 @@ export function rgbToCmyk({ r, g, b }: Rgb): { c: number; m: number; y: number; 
     };
 }
 
-export function cmykToRgb(
-    c: number,
-    m: number,
-    y: number,
-    k: number,
-): Rgb {
+export function cmykToRgb(c: number, m: number, y: number, k: number): Rgb {
     const cn = c / 100;
     const mn = m / 100;
     const yn = y / 100;

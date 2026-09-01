@@ -161,8 +161,7 @@ export function smsEncodingStats(text: string): {
         const multi = 153;
         const segments = gsmUnits === 0 ? 0 : gsmUnits <= single ? 1 : Math.ceil(gsmUnits / multi);
         const perSegment = segments <= 1 ? single : multi;
-        const usedInLast =
-            segments <= 1 ? gsmUnits : gsmUnits - (segments - 1) * multi;
+        const usedInLast = segments <= 1 ? gsmUnits : gsmUnits - (segments - 1) * multi;
         return {
             encoding: 'GSM-7',
             units: gsmUnits,

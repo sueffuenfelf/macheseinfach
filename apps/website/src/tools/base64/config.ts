@@ -22,7 +22,6 @@ export default defineGenerateTool(
             theme: WEB_THEME,
             maturity: 'stable',
             areas: ['web'],
-            storyIds: ['story-base64'],
         },
         fields: [
             {

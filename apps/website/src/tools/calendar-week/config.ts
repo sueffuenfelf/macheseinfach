@@ -22,7 +22,6 @@ export default defineCalcTool(
             theme: ZEIT_THEME,
             maturity: 'stable',
             areas: ['zeit'],
-            storyIds: ['story-kalenderwoche'],
         },
         fields: [{ id: 'date', type: 'date', label: 'Datum' }],
         compute: computeCalendarWeek,

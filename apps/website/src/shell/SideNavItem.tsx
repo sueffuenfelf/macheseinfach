@@ -14,7 +14,11 @@ export type SideNavItemProps = {
 const baseClass =
     'ms-focus ms-sidenav-btn flex w-full items-center gap-2 px-2.5 py-1.5 font-display text-[13px] font-semibold';
 
-function SideNavItemContent({ icon, label, trailing }: Pick<SideNavItemProps, 'icon' | 'label' | 'trailing'>) {
+function SideNavItemContent({
+    icon,
+    label,
+    trailing,
+}: Pick<SideNavItemProps, 'icon' | 'label' | 'trailing'>) {
     return (
         <>
             <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center">{icon}</span>
@@ -24,7 +28,14 @@ function SideNavItemContent({ icon, label, trailing }: Pick<SideNavItemProps, 'i
     );
 }
 
-export function SideNavItem({ to, onClick, active = false, icon, label, trailing }: SideNavItemProps) {
+export function SideNavItem({
+    to,
+    onClick,
+    active = false,
+    icon,
+    label,
+    trailing,
+}: SideNavItemProps) {
     const className = baseClass;
     const activeProps = active ? { 'data-active': true as const } : {};
 
@@ -53,7 +64,14 @@ export type SideNavAreaItemProps = {
     label: string;
 };
 
-export function SideNavAreaItem({ to, onClick, active = false, accent, icon, label }: SideNavAreaItemProps) {
+export function SideNavAreaItem({
+    to,
+    onClick,
+    active = false,
+    accent,
+    icon,
+    label,
+}: SideNavAreaItemProps) {
     return (
         <Link
             to={to}
@@ -80,7 +98,12 @@ export type SideNavFavoriteItemProps = {
     onClick: () => void;
 };
 
-export function SideNavFavoriteItem({ label, icon, active = false, onClick }: SideNavFavoriteItemProps) {
+export function SideNavFavoriteItem({
+    label,
+    icon,
+    active = false,
+    onClick,
+}: SideNavFavoriteItemProps) {
     return (
         <button
             type="button"

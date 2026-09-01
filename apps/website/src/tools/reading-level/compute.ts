@@ -2,9 +2,7 @@ import type { PasteFinding } from '../_shared/shells';
 
 /** Rough German syllable count (vowel-group heuristic). */
 export function countSyllablesDe(word: string): number {
-    const cleaned = word
-        .toLocaleLowerCase('de-DE')
-        .replace(/[^a-zäöüß]/g, '');
+    const cleaned = word.toLocaleLowerCase('de-DE').replace(/[^a-zäöüß]/g, '');
     if (!cleaned) return 0;
     const groups = cleaned.match(/[aeiouyäöü]+/g);
     return Math.max(1, groups?.length ?? 1);
@@ -33,7 +31,9 @@ function splitSentences(text: string): string[] {
 export function analyzeReadingLevel(input: string): PasteFinding[] {
     const text = input.trim();
     if (!text) {
-        return [{ id: 'empty', severity: 'error', title: 'Kein Text', detail: 'Bitte Text einfügen.' }];
+        return [
+            { id: 'empty', severity: 'error', title: 'Kein Text', detail: 'Bitte Text einfügen.' },
+        ];
     }
 
     const words = splitWords(text);
@@ -82,8 +82,7 @@ export function analyzeReadingLevel(input: string): PasteFinding[] {
             id: 'hint',
             severity: 'info',
             title: 'Tipp',
-            detail:
-                'Kürzere Sätze und einfachere Wörter heben den Index. Behörden-/AGB-Texte liegen oft unter 40.',
+            detail: 'Kürzere Sätze und einfachere Wörter heben den Index. Behörden-/AGB-Texte liegen oft unter 40.',
         },
     ];
 }

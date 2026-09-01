@@ -9,7 +9,10 @@ export function generateWhitespaceClean(values: FieldValues): GenerateOutput {
     let content: string;
     switch (mode) {
         case 'collapse':
-            content = text.replace(/[^\S\n]+/g, ' ').replace(/ +\n/g, '\n').replace(/\n +/g, '\n');
+            content = text
+                .replace(/[^\S\n]+/g, ' ')
+                .replace(/ +\n/g, '\n')
+                .replace(/\n +/g, '\n');
             break;
         case 'trim-lines':
             content = text

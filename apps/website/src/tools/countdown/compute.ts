@@ -40,6 +40,11 @@ export function computeCountdown(values: FieldValues): CalcResult {
             { label: 'Tage', value: String(days) },
             { label: 'Wochen (grob)', value: weeks },
         ],
-        hint: days > 0 ? 'Countdown bis zum Zieldatum.' : days < 0 ? 'Das Datum liegt in der Vergangenheit.' : undefined,
+        hint:
+            days > 0
+                ? 'Countdown bis zum Zieldatum.'
+                : days < 0
+                  ? 'Das Datum liegt in der Vergangenheit.'
+                  : undefined,
     };
 }

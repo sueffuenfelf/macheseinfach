@@ -54,7 +54,10 @@ export function ImagePassportPhotoTool({ tool }: ImagePassportPhotoToolProps) {
         if (!file || working) return;
         setWorking(true);
         try {
-            const cropped = await cropImage(file, file.name, rect, { format: 'jpg', quality: 0.95 });
+            const cropped = await cropImage(file, file.name, rect, {
+                format: 'jpg',
+                quality: 0.95,
+            });
             const bitmap = await createImageBitmap(cropped);
             const canvas = document.createElement('canvas');
             canvas.width = targetSize.width;
@@ -74,7 +77,10 @@ export function ImagePassportPhotoTool({ tool }: ImagePassportPhotoToolProps) {
                 );
             });
 
-            const filename = outputFilename(file.name, 'jpg').replace(/\.jpg$/, `-passfoto-${dpi}dpi.jpg`);
+            const filename = outputFilename(file.name, 'jpg').replace(
+                /\.jpg$/,
+                `-passfoto-${dpi}dpi.jpg`,
+            );
             setResult({ blob, filename });
             downloadBlob(blob, filename);
             toast({ message: `Passfoto (${dpi} DPI) heruntergeladen`, variant: 'success' });
@@ -158,7 +164,9 @@ export function ImagePassportPhotoTool({ tool }: ImagePassportPhotoToolProps) {
 
                         <section className="grid gap-4 rounded-xl border-2 border-black bg-white p-4 shadow-brutal-sm md:grid-cols-2">
                             <label className="space-y-1">
-                                <span className="font-display text-[13px] font-bold">Auflösung</span>
+                                <span className="font-display text-[13px] font-bold">
+                                    Auflösung
+                                </span>
                                 <select
                                     className="ms-input w-full"
                                     value={dpi}

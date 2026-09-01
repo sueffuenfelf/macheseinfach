@@ -17,8 +17,7 @@ const catalog = {
     entry: 'file',
     theme: { accent: '#f4a261', accentStrong: '#000', accentSoft: '#fde8d4' },
     maturity: 'stable',
-    areas: ['bilder', 'behoerden'],
-    storyIds: [],
+    areas: ['bilder'],
 } as const;
 
 export default defineTool({ catalog, page: ImagePassportPhotoTool }, 'image-passport-photo');

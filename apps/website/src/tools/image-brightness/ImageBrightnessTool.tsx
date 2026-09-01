@@ -208,7 +208,9 @@ export function ImageBrightnessTool({ tool }: ImageBrightnessToolProps) {
                                 Zurücksetzen
                             </button>
                             <label className="space-y-1">
-                                <span className="font-display text-[13px] font-bold">Zielformat</span>
+                                <span className="font-display text-[13px] font-bold">
+                                    Zielformat
+                                </span>
                                 <select
                                     className="ms-input w-full"
                                     value={outputFormat}

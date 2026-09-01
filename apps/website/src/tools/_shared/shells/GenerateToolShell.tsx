@@ -1,9 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { ToolDefinition } from '../../../data/catalog/types';
 import { fieldDefaultsWithPrefill } from '../../../assistant/tool-prefill';
-import { useFlowSession } from '../../../flow/FlowWorkspace';
-import { useFlowMergedFieldValues } from '../../../flow/useFlowMergedFieldValues';
-import { FlowAwareField } from './FlowAwareField';
+import { FieldRenderer } from './fields';
 import { useCopyAction } from './hooks/useCopyAction';
 import type { FieldDef, FieldValues, GenerateOutput } from './types';
 
@@ -29,12 +27,10 @@ export function GenerateToolShell({
     outputTitle = 'Ausgabe',
     emptyHint = 'Fülle das Formular aus — die Ausgabe erscheint hier.',
 }: GenerateToolShellProps) {
-    const flowSession = useFlowSession();
     const [localValues, setLocalValues] = useState<FieldValues>(() =>
         fieldDefaultsWithPrefill(tool.id, fields),
     );
-    const fieldIds = fields.map((f) => f.id);
-    const values = useFlowMergedFieldValues(tool.id, fieldIds, localValues);
+    const values = localValues;
     const [output, setOutput] = useState<GenerateOutput>(null);
     const [loading, setLoading] = useState(false);
     const { copyText, downloadAsText, downloadAsDataUrl } = useCopyAction();
@@ -57,7 +53,6 @@ export function GenerateToolShell({
             .then((next) => {
                 if (!cancelled) {
                     setOutput(next);
-                    if (next) flowSession?.reportToolSuccess(tool.id);
                 }
             })
             .finally(() => {
@@ -66,15 +61,14 @@ export function GenerateToolShell({
         return () => {
             cancelled = true;
         };
-    }, [flowSession, generate, ready, tool.id, values]);
+    }, [generate, ready, values]);
 
     return (
         <div className="ms-animate-fade mx-auto grid w-full max-w-3xl gap-5 px-4 py-6 md:grid-cols-[1.2fr_1fr] md:px-6">
             <section className="space-y-3">
                 {fields.map((field) => (
-                    <FlowAwareField
+                    <FieldRenderer
                         key={field.id}
-                        toolId={tool.id}
                         field={field}
                         value={localValues[field.id] ?? ''}
                         onChange={(next) => setField(field.id, next)}

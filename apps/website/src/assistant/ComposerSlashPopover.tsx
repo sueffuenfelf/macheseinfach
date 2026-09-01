@@ -112,7 +112,9 @@ export function ComposerSlashPopover({
                     role="option"
                     aria-selected={index === activeIndex}
                     className={`ms-focus flex w-full flex-col rounded-[8px] px-2.5 py-2 text-left ${
-                        index === activeIndex ? 'bg-[var(--color-success)]' : 'hover:bg-[var(--color-chip)]'
+                        index === activeIndex
+                            ? 'bg-[var(--color-success)]'
+                            : 'hover:bg-[var(--color-chip)]'
                     }`}
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => {
@@ -124,7 +126,9 @@ export function ComposerSlashPopover({
                         onSelect(args.trim() ? `/${cmd.name} ${args}` : `/${cmd.name} `);
                     }}
                 >
-                    <span className="font-display text-[13px] font-semibold">{cmd.description}</span>
+                    <span className="font-display text-[13px] font-semibold">
+                        {cmd.description}
+                    </span>
                     <span className="font-mono text-[11px] text-[var(--color-ink-muted)]">
                         {cmd.usage}
                     </span>

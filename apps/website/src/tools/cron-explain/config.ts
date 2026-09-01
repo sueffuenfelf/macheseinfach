@@ -14,12 +14,7 @@ export default defineGenerateTool(
             solution: 'Ausdruck einfügen — lesbare Erklärung erscheint.',
             trust: TRUST_LOCAL,
             tags: ['Cron', 'Dev'],
-            keywords: [
-                'cron job erklären',
-                'crontab generator',
-                'cron syntax',
-                'cron ausdruck',
-            ],
+            keywords: ['cron job erklären', 'crontab generator', 'cron syntax', 'cron ausdruck'],
             fileHints: [],
             command: '/cron',
             entry: 'form',
@@ -27,7 +22,6 @@ export default defineGenerateTool(
             theme: WEB_THEME,
             maturity: 'stable',
             areas: ['web'],
-            storyIds: [],
         },
         fields: [
             {

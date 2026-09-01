@@ -29,6 +29,9 @@ export async function extractPdfText(file: File): Promise<PdfExtractedText> {
 
     await doc.destroy();
 
-    const fullText = pages.map((p) => p.text).filter(Boolean).join('\n\n');
+    const fullText = pages
+        .map((p) => p.text)
+        .filter(Boolean)
+        .join('\n\n');
     return { pages, fullText, pageCount };
 }

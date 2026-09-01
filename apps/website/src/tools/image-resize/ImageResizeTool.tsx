@@ -13,7 +13,7 @@ import { downloadBlob } from '../_shared/pdf/io';
 import { isUnitQuad, type Quad, UNIT_QUAD } from '../_shared/image/perspective';
 import type { ImageFormatId } from '../_shared/image/types';
 import { ContinueWithNextTool, useImageToolSession } from '../_shared/image/useImageToolSession';
-import { useFlowImageFile } from '../_shared/image/useFlowImageFile';
+import { useImageToolFile } from '../_shared/image/useImageToolFile';
 import { ImageResizeCanvas } from './ImageResizeCanvas';
 
 type ImageResizeToolProps = {
@@ -75,7 +75,7 @@ export function ImageResizeTool({ tool }: ImageResizeToolProps) {
         processedRef.current.clear();
     }, []);
 
-    const flowFile = useFlowImageFile(tool.id, 'file');
+    const flowFile = useImageToolFile(tool.id, 'file');
 
     useImageToolSession({ toolId: tool.id, onIncomingFile: acceptIncomingFile });
 

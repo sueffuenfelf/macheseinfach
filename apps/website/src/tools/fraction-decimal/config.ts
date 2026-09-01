@@ -14,7 +14,12 @@ export default defineCalcTool(
             solution: 'Modus wählen, Wert eingeben — Ergebnis sofort.',
             trust: EINHEITEN_TRUST,
             tags: ['Umwandeln'],
-            keywords: ['bruch in dezimal', 'dezimal in bruch', 'bruch umrechnen', 'dezimalzahl bruch'],
+            keywords: [
+                'bruch in dezimal',
+                'dezimal in bruch',
+                'bruch umrechnen',
+                'dezimalzahl bruch',
+            ],
             fileHints: [],
             command: '/bruch',
             entry: 'form',
@@ -22,7 +27,6 @@ export default defineCalcTool(
             theme: EINHEITEN_THEME,
             maturity: 'stable',
             areas: ['einheiten'],
-            storyIds: [],
         },
         fields: [
             {

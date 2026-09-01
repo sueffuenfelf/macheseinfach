@@ -4,7 +4,6 @@
 **Scope:** `packages/*` (neu) + `apps/website` Shell-UI  
 **Status:** P4 code complete — Assistent feature-flagged (`assistantChat`, default on). Manual smoke pending.  
 **Related:**
-- `docs/plans/2026-07-28-vorhaben-multi-tool.md` (Flow / Vorhaben)
 - `docs/plans/2026-07-28-bereich-tool-roadmap.md`
 - Favorites: `PlatformContext` (`msf.favorites`)
 
@@ -23,7 +22,6 @@
 3. **LLM nur über OpenRouter** — Browser ruft OpenRouter mit **user-supplied API key** (lokal in Settings; nie in Repo/SOPS für Endnutzer-Keys). Dev-Default optional via SOPS nur für interne Tests.
 4. **Kein Tool-Dump an das Modell** — der Agent bekommt **kleine Meta-Tools**:
    - `list_areas` / `get_area`
-   - `list_flows` / `get_flow` (Vorhaben)
    - `search_tools` / `get_tool`
    - `run_tool`
    - `request_user_input` (Datei/Text vom Nutzer anfordern)
@@ -47,7 +45,6 @@
 | Sidebar | `AssistantLayoutMode = 'sidebar'` |
 | Schwebendes Fenster | `AssistantLayoutMode = 'floating'` |
 | Bereich | `Area` (via `list_areas`) |
-| Vorhaben | `Flow` (via `list_flows`) |
 | Tool ausführen | `run_tool` |
 | Datei / Text anfordern | `request_user_input` |
 | Favoriten | `favorites` (PlatformContext) |
@@ -58,7 +55,7 @@
 ## Problem / Warum so
 
 - 100+ Tools → Context-Window und Halluzinationen, wenn man alle Specs reinpackt.
-- Nutzer denkt in **Bereichen** und **Vorhaben**, nicht in Tool-IDs.
+- Nutzer denkt in **Bereichen** und **Tools**, nicht in Tool-IDs.
 - Notion-Pattern: Assistent immer greifbar, ohne die Seite zu verlassen; Layout wählbar.
 - Trust-Modell der Plattform: lokal arbeiten; der Assistent **orchestriert** Browser-Tools, er ersetzt sie nicht durch Cloud-Processing von PDFs (außer der User schickt explizit Text an das Modell).
 
@@ -149,126 +146,6 @@ export function createOpenRouterClient(options: {
 
 ### 2. Assistant core — meta-tools only
 
-```ts
-// packages/assistant-core/src/meta-tools.ts
-export const META_TOOLS = [
-  {
-    name: 'list_areas',
-    description: 'List all tool areas (Bereiche) with id, label, description, toolCount.',
-    parameters: { type: 'object', properties: {}, additionalProperties: false },
-  },
-  {
-    name: 'get_area',
-    description: 'Get one area and a compact list of tools in that area (id, title, sub).',
-    parameters: {
-      type: 'object',
-      required: ['areaId'],
-      properties: { areaId: { type: 'string' } },
-    },
-  },
-  {
-    name: 'list_flows',
-    description: 'List Vorhaben (flows): multi-tool journeys. Filter by areaId optional.',
-    parameters: {
-      type: 'object',
-      properties: {
-        areaId: { type: 'string' },
-        query: { type: 'string' },
-      },
-    },
-  },
-  {
-    name: 'get_flow',
-    description: 'Get one flow with steps[], recommended[], and context slot schema.',
-    parameters: {
-      type: 'object',
-      required: ['flowId'],
-      properties: { flowId: { type: 'string' } },
-    },
-  },
-  {
-    name: 'search_tools',
-    description: 'Search tools by query / tags / area. Returns top matches (never dump full catalog).',
-    parameters: {
-      type: 'object',
-      required: ['query'],
-      properties: {
-        query: { type: 'string' },
-        areaId: { type: 'string' },
-        limit: { type: 'number' },
-      },
-    },
-  },
-  {
-    name: 'get_tool',
-    description: 'Get tool metadata + input schema summary for run_tool.',
-    parameters: {
-      type: 'object',
-      required: ['toolId'],
-      properties: { toolId: { type: 'string' } },
-    },
-  },
-  {
-    name: 'list_favorites',
-    description: 'List the user\'s favorite tools (always available; also injected in system prompt).',
-    parameters: { type: 'object', properties: {} },
-  },
-  {
-    name: 'request_user_input',
-    description:
-      'Ask the user for a file or text needed for a later run_tool. Blocks until user provides or cancels. Returns an attachmentId.',
-    parameters: {
-      type: 'object',
-      required: ['kind', 'prompt'],
-      properties: {
-        kind: { type: 'string', enum: ['file', 'files', 'text', 'multiline'] },
-        prompt: { type: 'string', description: 'German instruction shown to the user' },
-        accept: { type: 'string', description: 'e.g. application/pdf,.pdf' },
-        slotHint: { type: 'string', description: 'logical name e.g. sourcePdf' },
-      },
-    },
-  },
-  {
-    name: 'attach_from_chat',
-    description:
-      'Reference a file/text already uploaded in this thread (by attachmentId).',
-    parameters: {
-      type: 'object',
-      required: ['attachmentId'],
-      properties: { attachmentId: { type: 'string' } },
-    },
-  },
-  {
-    name: 'run_tool',
-    description:
-      'Execute a catalog tool locally in the browser. Pass inputs as JSON; file inputs as attachmentId refs.',
-    parameters: {
-      type: 'object',
-      required: ['toolId', 'input'],
-      properties: {
-        toolId: { type: 'string' },
-        input: { type: 'object' },
-        openInUi: {
-          type: 'boolean',
-          description: 'If true, navigate/open the tool UI with prefilled context',
-        },
-      },
-    },
-  },
-  {
-    name: 'open_flow',
-    description: 'Open a Vorhaben (flow) workspace in the UI, optionally with prefilled slots.',
-    parameters: {
-      type: 'object',
-      required: ['flowId'],
-      properties: {
-        flowId: { type: 'string' },
-        slotValues: { type: 'object' },
-      },
-    },
-  },
-] as const;
-```
 
 ### 3. Host bridge (website wires catalog)
 
@@ -277,13 +154,10 @@ export const META_TOOLS = [
 export type AssistantHost = {
   listAreas(): AreaSummary[];
   getArea(areaId: string): AreaDetail | null;
-  listFlows(filter?: { areaId?: string; query?: string }): FlowSummary[];
-  getFlow(flowId: string): FlowDefinition | null;
   searchTools(query: string, opts?: { areaId?: string; limit?: number }): ToolHit[];
   getTool(toolId: string): ToolMeta | null;
   listFavorites(): ToolHit[]; // from PlatformContext
   runTool(toolId: string, input: unknown): Promise<ToolRunResult>;
-  openFlow(flowId: string, slots?: Record<string, unknown>): void;
   openTool(toolId: string, prefill?: unknown): void;
   requestUserInput(req: UserInputRequest): Promise<AttachmentRef | { cancelled: true }>;
   resolveAttachment(id: string): Promise<AttachmentPayload | null>;
@@ -295,21 +169,6 @@ Für File/Editor-Tools (PDF redact, …): Phase 1 = `openInUi: true` + Prefill A
 
 ### 4. System prompt (immer Favoriten)
 
-```ts
-function buildSystemPrompt(ctx: {
-  favorites: { id: string; title: string }[];
-  locale: 'de';
-}): string {
-  return [
-    'Du bist der Assistent von macheseinfa.ch.',
-    'Du hilfst lokal im Browser. Sensible Dateien verarbeiten Tools lokal — du orchestrierst nur.',
-    'Nutze Meta-Tools: erst Bereiche/Vorhaben/Tools suchen, dann run_tool oder open_flow.',
-    'Erfinde keine toolIds. Bei Unsicherheit search_tools / list_areas.',
-    'Sprich Deutsch, knapp, klar.',
-    `Favoriten des Nutzers: ${ctx.favorites.map((f) => `${f.title} (${f.id})`).join(', ') || '— keine —'}`,
-  ].join('\n');
-}
-```
 
 ### 5. Thread + Attachments (lokal)
 
@@ -445,12 +304,8 @@ Settings-UI (DE):
 
 ---
 
-## Integration mit Vorhaben (Flow)
 
-Wenn Flow-Workspace existiert (parallel Plan):
 
-- Assistent darf `open_flow` + Slot-Prefill aus Chat-Attachments.
-- Im Flow-Workspace: Assistent kennt **aktuelle** Flow-Slots (read-only Summary im System-Prompt: „Aktives Vorhaben: … Slots: pdf=gesetzt“).
 - Kein Konflikt mit `useFlowInput` — Assistent schreibt Slots nur über Host-API `setFlowSlot`.
 
 ---
@@ -462,10 +317,8 @@ Wenn Flow-Workspace existiert (parallel Plan):
 | **P0** | Packages `openrouter` + `assistant-core` (loop, types, meta-tool schemas, memory store) + unit tests |
 | **P1** | Website: Settings key, Floating layout, thread persistence, `list_*` / `search_tools` / `list_favorites` wired |
 | **P2** | `request_user_input` + attachments IDB; `run_tool` for calc/check/generate/paste shells |
-| **P3** | Sidebar layout + layout toggle; `open_flow` / `open_tool`; streaming polish |
 | **P4** | File-tool headless where safe; DoD; flag on |
 
-Abhängigkeit: Flow-Plan muss nicht fertig sein für P0–P2 (`list_flows` kann zuerst legacy `stories` mappen oder leer zurückgeben).
 
 ---
 
@@ -494,7 +347,6 @@ Abhängigkeit: Flow-Plan muss nicht fertig sein für P0–P2 (`list_flows` kann 
 - [x] OpenRouter-Key nur lokal; Empty-State ohne Key klar
 - [x] Meta-Tools only — kein Full-Catalog im Prompt
 - [x] Favoriten immer im System-Prompt + `list_favorites`
-- [x] `list_areas` / `list_flows` / `search_tools` / `run_tool` / `request_user_input` / `attach_from_chat` funktionieren
 - [x] Attachments in IDB; Blobs revoke; Thread-Liste lokal
 - [x] Streaming + Tool-Step-UI; Fehlerzustände DE
 - [x] Mobile sheet; a11y basics (focus, Esc, labels)
@@ -508,7 +360,6 @@ Abhängigkeit: Flow-Plan muss nicht fertig sein für P0–P2 (`list_flows` kann 
 | --- | --- | --- | --- |
 | IBAN-Tool finden | „Finde IBAN-Tool“ → `search_tools` → `run_tool` iban-validate | Gültigkeits-Summary im Chat | ☐ manuell |
 | PDF + Tool öffnen | Datei anhängen → `request_user_input` oder Composer → `open_tool` pdf-extract-text mit Prefill | Tool zeigt Datei im Dropzone/Extract | ☐ manuell |
-| Vorhaben | `open_flow` mit Slot-Prefill aus Attachment | Story öffnet, Slot-Chip sichtbar | ☐ manuell |
 
 **Offen:** End-to-End-QA der drei Journeys im Browser mit echtem OpenRouter-Key; `assistantChat` ist default on (deaktivierbar per `msf.feature.assistantChat` / `VITE_FEATURE_ASSISTANT_CHAT=false`).
 
@@ -516,8 +367,6 @@ Abhängigkeit: Flow-Plan muss nicht fertig sein für P0–P2 (`list_flows` kann 
 
 - **File-Prefill:** `setToolFilePrefill` → `useFlowInput(decodeFile)` + `ExtractToolShell`; `openTool`/`openInUi` wartet auf Attachment-Auflösung vor Navigation.
 - **Headless file tools:** Nur `defineExtractTool`-Shells (z. B. `hash-file`, `pdf-extract-text`, `image-color-pick`); PDF-Editor/Redact weiterhin `openInUi`.
-- **Aktives Vorhaben:** `buildActiveFlowContext` aus `platform.activeStoryId` + `flowBlobStore`/scalar-persist → System-Prompt.
-- **FlowWorkspace:** Legacy `open_flow` via `selectStory` + Slot-Prefill; kein `goToFlow`-Rewrite.
 
 ---
 

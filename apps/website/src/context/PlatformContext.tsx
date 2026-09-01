@@ -7,15 +7,7 @@ import {
     useMemo,
     useState,
 } from 'react';
-import {
-    type AreaId,
-    allTools,
-    getTool,
-    type StoryId,
-    type Tool,
-    type ToolId,
-    toolsForStory,
-} from '../data/catalog';
+import { type AreaId, allTools, getTool, type Tool, type ToolId } from '../data/catalog';
 import type { AppPage } from '../routing/paths';
 import { useToast } from '../shell/toast';
 
@@ -31,7 +23,6 @@ export type ShellView = 'main' | 'settings';
 export type RouteSnapshot = {
     page: AppPage;
     areaId: AreaId | null;
-    storyId: StoryId | null;
     tool: Tool | null;
     tags: readonly string[];
 };
@@ -40,7 +31,6 @@ type PlatformContextValue = {
     page: AppPage;
     shellView: ShellView;
     activeAreaId: AreaId | null;
-    activeStoryId: StoryId | null;
     activeTool: Tool | null;
     /** Alias für bestehende Komponenten */
     activeScenario: Tool | null;
@@ -52,9 +42,6 @@ type PlatformContextValue = {
     recentTools: ToolId[];
     favorites: ToolId[];
     selectArea: (areaId: AreaId) => void;
-    selectStory: (storyId: StoryId) => void;
-    /** Alias for selectStory — preferred name for Flow / Vorhaben UI */
-    goToFlow: (storyId: StoryId) => void;
     selectTool: (toolId: ToolId) => void;
     clearTool: () => void;
     goHome: () => void;
@@ -109,7 +96,6 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
     const [page, setPage] = useState<AppPage>('home');
     const [shellView, setShellView] = useState<ShellView>('main');
     const [activeAreaId, setActiveAreaId] = useState<AreaId | null>(null);
-    const [activeStoryId, setActiveStoryId] = useState<StoryId | null>(null);
     const [activeTool, setActiveTool] = useState<Tool | null>(null);
     const [file, setFileState] = useState<PlatformFile | null>(null);
     const [paletteOpen, setPaletteOpen] = useState(false);
@@ -130,14 +116,13 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
         setPage(snapshot.page);
         setShellView(snapshot.page === 'settings' ? 'settings' : 'main');
         setActiveAreaId(snapshot.areaId);
-        setActiveStoryId(snapshot.storyId);
         setActiveTool(snapshot.tool);
         setActiveTags([...snapshot.tags]);
         if (
             snapshot.page === 'home' ||
             snapshot.page === 'settings' ||
             snapshot.page === 'search' ||
-            snapshot.page === 'vorhaben'
+            snapshot.page === 'conversion'
         ) {
             setFileState(null);
         }
@@ -155,7 +140,6 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
 
     const selectArea = useCallback((areaId: AreaId) => {
         setActiveAreaId(areaId);
-        setActiveStoryId(null);
         setActiveTool(null);
         setFileState(null);
         setQueryState('');
@@ -168,27 +152,10 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
             setActiveAreaId((prev) =>
                 prev && tool.areas.includes(prev) ? prev : (tool.areas[0] ?? null),
             );
-            setActiveStoryId((prev) =>
-                prev && tool.storyIds.includes(prev) ? prev : (tool.storyIds[0] ?? null),
-            );
             setActiveTool(tool);
             pushRecent(toolId);
         },
         [pushRecent],
-    );
-
-    const selectStory = useCallback(
-        (storyId: StoryId) => {
-            setActiveStoryId(storyId);
-            setFileState(null);
-            const storyTools = toolsForStory(storyId);
-            if (storyTools.length === 1) {
-                selectTool(storyTools[0].id);
-                return;
-            }
-            setActiveTool(null);
-        },
-        [selectTool],
     );
 
     const clearTool = useCallback(() => {
@@ -199,7 +166,6 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
     const goHome = useCallback(() => {
         setShellView('main');
         setActiveAreaId(null);
-        setActiveStoryId(null);
         setActiveTool(null);
         setFileState(null);
         setQueryState('');
@@ -282,7 +248,6 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
             page,
             shellView,
             activeAreaId,
-            activeStoryId,
             activeTool,
             activeScenario: activeTool,
             file,
@@ -292,8 +257,6 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
             recentTools,
             favorites,
             selectArea,
-            selectStory,
-            goToFlow: selectStory,
             selectTool,
             clearTool,
             goHome,
@@ -318,7 +281,6 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
             page,
             shellView,
             activeAreaId,
-            activeStoryId,
             activeTool,
             file,
             paletteOpen,
@@ -327,7 +289,6 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
             recentTools,
             favorites,
             selectArea,
-            selectStory,
             selectTool,
             clearTool,
             goHome,

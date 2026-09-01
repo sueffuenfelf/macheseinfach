@@ -6,7 +6,7 @@ type PageContainerProps = {
     children: ReactNode;
     /** Wider layout for tool grids */
     wide?: boolean;
-    /** Fill parent height (flow/tool workspaces) */
+    /** Fill parent height for scroll-split workspaces (outer wrapper only — not page headers). */
     fill?: boolean;
     className?: string;
 };

@@ -15,7 +15,12 @@ export default defineCalcTool(
             solution: 'Von/Bis wählen — Werktage erscheinen sofort.',
             trust: TRUST_LOCAL,
             tags: ['Zeit', 'Zähler', 'Frist'],
-            keywords: ['werktage berechnen', 'werktage zwischen', 'arbeitstage rechnen', 'lieferfrist'],
+            keywords: [
+                'werktage berechnen',
+                'werktage zwischen',
+                'arbeitstage rechnen',
+                'lieferfrist',
+            ],
             fileHints: [],
             command: '/werktage',
             entry: 'form',
@@ -23,7 +28,6 @@ export default defineCalcTool(
             theme: ZEIT_THEME,
             maturity: 'stable',
             areas: ['zeit'],
-            storyIds: ['story-werktage'],
         },
         fields: [
             { id: 'from', type: 'date', label: 'Von' },

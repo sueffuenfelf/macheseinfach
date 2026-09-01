@@ -49,7 +49,8 @@ export function PdfPageReorderTool({ tool }: Props) {
                 await doc.destroy?.();
                 if (!cancelled) setThumbs(next);
             } catch {
-                if (!cancelled) toast({ message: 'Vorschaubilder fehlgeschlagen.', variant: 'error' });
+                if (!cancelled)
+                    toast({ message: 'Vorschaubilder fehlgeschlagen.', variant: 'error' });
             } finally {
                 if (!cancelled) setLoadingThumbs(false);
             }
@@ -189,7 +190,9 @@ export function PdfPageReorderTool({ tool }: Props) {
                                 type="button"
                                 className="ms-btn px-2 py-0.5 text-[11px]"
                                 disabled={position === 0}
-                                onClick={() => setOrder((prev) => moveIndex(prev, position, position - 1))}
+                                onClick={() =>
+                                    setOrder((prev) => moveIndex(prev, position, position - 1))
+                                }
                                 aria-label="Nach vorne"
                             >
                                 ↑
@@ -198,7 +201,9 @@ export function PdfPageReorderTool({ tool }: Props) {
                                 type="button"
                                 className="ms-btn px-2 py-0.5 text-[11px]"
                                 disabled={position === items.length - 1}
-                                onClick={() => setOrder((prev) => moveIndex(prev, position, position + 1))}
+                                onClick={() =>
+                                    setOrder((prev) => moveIndex(prev, position, position + 1))
+                                }
                                 aria-label="Nach hinten"
                             >
                                 ↓

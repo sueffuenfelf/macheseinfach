@@ -36,9 +36,7 @@ export function useAnchoredPopover(options?: { width?: number; placement?: Place
                 openUp = spaceBelow < menuHeight + gap && spaceAbove > spaceBelow;
             }
 
-            const top = openUp
-                ? Math.max(8, rect.top - menuHeight - gap)
-                : rect.bottom + gap;
+            const top = openUp ? Math.max(8, rect.top - menuHeight - gap) : rect.bottom + gap;
 
             setMenuStyle({
                 top,

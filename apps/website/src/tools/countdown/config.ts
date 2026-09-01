@@ -14,7 +14,12 @@ export default defineCalcTool(
             solution: 'Zieldatum wählen — Countdown erscheint sofort.',
             trust: TRUST_LOCAL,
             tags: ['Zeit', 'Zähler', 'Frist'],
-            keywords: ['countdown rechner', 'tage bis datum', 'countdown generieren', 'deadline tage'],
+            keywords: [
+                'countdown rechner',
+                'tage bis datum',
+                'countdown generieren',
+                'deadline tage',
+            ],
             fileHints: [],
             command: '/countdown',
             entry: 'form',
@@ -22,7 +27,6 @@ export default defineCalcTool(
             theme: ZEIT_THEME,
             maturity: 'stable',
             areas: ['zeit'],
-            storyIds: ['story-countdown'],
         },
         fields: [
             { id: 'target', type: 'date', label: 'Zieldatum' },

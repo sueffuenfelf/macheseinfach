@@ -17,7 +17,6 @@ const catalog = {
     theme: { accent: '#90a8ed', accentStrong: '#000', accentSoft: '#e6ecfb' },
     maturity: 'planned',
     areas: ['dokumente'],
-    storyIds: ['story-scan-text-kopieren'],
 } as const;
 
 export default defineTool(

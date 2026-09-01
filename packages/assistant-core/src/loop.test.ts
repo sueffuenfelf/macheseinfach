@@ -35,14 +35,11 @@ function createFakeHost(overrides: Partial<AssistantHost> = {}): AssistantHost {
     return {
         listAreas: () => areas,
         getArea: (areaId) => (areaId === 'finance' ? { ...areas[0]!, tools } : null),
-        listFlows: () => [],
-        getFlow: () => null,
         searchTools: (query) =>
             tools.filter((t) => t.title.toLowerCase().includes(query.toLowerCase())),
         getTool: (toolId) => tools.find((t) => t.id === toolId) ?? null,
         listFavorites: () => tools,
         runTool: async () => ({ ok: true, summary: 'done' }),
-        openFlow: () => {},
         openTool: async () => {},
         requestUserInput: async () => ({ cancelled: true }),
         resolveAttachment: async () => null,
@@ -73,15 +70,12 @@ describe('META_TOOLS', () => {
         expect(names).toEqual([
             'list_areas',
             'get_area',
-            'list_flows',
-            'get_flow',
             'search_tools',
             'get_tool',
             'list_favorites',
             'request_user_input',
             'attach_from_chat',
             'run_tool',
-            'open_flow',
             'open_tool',
         ]);
     });

@@ -18,7 +18,9 @@ export async function splitPdfBySpec(
 }
 
 /** One PDF per page. */
-export async function splitPdfEachPage(file: File): Promise<{ bytes: Uint8Array; label: string }[]> {
+export async function splitPdfEachPage(
+    file: File,
+): Promise<{ bytes: Uint8Array; label: string }[]> {
     const src = await loadPdfDocument(file);
     const count = src.getPageCount();
     const results: { bytes: Uint8Array; label: string }[] = [];

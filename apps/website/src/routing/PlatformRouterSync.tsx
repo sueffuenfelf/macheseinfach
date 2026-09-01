@@ -14,13 +14,12 @@ export function PlatformRouterSync() {
 
         applyRoute({
             areaId: route.areaId,
-            storyId: route.storyId,
             tool: route.toolId ? getTool(route.toolId) : null,
             tags: isTagFilterRoute(route.page) ? route.tags : [],
             page: route.page,
         });
 
-        if (route.page === 'tool' && route.areaId && route.storyId && route.toolId) {
+        if (route.page === 'tool' && route.toolId) {
             pushRecent(route.toolId);
         }
     }, [location.pathname, location.search, applyRoute, pushRecent]);

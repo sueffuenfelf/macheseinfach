@@ -1,17 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import type { ToolDefinition as Tool } from '../../data/catalog/types';
-import { useFileDrop } from '../../hooks/useFileDrop';
 import { toolShortcutPath } from '../../routing/paths';
 import { useJobQueue } from '../../shell/jobs';
 import { useToast } from '../../shell/toast';
-import { ProgressBar, ResultCard, StateHint } from '../_shared/_shared';
+import { outputFilename } from '../_shared/image/convert';
 import { compressImage } from '../_shared/image/compress';
 import { getFormat, IMAGE_FORMATS } from '../_shared/image/formats';
-import { outputFilename } from '../_shared/image/convert';
+import { ContinueWithNextTool, useImageToolSession } from '../_shared/image/useImageToolSession';
+import {
+    formatBytes,
+    ImageWorkbenchShell,
+    type WorkbenchFile,
+} from '../_shared/image/workbench';
 import { downloadBlob } from '../_shared/pdf/io';
 import type { ImageFormatId } from '../_shared/image/types';
-import { ContinueWithNextTool, useImageToolSession } from '../_shared/image/useImageToolSession';
 
 type ImageCompressToolProps = {
     tool: Tool;
@@ -37,33 +40,68 @@ export function ImageCompressTool({ tool }: ImageCompressToolProps) {
     const route = `${location.pathname}${location.search}`;
     const shortcutRoute = toolShortcutPath(tool.id);
 
-    const [fileEntries, setFileEntries] = useState<{ id: string; file: File }[]>([]);
+    const [fileEntries, setFileEntries] = useState<WorkbenchFile[]>([]);
+    const [selectedId, setSelectedId] = useState<string | null>(null);
     const [quality, setQuality] = useState(0.82);
     const [outputFormat, setOutputFormat] = useState<ImageFormatId>('jpg');
     const [activeJobId, setActiveJobId] = useState<string | null>(null);
-    const [jobProgress, setJobProgress] = useState(0);
     const [jobDoneCount, setJobDoneCount] = useState(0);
     const [jobStatus, setJobStatus] = useState<'idle' | 'running' | 'paused' | 'completed'>('idle');
-    const fileInputRef = useRef<HTMLInputElement | null>(null);
     const processedRef = useRef<Map<string, ProcessedFile>>(new Map());
+    const [, setProcessedTick] = useState(0);
+    const [previewAfter, setPreviewAfter] = useState<Blob | null>(null);
+    const [previewLoading, setPreviewLoading] = useState(false);
     const { toast } = useToast();
-    const {
-        enqueueBatch,
-        reattachBatch,
-        getResumableJobForRoute,
-        canResumeJob,
-        pauseJob,
-        resumeJob,
-    } = useJobQueue();
+    const { enqueueBatch, reattachBatch, getResumableJobForRoute, canResumeJob } = useJobQueue();
 
     const working = jobStatus === 'running';
     const accept = '.heic,.heif,.png,.jpg,.jpeg,.webp';
+    const selected = fileEntries.find((entry) => entry.id === selectedId) ?? fileEntries[0];
+    const selectedResult =
+        jobStatus === 'completed' && selected ? processedRef.current.get(selected.id) : undefined;
+    const afterBlob = previewAfter;
+
+    useEffect(() => {
+        if (!selected) {
+            setPreviewAfter(null);
+            setPreviewLoading(false);
+            return;
+        }
+        setPreviewAfter(null);
+        setPreviewLoading(true);
+        let cancelled = false;
+        const timer = window.setTimeout(() => {
+            void compressImage(selected.file, selected.file.name, {
+                quality,
+                format: outputFormat,
+            })
+                .then((blob) => {
+                    if (!cancelled) {
+                        setPreviewAfter(blob);
+                        setPreviewLoading(false);
+                    }
+                })
+                .catch(() => {
+                    if (!cancelled) {
+                        setPreviewAfter(null);
+                        setPreviewLoading(false);
+                    }
+                });
+        }, 280);
+        return () => {
+            cancelled = true;
+            window.clearTimeout(timer);
+        };
+    }, [selected, quality, outputFormat]);
 
     const acceptIncomingFile = useCallback((file: File) => {
-        setFileEntries([{ id: crypto.randomUUID(), file }]);
+        const id = crypto.randomUUID();
+        setFileEntries([{ id, file }]);
+        setSelectedId(id);
         setJobDoneCount(0);
         setJobStatus('idle');
         processedRef.current.clear();
+        setProcessedTick((n) => n + 1);
     }, []);
 
     useImageToolSession({ toolId: tool.id, onIncomingFile: acceptIncomingFile });
@@ -75,12 +113,13 @@ export function ImageCompressTool({ tool }: ImageCompressToolProps) {
         items: { status: string }[];
     }) {
         setActiveJobId(job.id);
-        setJobProgress(job.progress);
         setJobDoneCount(job.items.filter((item) => item.status === 'done').length);
         if (job.status === 'running' || job.status === 'queued') setJobStatus('running');
         else if (job.status === 'paused') setJobStatus('paused');
-        else if (job.status === 'completed') setJobStatus('completed');
-        else setJobStatus('idle');
+        else if (job.status === 'completed') {
+            setJobStatus('completed');
+            setProcessedTick((n) => n + 1);
+        } else setJobStatus('idle');
     }
 
     function buildProcessor() {
@@ -96,18 +135,16 @@ export function ImageCompressTool({ tool }: ImageCompressToolProps) {
         };
     }
 
-    function appendFiles(list: FileList) {
+    function appendFiles(list: File[] | FileList) {
         const next = Array.from(list).map((file) => ({ id: crypto.randomUUID(), file }));
         if (!next.length) return;
         setFileEntries((prev) => [...prev, ...next]);
+        setSelectedId(next[0]?.id ?? null);
         setJobDoneCount(0);
         setJobStatus('idle');
         processedRef.current.clear();
+        setProcessedTick((n) => n + 1);
     }
-
-    const { dragOver, onDragLeave, onDragOver, onDrop } = useFileDrop((incoming) =>
-        appendFiles(incoming),
-    );
 
     useEffect(() => {
         const resumable = getResumableJobForRoute(route) ?? getResumableJobForRoute(shortcutRoute);
@@ -163,65 +200,33 @@ export function ImageCompressTool({ tool }: ImageCompressToolProps) {
 
         setActiveJobId(jobId);
         setJobStatus('running');
-        setJobProgress(0);
         setJobDoneCount(0);
     }
 
+    const done = !working && jobStatus === 'completed' && jobDoneCount > 0;
+
     return (
-        <>
-            <div
-                className="ms-animate-fade mx-auto w-full max-w-3xl space-y-4 px-4 py-6 md:px-6"
-                aria-busy={working}
-            >
-                <section
-                    className="ms-dropzone rounded-xl p-6 text-center"
-                    data-drag={dragOver}
-                    onDragOver={onDragOver}
-                    onDragLeave={onDragLeave}
-                    onDrop={onDrop}
-                >
-                    <p className="font-display text-[20px] font-bold tracking-[-0.02em]">
-                        {tool.title}
-                    </p>
-                    <p className="mt-2 text-[14px] text-[var(--color-ink-soft)]">
-                        Bilder komprimieren — Qualität und Zielformat einstellen.
-                    </p>
-                    <button
-                        type="button"
-                        className="ms-btn mt-4"
-                        onClick={() => fileInputRef.current?.click()}
-                    >
-                        Dateien auswählen
-                    </button>
-                    <input
-                        ref={fileInputRef}
-                        className="ms-sr-only"
-                        type="file"
-                        multiple
-                        accept={accept}
-                        onChange={(e) => {
-                            if (e.target.files) appendFiles(e.target.files);
-                        }}
-                    />
-                </section>
-
-                {fileEntries.length ? (
-                    <div className="flex flex-wrap gap-2">
-                        {fileEntries.map((entry) => (
-                            <span
-                                key={entry.id}
-                                className="ms-badge bg-[var(--color-chip)] px-3 py-1 text-[12px]"
-                            >
-                                {entry.file.name}
-                            </span>
-                        ))}
-                    </div>
-                ) : null}
-
-                <section className="grid gap-4 rounded-xl border-2 border-black bg-white p-4 shadow-brutal-sm md:grid-cols-2">
-                    <label className="space-y-2">
-                        <span className="font-display text-[13px] font-bold">
-                            Qualität ({Math.round(quality * 100)}%)
+        <ImageWorkbenchShell
+            files={fileEntries}
+            selectedId={selectedId}
+            onSelectFile={setSelectedId}
+            onFiles={appendFiles}
+            accept={accept}
+            working={working}
+            beforeBlob={selected?.file ?? null}
+            afterBlob={afterBlob}
+            afterLoading={previewLoading}
+            display="compare-slider"
+            beforeLabel="Original"
+            afterLabel="Komprimiert"
+            emptyTitle="Bild hier ablegen"
+            emptyHint="JPG, PNG, WebP oder HEIC. Komprimierung läuft lokal im Browser."
+            rail={
+                <>
+                    <label className="block space-y-2">
+                        <span className="flex items-baseline justify-between font-display text-[13px] font-bold">
+                            Qualität
+                            <span className="tabular-nums">{Math.round(quality * 100)}%</span>
                         </span>
                         <input
                             type="range"
@@ -230,16 +235,20 @@ export function ImageCompressTool({ tool }: ImageCompressToolProps) {
                             max={1}
                             step={0.01}
                             value={quality}
-                            onChange={(e) => setQuality(Number(e.target.value))}
+                            onChange={(event) => setQuality(Number(event.target.value))}
                             disabled={working}
+                            aria-label="Komprimierungsqualität"
                         />
                     </label>
-                    <label className="space-y-1">
+
+                    <label className="block space-y-1">
                         <span className="font-display text-[13px] font-bold">Zielformat</span>
                         <select
                             className="ms-input w-full"
                             value={outputFormat}
-                            onChange={(e) => setOutputFormat(e.target.value as ImageFormatId)}
+                            onChange={(event) =>
+                                setOutputFormat(event.target.value as ImageFormatId)
+                            }
                             disabled={working}
                         >
                             {OUTPUT_FORMATS.map((id) => (
@@ -249,86 +258,60 @@ export function ImageCompressTool({ tool }: ImageCompressToolProps) {
                             ))}
                         </select>
                     </label>
-                </section>
 
-                {working || jobStatus === 'paused' ? (
-                    <div className="space-y-2">
-                        <ProgressBar value={jobProgress} max={1} />
-                        <p className="text-center text-[12px] text-[var(--color-ink-soft)]">
-                            {jobDoneCount} / {fileEntries.length} fertig
-                            {jobStatus === 'paused' ? ' · pausiert' : ''}
+                    {selected ? (
+                        <p className="text-[12px] text-[var(--color-ink-soft)]">
+                            {fileEntries.length === 1
+                                ? formatBytes(selected.file.size)
+                                : `${fileEntries.length} Dateien · Fokus ${formatBytes(selected.file.size)}`}
                         </p>
-                        <div className="flex flex-wrap justify-center gap-2">
-                            {working && activeJobId ? (
-                                <button
-                                    type="button"
-                                    className="ms-btn text-[12px]"
-                                    onClick={() => pauseJob(activeJobId)}
-                                >
-                                    Pause
-                                </button>
-                            ) : null}
-                            {jobStatus === 'paused' && activeJobId && canResumeJob(activeJobId) ? (
-                                <button
-                                    type="button"
-                                    className="ms-btn text-[12px]"
-                                    onClick={() => resumeJob(activeJobId)}
-                                >
-                                    Fortsetzen
-                                </button>
-                            ) : null}
-                        </div>
-                    </div>
-                ) : null}
+                    ) : (
+                        <p className="text-[12px] text-[var(--color-ink-soft)]">
+                            Noch kein Bild. Ablage in der Mitte, Dateien links.
+                        </p>
+                    )}
 
-                {!working && jobStatus === 'completed' && jobDoneCount > 0 ? (
-                    <ResultCard
-                        tone="success"
-                        heading={`Fertig: ${jobDoneCount} Dateien komprimiert`}
-                    >
-                        <div className="flex flex-col gap-2">
-                            <button
-                                type="button"
-                                className="ms-btn-primary"
-                                onClick={() => {
-                                    for (const processed of processedRef.current.values()) {
-                                        downloadBlob(processed.blob, processed.filename);
-                                    }
-                                    toast({ message: 'Downloads gestartet', variant: 'success' });
-                                }}
-                            >
-                                {jobDoneCount} Dateien herunterladen
-                            </button>
-                            {(() => {
-                                const first = processedRef.current.values().next().value;
-                                return first ? (
+                    <div className="mt-auto flex flex-col gap-2">
+                        <button
+                            type="button"
+                            className="ms-btn-primary w-full"
+                            disabled={!fileEntries.length || working}
+                            onClick={startCompress}
+                        >
+                            {fileEntries.length
+                                ? `${fileEntries.length} ${fileEntries.length === 1 ? 'Bild' : 'Bilder'} komprimieren`
+                                : 'Komprimieren'}
+                        </button>
+
+                        {done ? (
+                            <>
+                                <button
+                                    type="button"
+                                    className="ms-btn w-full"
+                                    onClick={() => {
+                                        for (const processed of processedRef.current.values()) {
+                                            downloadBlob(processed.blob, processed.filename);
+                                        }
+                                        toast({
+                                            message: 'Downloads gestartet',
+                                            variant: 'success',
+                                        });
+                                    }}
+                                >
+                                    {jobDoneCount === 1 ? 'Herunterladen' : `${jobDoneCount} Dateien laden`}
+                                </button>
+                                {selectedResult ? (
                                     <ContinueWithNextTool
                                         toolId={tool.id}
-                                        resultBlob={first.blob}
-                                        resultFilename={first.filename}
+                                        resultBlob={selectedResult.blob}
+                                        resultFilename={selectedResult.filename}
                                     />
-                                ) : null;
-                            })()}
-                        </div>
-                    </ResultCard>
-                ) : null}
-
-                <button
-                    type="button"
-                    className="ms-btn-primary w-full"
-                    disabled={!fileEntries.length || working}
-                    onClick={startCompress}
-                >
-                    {fileEntries.length
-                        ? `${fileEntries.length} Bilder komprimieren`
-                        : 'Bilder komprimieren'}
-                </button>
-
-                <StateHint>
-                    Canvas-Neukodierung mit einstellbarer Qualität — läuft client-seitig, ohne
-                    Upload.
-                </StateHint>
-            </div>
-        </>
+                                ) : null}
+                            </>
+                        ) : null}
+                    </div>
+                </>
+            }
+        />
     );
 }

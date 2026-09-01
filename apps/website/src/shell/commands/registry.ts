@@ -1,11 +1,9 @@
-import { formatIban, ibanCountryName, validateIban } from '../../lib/iban';
 import { generateQrDataUrl } from '../../lib/qr';
 import type { CommandResult, SlashCommand } from './types';
 import {
     base64Decode,
     base64Encode,
     countText,
-    generatePassword,
     generateUuidV4,
     sha256Hex,
     slugify,
@@ -27,65 +25,13 @@ function info(message: string): CommandResult {
     return { status: 'info', output: message };
 }
 
-async function readClipboardText(): Promise<string | null> {
-    try {
-        return await navigator.clipboard.readText();
-    } catch {
-        return null;
-    }
-}
-
 const commands: SlashCommand[] = [
-    {
-        name: 'pw',
-        description: 'Sicheres Passwort generieren',
-        usage: '/pw [länge]',
-        execute(args) {
-            const len = args.trim() ? Number.parseInt(args.trim(), 10) : 16;
-            if (!Number.isFinite(len) || len < 4 || len > 128) {
-                return err('Länge muss zwischen 4 und 128 liegen.');
-            }
-            return ok(generatePassword(len));
-        },
-    },
     {
         name: 'uuid',
         description: 'UUID v4 erzeugen',
         usage: '/uuid',
         execute() {
             return ok(generateUuidV4());
-        },
-    },
-    {
-        name: 'iban',
-        description: 'IBAN prüfen und formatieren',
-        usage: '/iban [text|paste]',
-        async execute(args) {
-            let input = args.trim();
-            if (!input || input.toLowerCase() === 'paste') {
-                const clip = await readClipboardText();
-                if (!clip?.trim()) return err('Zwischenablage leer oder nicht lesbar.');
-                input = clip.trim();
-            }
-            const result = validateIban(input);
-            if (!result.ok) {
-                const reasons: Record<string, string> = {
-                    format: 'Format ungültig',
-                    length: 'Länge passt nicht zum Land',
-                    checksum: 'Prüfsumme falsch',
-                    country: 'Land nicht unterstützt',
-                };
-                return err(`${reasons[result.reason]} — ${formatIban(result.iban)}`);
-            }
-            const formatted = formatIban(result.iban);
-            const lines = [
-                formatted,
-                `${ibanCountryName(result.country)} · ${result.bank}`,
-                result.bic !== '—' ? `BIC ${result.bic}` : '',
-            ]
-                .filter(Boolean)
-                .join('\n');
-            return ok(lines, formatted);
         },
     },
     {

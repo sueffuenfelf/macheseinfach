@@ -38,7 +38,6 @@ App (dvh flex column, overflow hidden)
 |------|-------|-------|
 | Logo / Start | `/` | compact wordmark |
 | Suche | palette ⌘K | button, not navigate |
-| Vorhaben | `/vorhaben` | |
 | Favoriten | `/favoriten` | badge if count > 0 |
 | Bereiche | collapsible list | `areaOrder`, active highlight |
 | Einstellungen | `/einstellungen` | footer section |
@@ -49,7 +48,7 @@ Footer links (Datenschutz, Quelltext, Impressum) move to sidenav bottom — no d
 ## Page restyle
 
 - Shared `PageContainer` + `PageHeader` — dense typography (h1 ~22–24px), consistent `px-5 py-5` padding.
-- Remove redundant `BackButton` on top-level nav pages (home, suche, favoriten, vorhaben, einstellungen).
+- Remove redundant `BackButton` on top-level nav pages (home, suche, favoriten, einstellungen).
 - Keep subtle back on drill-down (bereich → story → tool).
 - `AreaStep`: compact grid, smaller cards, inline search retained.
 
@@ -67,11 +66,11 @@ Footer links (Datenschutz, Quelltext, Impressum) move to sidenav bottom — no d
 | add | `shell/AppSideNav.tsx` |
 | add | `shell/PageContainer.tsx` |
 | edit | `shell/ToolShell.tsx` |
-| edit | `shell/AreaStep.tsx`, `StoryPickStep.tsx`, `SearchPage.tsx`, `FavoritesPage.tsx`, `SettingsPage.tsx`, `StoriesOverviewPage.tsx`, `ToolWorkspace.tsx`, `ConversionVariantHub.tsx` |
+| edit | `shell/AreaStep.tsx`, `AreaToolsStep.tsx`, `SearchPage.tsx`, `FavoritesPage.tsx`, `SettingsPage.tsx`, `ToolWorkspace.tsx`, `ConversionVariantHub.tsx` |
 | edit | `index.css` |
 
 ## Verification
 
-- `bun test` / manual browse: `/`, `/bereich/bilder`, `/vorhaben`, `/suche`, `/favoriten`, `/einstellungen`, one tool URL
+- `bun test` / manual browse: `/`, `/bereich/bilder`, `/suche`, `/favoriten`, `/einstellungen`, one tool URL
 - Screenshots via browser MCP
 - Assistant panel + sidebar mode still inset main content

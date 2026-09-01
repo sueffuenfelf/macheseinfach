@@ -221,11 +221,18 @@ export function ImageRectCropCanvas({
 
                     {stage && box ? (
                         <>
-                            <svg className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden>
+                            <svg
+                                className="pointer-events-none absolute inset-0 h-full w-full"
+                                aria-hidden
+                            >
                                 <title>Ausschnitt</title>
                                 <defs>
                                     <mask id="ms-rect-crop-mask">
-                                        <rect width={stage.width} height={stage.height} fill="white" />
+                                        <rect
+                                            width={stage.width}
+                                            height={stage.height}
+                                            fill="white"
+                                        />
                                         <rect
                                             x={box.left}
                                             y={box.top}
@@ -276,8 +283,7 @@ export function ImageRectCropCanvas({
                             />
 
                             {(['nw', 'ne', 'sw', 'se'] as const).map((handle) => {
-                                const left =
-                                    handle.includes('w') ? box.left : box.left + box.width;
+                                const left = handle.includes('w') ? box.left : box.left + box.width;
                                 const top = handle.includes('n') ? box.top : box.top + box.height;
                                 return (
                                     <button

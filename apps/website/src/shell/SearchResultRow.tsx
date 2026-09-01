@@ -8,8 +8,6 @@ function kindLabel(kind: ScoredResult['document']['kind']): string {
             return 'Tool';
         case 'variant':
             return 'Variante';
-        case 'story':
-            return 'Vorhaben';
         case 'area':
             return 'Bereich';
     }
@@ -23,8 +21,6 @@ function kindEyebrowClass(kind: ScoredResult['document']['kind']): string {
             return 'bg-white text-black';
         case 'variant':
             return 'bg-[var(--color-chip)] text-black';
-        case 'story':
-            return 'bg-white text-black';
     }
 }
 

@@ -26,7 +26,6 @@ export default definePasteTool(
             theme: { accent: '#7dd3c0', accentStrong: '#000', accentSoft: '#e8f7f3' },
             maturity: 'stable',
             areas: ['text'],
-            storyIds: [],
         },
         analyze: analyzeReadingLevel,
         placeholder: 'Behördentext, AGB oder Brief hier einfügen …',

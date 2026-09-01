@@ -54,25 +54,6 @@ export type AreaDetail = AreaSummary & {
     tools: ToolHit[];
 };
 
-export type FlowSummary = {
-    id: string;
-    title: string;
-    description?: string;
-    areaId?: string;
-};
-
-export type FlowStep = {
-    id: string;
-    title: string;
-    toolId?: string;
-};
-
-export type FlowDefinition = FlowSummary & {
-    steps: FlowStep[];
-    recommended: string[];
-    slotSchema?: Record<string, unknown>;
-};
-
 export type ToolMeta = ToolHit & {
     inputSchema?: Record<string, unknown>;
     description?: string;

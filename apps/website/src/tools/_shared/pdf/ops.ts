@@ -1,10 +1,6 @@
 import { loadPdfJsDocument, renderPdfPage } from './pdfjs';
 import { allPageIndices } from './pages';
-import {
-    applyGrayscaleInPlace,
-    canvasToJpegBytes,
-    rasterizePdfPages,
-} from './raster';
+import { applyGrayscaleInPlace, canvasToJpegBytes, rasterizePdfPages } from './raster';
 
 export {
     fitPdfToA4,

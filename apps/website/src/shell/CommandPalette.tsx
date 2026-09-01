@@ -1,16 +1,9 @@
-import {
-    useCallback,
-    useEffect,
-    useMemo,
-    useRef,
-    useState,
-    type KeyboardEvent,
-} from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSettings } from '../context/SettingsContext';
 import { type ToolId } from '../data/catalog';
 import { filterHint, resolveSearch, type ScoredResult } from '../search';
-import { homePath, settingsPath, vorhabenPath } from '../routing/paths';
+import { homePath, settingsPath } from '../routing/paths';
 import { copyToClipboard } from '../lib/format';
 import { useToast } from './toast';
 import { useDismissLayer } from './useDismissLayer';
@@ -34,9 +27,7 @@ type NavShortcut = {
     run: () => void;
 };
 
-type PaletteRow =
-    | { kind: 'search'; entry: ScoredResult }
-    | { kind: 'nav'; item: NavShortcut };
+type PaletteRow = { kind: 'search'; entry: ScoredResult } | { kind: 'nav'; item: NavShortcut };
 
 type CommandPaletteProps = {
     open: boolean;
@@ -78,12 +69,6 @@ export function CommandPalette({
         () => [
             { id: 'home', label: 'Startseite', hint: 'Home', run: () => navigate(homePath()) },
             {
-                id: 'vorhaben',
-                label: 'Vorhaben-Übersicht',
-                hint: 'Flows',
-                run: () => navigate(vorhabenPath()),
-            },
-            {
                 id: 'settings',
                 label: 'Einstellungen',
                 hint: 'Settings',
@@ -98,8 +83,7 @@ export function CommandPalette({
         const q = localQuery.trim().toLowerCase();
         if (!q) return navShortcuts;
         return navShortcuts.filter(
-            (item) =>
-                item.label.toLowerCase().includes(q) || item.hint.toLowerCase().includes(q),
+            (item) => item.label.toLowerCase().includes(q) || item.hint.toLowerCase().includes(q),
         );
     }, [commandMode, localQuery, navShortcuts]);
 
@@ -531,20 +515,22 @@ export function CommandPalette({
                                                                 ? 'bg-[var(--color-success)]'
                                                                 : 'hover:bg-[var(--color-chip)]'
                                                         }`}
-                                                        onMouseEnter={() => setActiveIndex(rowIndex)}
+                                                        onMouseEnter={() =>
+                                                            setActiveIndex(rowIndex)
+                                                        }
                                                         onClick={() => {
                                                             item.run();
                                                             onClose();
                                                         }}
                                                     >
-                                                    <span className="flex items-center justify-between gap-2">
-                                                        <span className="font-display text-[14px] font-semibold text-[var(--color-ink)]">
-                                                            {item.label}
+                                                        <span className="flex items-center justify-between gap-2">
+                                                            <span className="font-display text-[14px] font-semibold text-[var(--color-ink)]">
+                                                                {item.label}
+                                                            </span>
+                                                            <span className="font-mono text-[11px] text-[var(--color-ink-muted)]">
+                                                                {item.hint}
+                                                            </span>
                                                         </span>
-                                                        <span className="font-mono text-[11px] text-[var(--color-ink-muted)]">
-                                                            {item.hint}
-                                                        </span>
-                                                    </span>
                                                     </button>
                                                 </li>
                                             );

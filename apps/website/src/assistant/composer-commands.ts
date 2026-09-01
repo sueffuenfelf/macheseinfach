@@ -4,21 +4,17 @@ import {
     getAreaBySlug,
     getTool,
     searchTools,
-    stories,
     type AreaId,
-    type StoryId,
     type ToolId,
 } from '../data/catalog';
-import { searchPath, storyPath, vorhabenPath } from '../routing/paths';
+import { searchPath } from '../routing/paths';
 
 export type ComposerCommandContext = {
     startFreshThread: () => void;
     selectArea: (areaId: AreaId) => void;
-    selectStory: (storyId: StoryId) => void;
     selectTool: (toolId: ToolId) => void;
     listFavorites: () => ToolId[];
     goToSearch: (query?: string) => void;
-    goToVorhaben: (areaSlug?: string) => void;
     attachFromClipboard: () => Promise<void>;
     injectAssistantReply: (text: string) => void;
     navigate: (href: string) => void;
@@ -56,12 +52,6 @@ export const composerSlashCommands: ComposerSlashCommand[] = [
         description: 'Bereich öffnen',
         usage: '/bereich <slug>',
         aliases: ['area'],
-    },
-    {
-        name: 'vorhaben',
-        description: 'Vorhaben suchen oder Übersicht öffnen',
-        usage: '/vorhaben [suche]',
-        aliases: ['flow'],
     },
     {
         name: 'favorit',
@@ -137,25 +127,7 @@ function formatHelp(): string {
     return composerSlashCommands.map((c) => `${c.usage} — ${c.description}`).join('\n');
 }
 
-function searchStories(query: string, areaId?: AreaId) {
-    const q = query.trim().toLowerCase();
-    let list = Object.values(stories);
-    if (areaId) list = list.filter((s) => s.areaIds.includes(areaId));
-    if (!q) return list.slice(0, 8);
-    return list
-        .filter(
-            (s) =>
-                s.outcome.toLowerCase().includes(q) ||
-                s.situation.toLowerCase().includes(q) ||
-                s.title.toLowerCase().includes(q) ||
-                s.slug.includes(q),
-        )
-        .slice(0, 8);
-}
-
-export type ComposerCommandResult =
-    | { handled: true; clearDraft?: boolean }
-    | { handled: false };
+export type ComposerCommandResult = { handled: true; clearDraft?: boolean } | { handled: false };
 
 export async function executeComposerSlash(
     text: string,
@@ -219,33 +191,6 @@ export async function executeComposerSlash(
             }
             ctx.selectArea(areaId);
             ctx.injectAssistantReply(`Öffne Bereich „${areas[areaId].label}“.`);
-            return { handled: true, clearDraft: true };
-        }
-        case 'vorhaben': {
-            if (!parsed.args.trim()) {
-                ctx.goToVorhaben();
-                ctx.injectAssistantReply('Vorhaben-Übersicht geöffnet.');
-                return { handled: true, clearDraft: true };
-            }
-            const matches = searchStories(parsed.args);
-            if (matches.length === 1) {
-                const story = matches[0];
-                const areaId = story.areaIds[0];
-                if (areaId) {
-                    ctx.navigate(storyPath(areaId, story.id));
-                    ctx.injectAssistantReply(`Öffne Vorhaben „${story.outcome}“.`);
-                }
-                return { handled: true, clearDraft: true };
-            }
-            if (matches.length === 0) {
-                ctx.goToVorhaben();
-                ctx.injectAssistantReply(
-                    `Kein Vorhaben für „${parsed.args}“ — Übersicht geöffnet.`,
-                );
-                return { handled: true, clearDraft: true };
-            }
-            const lines = matches.map((s) => `• ${s.outcome}`).join('\n');
-            ctx.injectAssistantReply(`Treffer:\n${lines}\n\nNutze \`/vorhaben <genauer>\`.`);
             return { handled: true, clearDraft: true };
         }
         case 'favorit': {

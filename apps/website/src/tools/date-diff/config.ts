@@ -27,7 +27,6 @@ export default defineCalcTool(
             theme: ZEIT_THEME,
             maturity: 'stable',
             areas: ['zeit'],
-            storyIds: [],
         },
         fields: [
             { id: 'a', type: 'date', label: 'Von' },

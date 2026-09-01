@@ -3,10 +3,7 @@ import type { ToolDefinition as Tool } from '../../data/catalog/types';
 import { useFileDrop } from '../../hooks/useFileDrop';
 import { useToast } from '../../shell/toast';
 import { ProgressBar, StateHint } from '../_shared/_shared';
-import {
-    addPdfPageNumbers,
-    type PageNumberPosition,
-} from '../_shared/pdf/page-numbers';
+import { addPdfPageNumbers, type PageNumberPosition } from '../_shared/pdf/page-numbers';
 import { downloadPdfBytes, swapBaseFilename } from '../_shared/pdf/io';
 
 type PdfPageNumbersToolProps = {

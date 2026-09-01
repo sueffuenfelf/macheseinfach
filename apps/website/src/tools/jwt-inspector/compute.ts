@@ -1,5 +1,12 @@
-import { base64UrlDecode } from '../_shared/security/crypto';
 import type { PasteFinding } from '../_shared/shells';
+
+function base64UrlDecode(segment: string): string {
+    const padded = segment.replace(/-/g, '+').replace(/_/g, '/');
+    const pad = padded.length % 4 === 0 ? '' : '='.repeat(4 - (padded.length % 4));
+    const binary = atob(padded + pad);
+    const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
+    return new TextDecoder().decode(bytes);
+}
 
 function tryParseJson(raw: string): { ok: true; value: unknown } | { ok: false; error: string } {
     try {

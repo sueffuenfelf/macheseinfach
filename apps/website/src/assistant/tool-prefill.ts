@@ -29,10 +29,7 @@ export function consumePasteTextPrefill(toolId: string): string | null {
     return text ?? null;
 }
 
-export function fieldDefaultsWithPrefill(
-    toolId: string,
-    fields: readonly FieldDef[],
-): FieldValues {
+export function fieldDefaultsWithPrefill(toolId: string, fields: readonly FieldDef[]): FieldValues {
     const defaults = defaultsFromFields(fields);
     const prefill = scalarPrefill.get(toolId);
     if (prefill) {

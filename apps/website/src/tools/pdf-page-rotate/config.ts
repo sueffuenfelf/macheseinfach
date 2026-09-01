@@ -15,10 +15,9 @@ const catalog = {
     fileHints: ['pdf'],
     command: '/pdf rotate',
     entry: 'file',
-    theme: { accent: '#ffc900', accentStrong: '#000', accentSoft: '#fff7cf' },
+    theme: { accent: '#90a8ed', accentStrong: '#000', accentSoft: '#e6ecfb' },
     maturity: 'stable',
-    areas: ['behoerden', 'dokumente'],
-    storyIds: [],
+    areas: ['dokumente'],
 } as const;
 
 export default defineTool({ catalog, page: PdfPageRotateTool }, 'pdf-page-rotate');

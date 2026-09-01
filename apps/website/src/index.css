@@ -217,6 +217,11 @@ select {
     transform: translate(1px, 1px);
 }
 
+/* Gutter so brutalist hover (translate + shadow) is not clipped by overflow-y */
+.ms-sidenav-scroll {
+    overflow-x: hidden;
+}
+
 .ms-sidenav-btn[data-active="true"] {
     border-color: #000;
     background: var(--color-accent);
@@ -431,6 +436,18 @@ select {
     animation: ms-stripes 0.7s linear infinite;
 }
 
+.ms-compare-load {
+    background-image: repeating-linear-gradient(
+        135deg,
+        var(--color-chip) 0,
+        var(--color-chip) 10px,
+        #fff 10px,
+        #fff 20px
+    );
+    background-size: 28px 28px;
+    animation: ms-stripes 0.9s linear infinite;
+}
+
 .ms-pulse {
     animation: ms-pulse 1.1s ease-in-out infinite;
 }
@@ -640,6 +657,35 @@ select {
 
 .ms-shell-chrome {
     box-sizing: border-box;
+}
+
+.ms-mobile-dock {
+    flex-shrink: 0;
+    border-top: 2px solid #000;
+    background: var(--color-canvas);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.ms-mobile-dock__stamp {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.28rem;
+    padding: 0.45rem 0.15rem 0.5rem;
+    color: var(--color-ink);
+    text-decoration: none;
+}
+
+.ms-mobile-dock__stamp[data-active='true'] {
+    background: var(--color-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ms-mobile-dock__stamp {
+        transition: none;
+    }
 }
 
 /* Assistant sidebar — main content inset when panel open (desktop) */

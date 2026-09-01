@@ -14,9 +14,6 @@ const KIND_ALIASES: Record<string, SearchDocumentKind[]> = {
     tool: ['tool'],
     varianten: ['variant'],
     variant: ['variant'],
-    vorhaben: ['story'],
-    stories: ['story'],
-    story: ['story'],
     bereiche: ['area'],
     bereich: ['area'],
     areas: ['area'],
@@ -51,8 +48,8 @@ function resolveKindFilter(token: string): SearchDocumentKind[] | null {
  *
  * Examples:
  * - `@tools png verkleinern` → tools/variants matching "png verkleinern"
- * - `@tools @buchhaltung` → all tools in buchhaltung
- * - `@vorhaben miete` → stories matching "miete"
+ * - `@tools @bilder` → all tools in bilder
+ * - `@tools json` → tools matching "json"
  */
 export function parseSearchFilters(raw: string): ParsedSearchFilters {
     const tokens = raw.trim().split(/\s+/).filter(Boolean);
@@ -107,5 +104,5 @@ export function documentMatchesFilters(
 }
 
 export function filterHint(): string {
-    return '@tools · @vorhaben · @bereiche · @<bereich-slug>';
+    return '@tools · @bereiche · @<bereich-slug>';
 }

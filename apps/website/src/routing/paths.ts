@@ -2,18 +2,15 @@ import {
     type AreaId,
     areas,
     getAreaBySlug,
-    getStoryBySlug,
     getTool,
     getToolBySlug,
-    type StoryId,
-    stories,
     type ToolId,
-    toolsForStory,
 } from '../data/catalog';
-import { getVariantStoryBySlug, isVariantStorySlug } from '../data/catalog/variant-stories';
+import { CONVERSION_HUB_SLUG, isConversionHubSlug } from './conversion-hub';
+import { isVariantStorySlug } from '../data/catalog/variant-stories';
 import { getVariantBySlug } from '../tools/variant-registry';
 
-export type AppPage = 'home' | 'area' | 'story' | 'tool' | 'settings' | 'search' | 'vorhaben';
+export type AppPage = 'home' | 'area' | 'tool' | 'settings' | 'search' | 'conversion';
 
 export function homePath(): string {
     return '/';
@@ -28,15 +25,6 @@ export function searchPath(query?: string): string {
     return `/suche?q=${encodeURIComponent(query.trim())}`;
 }
 
-export function vorhabenPath(areaSlug?: string): string {
-    if (!areaSlug?.trim()) return '/vorhaben';
-    return `/vorhaben?bereich=${encodeURIComponent(areaSlug.trim())}`;
-}
-
-export function parseVorhabenAreaParam(search: string): string {
-    return new URLSearchParams(search).get('bereich')?.trim() ?? '';
-}
-
 export function parseSearchQuery(search: string): string {
     return new URLSearchParams(search).get('q')?.trim() ?? '';
 }
@@ -45,20 +33,13 @@ export function areaPath(areaId: AreaId): string {
     return `/bereich/${areas[areaId].slug}`;
 }
 
-export function storyPath(areaId: AreaId, storyId: StoryId, tags?: readonly string[]): string {
-    const base = `/bereich/${areas[areaId].slug}/${stories[storyId].slug}`;
-    if (!tags?.length) return base;
-    return `${base}?tags=${encodeURIComponent(tags.join(','))}`;
+export function conversionHubPath(): string {
+    return `/bereich/${areas.bilder.slug}/${CONVERSION_HUB_SLUG}`;
 }
 
 export function variantPath(areaId: AreaId, variantSlug: string, toolId: ToolId): string {
     const tool = getTool(toolId);
     return `/bereich/${areas[areaId].slug}/${variantSlug}/${tool.slug}`;
-}
-
-export function toolPath(areaId: AreaId, storyId: StoryId, toolId: ToolId): string {
-    const tool = getTool(toolId);
-    return `/bereich/${areas[areaId].slug}/${stories[storyId].slug}/${tool.slug}`;
 }
 
 export function toolShortcutPath(toolId: ToolId): string {
@@ -81,7 +62,6 @@ export function tagsToSearchParam(tags: readonly string[]): string {
 export type ParsedRoute = {
     page: AppPage;
     areaId: AreaId | null;
-    storyId: StoryId | null;
     toolId: ToolId | null;
     variantSlug: string | null;
     tags: string[];
@@ -91,36 +71,33 @@ function homeRoute(): ParsedRoute {
     return {
         page: 'home',
         areaId: null,
-        storyId: null,
         toolId: null,
         variantSlug: null,
         tags: [],
     };
 }
 
-function resolveStoryFromSlug(storySlug: string) {
-    const catalogStory = getStoryBySlug(storySlug);
-    if (catalogStory) return catalogStory;
-    return getVariantStoryBySlug(storySlug);
-}
-
-/** Legacy redirects — `/tool/heic-convert` and variant shortlinks */
+/**
+ * Tool-shortcut aliases only (legacy HEIC links → conversion variants).
+ */
 export function getRedirectTarget(pathname: string, search: string): string | null {
     const toolShortcut = pathname.match(/^\/tool\/([^/]+)$/);
-    if (!toolShortcut) return null;
+    if (toolShortcut) {
+        const slug = toolShortcut[1];
 
-    const slug = toolShortcut[1];
+        if (slug === 'heic-convert') {
+            const params = new URLSearchParams(search);
+            const to = params.get('to');
+            if (to === 'png') return variantPath('bilder', 'heic-zu-png', 'image-convert');
+            return variantPath('bilder', 'heic-zu-jpg', 'image-convert');
+        }
 
-    if (slug === 'heic-convert') {
-        const params = new URLSearchParams(search);
-        const to = params.get('to');
-        if (to === 'png') return variantPath('bilder', 'heic-zu-png', 'image-convert');
-        return variantPath('bilder', 'heic-zu-jpg', 'image-convert');
-    }
+        const variant = getVariantBySlug(slug);
+        if (variant) {
+            return variantPath('bilder', variant.slug, variant.toolId);
+        }
 
-    const variant = getVariantBySlug(slug);
-    if (variant) {
-        return variantPath('bilder', variant.slug, variant.toolId);
+        return null;
     }
 
     return null;
@@ -139,7 +116,6 @@ export function parsePathname(pathname: string, search: string): ParsedRoute {
         return {
             page: 'settings',
             areaId: null,
-            storyId: null,
             toolId: null,
             variantSlug: null,
             tags: [],
@@ -149,17 +125,6 @@ export function parsePathname(pathname: string, search: string): ParsedRoute {
         return {
             page: 'search',
             areaId: null,
-            storyId: null,
-            toolId: null,
-            variantSlug: null,
-            tags: [],
-        };
-    }
-    if (pathname === '/vorhaben') {
-        return {
-            page: 'vorhaben',
-            areaId: null,
-            storyId: null,
             toolId: null,
             variantSlug: null,
             tags: [],
@@ -179,11 +144,9 @@ export function parsePathname(pathname: string, search: string): ParsedRoute {
         const tool = getToolBySlug(toolShortcut[1]);
         if (!tool) return homeRoute();
         const areaId = tool.areas[0] ?? null;
-        const storyId = tool.storyIds[0] ?? null;
         return {
             page: 'tool',
             areaId,
-            storyId,
             toolId: tool.id,
             variantSlug: null,
             tags: [],
@@ -195,27 +158,14 @@ export function parsePathname(pathname: string, search: string): ParsedRoute {
         return homeRoute();
     }
 
-    const [, areaSlug, storySlug, toolSlug] = bereichMatch;
+    const [, areaSlug, midSlug, toolSlug] = bereichMatch;
     const area = getAreaBySlug(areaSlug);
     if (!area) return homeRoute();
 
-    if (!storySlug) {
+    if (!midSlug) {
         return {
             page: 'area',
             areaId: area.id,
-            storyId: null,
-            toolId: null,
-            variantSlug: null,
-            tags,
-        };
-    }
-
-    const story = resolveStoryFromSlug(storySlug);
-    if (!story || !story.areaIds.includes(area.id)) {
-        return {
-            page: 'area',
-            areaId: area.id,
-            storyId: null,
             toolId: null,
             variantSlug: null,
             tags,
@@ -223,88 +173,49 @@ export function parsePathname(pathname: string, search: string): ParsedRoute {
     }
 
     if (!toolSlug) {
-        return {
-            page: 'story',
-            areaId: area.id,
-            storyId: story.id as StoryId,
-            toolId: null,
-            variantSlug: isVariantStorySlug(storySlug) ? storySlug : null,
-            tags,
-        };
-    }
-
-    const tool = getToolBySlug(toolSlug);
-    if (!tool) {
-        return {
-            page: 'story',
-            areaId: area.id,
-            storyId: story.id as StoryId,
-            toolId: null,
-            variantSlug: null,
-            tags,
-        };
-    }
-
-    const isVariantRoute = isVariantStorySlug(storySlug);
-    if (isVariantRoute) {
-        const variant = getVariantBySlug(storySlug);
-        if (variant && variant.toolId === tool.id && tool.areas.includes(area.id)) {
+        if (isConversionHubSlug(area.id, midSlug)) {
             return {
-                page: 'tool',
+                page: 'conversion',
                 areaId: area.id,
-                storyId: story.id as StoryId,
-                toolId: tool.id,
-                variantSlug: storySlug,
-                tags: [],
-            };
-        }
-    }
-
-    // Allow tools listed on the flow (steps ∪ recommended) even if tool.storyIds
-    // does not yet include this story (cross-area side-quests / P3 pilots).
-    const flowToolIds = new Set([
-        ...story.steps.map((s) => s.toolId),
-        ...(story.recommended ?? []).map((r) => r.toolId),
-    ]);
-    const onThisFlow = flowToolIds.has(tool.id);
-
-    if (
-        (!tool.storyIds.includes(story.id as StoryId) && !onThisFlow) ||
-        (!tool.areas.includes(area.id) && !onThisFlow)
-    ) {
-        const storyTools = toolsForStory(story.id as StoryId);
-        if (storyTools.length === 1) {
-            return {
-                page: 'tool',
-                areaId: area.id,
-                storyId: story.id as StoryId,
-                toolId: storyTools[0].id,
+                toolId: null,
                 variantSlug: null,
                 tags,
             };
         }
         return {
-            page: 'story',
+            page: 'area',
             areaId: area.id,
-            storyId: story.id as StoryId,
             toolId: null,
             variantSlug: null,
             tags,
         };
     }
 
+    if (isVariantStorySlug(midSlug)) {
+        const tool = getToolBySlug(toolSlug);
+        const variant = getVariantBySlug(midSlug);
+        if (variant && tool && variant.toolId === tool.id && tool.areas.includes(area.id)) {
+            return {
+                page: 'tool',
+                areaId: area.id,
+                toolId: tool.id,
+                variantSlug: midSlug,
+                tags: [],
+            };
+        }
+    }
+
     return {
-        page: 'tool',
+        page: 'area',
         areaId: area.id,
-        storyId: story.id as StoryId,
-        toolId: tool.id,
-        variantSlug: isVariantRoute ? storySlug : null,
-        tags: [],
+        toolId: null,
+        variantSlug: null,
+        tags,
     };
 }
 
 export function isTagFilterRoute(page: AppPage): boolean {
-    return page === 'area' || page === 'story';
+    return page === 'area';
 }
 
 export { getVariantBySlug };

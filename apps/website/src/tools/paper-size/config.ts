@@ -22,7 +22,6 @@ export default defineCheckTool(
             theme: EINHEITEN_THEME,
             maturity: 'stable',
             areas: ['einheiten'],
-            storyIds: [],
         },
         fields: [
             {

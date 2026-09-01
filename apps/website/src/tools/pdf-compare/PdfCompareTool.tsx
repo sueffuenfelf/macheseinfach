@@ -152,7 +152,11 @@ export function PdfCompareTool({ tool }: PdfCompareToolProps) {
 
             {result ? (
                 <ResultCard
-                    tone={result.pageCountMatch && result.identicalPages === result.comparedPages ? 'success' : 'warn'}
+                    tone={
+                        result.pageCountMatch && result.identicalPages === result.comparedPages
+                            ? 'success'
+                            : 'warn'
+                    }
                     heading="Vergleich"
                 >
                     <InfoGrid

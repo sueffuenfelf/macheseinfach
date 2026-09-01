@@ -14,26 +14,6 @@ export const META_TOOLS = [
         },
     },
     {
-        name: 'list_flows',
-        description: 'List Vorhaben (flows): multi-tool journeys. Filter by areaId optional.',
-        parameters: {
-            type: 'object',
-            properties: {
-                areaId: { type: 'string' },
-                query: { type: 'string' },
-            },
-        },
-    },
-    {
-        name: 'get_flow',
-        description: 'Get one flow with steps[], recommended[], and context slot schema.',
-        parameters: {
-            type: 'object',
-            required: ['flowId'],
-            properties: { flowId: { type: 'string' } },
-        },
-    },
-    {
         name: 'search_tools',
         description:
             'Search tools by query / tags / area. Returns top matches (never dump full catalog).',
@@ -100,18 +80,6 @@ export const META_TOOLS = [
                     type: 'boolean',
                     description: 'If true, navigate/open the tool UI with prefilled context',
                 },
-            },
-        },
-    },
-    {
-        name: 'open_flow',
-        description: 'Open a Vorhaben (flow) workspace in the UI, optionally with prefilled slots.',
-        parameters: {
-            type: 'object',
-            required: ['flowId'],
-            properties: {
-                flowId: { type: 'string' },
-                slotValues: { type: 'object' },
             },
         },
     },

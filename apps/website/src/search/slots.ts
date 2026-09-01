@@ -63,19 +63,6 @@ const CONTEXT_ALIASES: Record<string, string> = {
     iphone: 'iphone',
     ios: 'iphone',
     portal: 'portal',
-    behoerde: 'behoerde',
-    behörde: 'behoerde',
-    elster: 'elster',
-    finanzamt: 'behoerde',
-    rechnung: 'rechnung',
-    invoice: 'rechnung',
-    vermieter: 'vermieter',
-    gehalt: 'gehalt',
-    passwort: 'security',
-    password: 'security',
-    leak: 'security',
-    seo: 'seo',
-    sitemap: 'seo',
     pipeline: 'pipeline',
     mehrere: 'pipeline',
     schritte: 'pipeline',
@@ -164,15 +151,9 @@ export function inferToolSlots(toolId: string, tags: readonly string[]): Documen
     if (toolId.includes('resize')) actions.push('resize');
     if (toolId.includes('rotate')) actions.push('rotate');
     if (toolId.includes('exif')) actions.push('exif');
-    if (toolId.includes('pdf-compress')) actions.push('compress');
     if (toolId.includes('pdf-merge')) actions.push('merge');
-    if (toolId.includes('pdf-redact')) actions.push('redact');
-    if (toolId.includes('pdf-form-fill')) actions.push('formular');
     if (toolId.includes('pdf-sign')) actions.push('sign');
     if (toolId.includes('ocr')) actions.push('ocr');
-    if (toolId.includes('iban')) actions.push('validate');
-    if (toolId.includes('girocode')) actions.push('girocode');
-    if (toolId.includes('pwned')) actions.push('security');
 
     for (const tag of tags) {
         const norm = normalizeToken(tag);

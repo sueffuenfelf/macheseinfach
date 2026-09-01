@@ -6,31 +6,23 @@ import type {
     ToolRunResult,
     UserInputRequest,
 } from '@macheseinfach/assistant-core';
-import type { AssistantPersistence, AssistantThread, ChatAttachment } from '@macheseinfach/assistant-core';
-import type { ToolId, StoryId } from '../data/catalog';
+import type {
+    AssistantPersistence,
+    AssistantThread,
+    ChatAttachment,
+} from '@macheseinfach/assistant-core';
+import type { ToolId } from '../data/catalog';
 import {
     areaOrder,
     areas,
     getTool,
     searchTools as catalogSearchTools,
-    stories,
     toolsInArea,
     type ToolDefinition,
 } from '../data/catalog';
-import { flowBlobStore } from '../flow/blob-store';
-import { encodeForSlot } from '../flow/slot-codec';
-import { persistScalarSlot } from '../flow/scalar-persist';
-import {
-    attachmentToFile,
-    saveFileAttachment,
-    saveTextAttachment,
-} from './attachment-service';
+import { attachmentToFile, saveFileAttachment, saveTextAttachment } from './attachment-service';
 import { runCatalogTool } from './shellRunner';
-import {
-    setPasteTextPrefill,
-    setToolFilePrefill,
-    setToolScalarPrefill,
-} from './tool-prefill';
+import { setPasteTextPrefill, setToolFilePrefill, setToolScalarPrefill } from './tool-prefill';
 
 export type UserInputResolver = (
     req: UserInputRequest,
@@ -40,7 +32,6 @@ export type AssistantHostDeps = {
     favoriteIds: ToolId[];
     selectTool: (toolId: ToolId) => void;
     navigateToTool: (toolId: ToolId) => void;
-    selectStory: (storyId: StoryId) => void;
     persistence: AssistantPersistence;
     getThread: () => AssistantThread;
     updateThread: (patch: Partial<AssistantThread>) => void;
@@ -66,10 +57,7 @@ function attachmentToRef(attachment: ChatAttachment): AttachmentRef {
     };
 }
 
-function linkAttachmentToThread(
-    deps: AssistantHostDeps,
-    attachmentId: string,
-): void {
+function linkAttachmentToThread(deps: AssistantHostDeps, attachmentId: string): void {
     const thread = deps.getThread();
     if (thread.attachmentIds.includes(attachmentId)) return;
     deps.updateThread({
@@ -101,37 +89,6 @@ async function resolveInputAttachments(
     }
 
     return resolved;
-}
-
-async function applyFlowSlotValues(
-    deps: AssistantHostDeps,
-    flowId: string,
-    slotValues: Record<string, unknown>,
-): Promise<void> {
-    const story = stories[flowId as keyof typeof stories];
-    if (!story) return;
-
-    for (const [slotId, raw] of Object.entries(slotValues)) {
-        let value: unknown = raw;
-        if (typeof raw === 'string' && deps.getThread().attachmentIds.includes(raw)) {
-            const payload = await deps.persistence.attachments.get(raw);
-            if (payload?.kind === 'text') {
-                value = payload.text ?? '';
-            } else if (payload?.kind === 'file') {
-                const file = await attachmentToFile(payload, deps.persistence.blobs);
-                if (file) value = file;
-            }
-        }
-
-        const encoded = encodeForSlot(story.context, slotId, value);
-        if (!encoded) continue;
-
-        const slotDef = story.context.slots.find((s) => s.id === slotId);
-        if (slotDef) {
-            persistScalarSlot(flowId, slotDef, encoded);
-        }
-        flowBlobStore.set(flowId, slotId, encoded);
-    }
 }
 
 async function applyToolPrefill(
@@ -199,45 +156,6 @@ export function createAssistantHost(deps: AssistantHostDeps): AssistantHost {
             };
         },
 
-        listFlows(filter) {
-            let list = Object.values(stories);
-            if (filter?.areaId) {
-                list = list.filter((s) => s.areaIds.includes(filter.areaId as never));
-            }
-            if (filter?.query?.trim()) {
-                const q = filter.query.trim().toLowerCase();
-                list = list.filter(
-                    (s) =>
-                        s.title.toLowerCase().includes(q) ||
-                        s.situation.toLowerCase().includes(q) ||
-                        s.outcome.toLowerCase().includes(q),
-                );
-            }
-            return list.map((s) => ({
-                id: s.id,
-                title: s.title,
-                description: s.situation,
-                areaId: s.areaIds[0],
-            }));
-        },
-
-        getFlow(flowId) {
-            const story = stories[flowId as keyof typeof stories];
-            if (!story) return null;
-            return {
-                id: story.id,
-                title: story.title,
-                description: story.situation,
-                areaId: story.areaIds[0],
-                steps: story.steps.map((step) => ({
-                    id: step.toolId,
-                    title: step.label,
-                    toolId: step.toolId,
-                })),
-                recommended: (story.recommended ?? []).map((r) => r.toolId),
-            };
-        },
-
         searchTools(query, opts) {
             const q = query.trim();
             if (!q) return [];
@@ -287,23 +205,10 @@ export function createAssistantHost(deps: AssistantHostDeps): AssistantHost {
             return runCatalogTool(toolId, resolvedInput);
         },
 
-        openFlow(flowId, slotValues) {
-            const story = stories[flowId as keyof typeof stories];
-            if (!story) return;
-            deps.selectStory(flowId as StoryId);
-            if (slotValues && Object.keys(slotValues).length) {
-                void applyFlowSlotValues(deps, flowId, slotValues);
-            }
-        },
-
         async openTool(toolId, prefill) {
             const tool = getTool(toolId);
             if (!tool) return;
-            if (
-                prefill &&
-                typeof prefill === 'object' &&
-                !Array.isArray(prefill)
-            ) {
+            if (prefill && typeof prefill === 'object' && !Array.isArray(prefill)) {
                 await applyToolPrefill(deps, toolId as ToolId, prefill as Record<string, unknown>);
             }
             deps.navigateToTool(toolId as ToolId);

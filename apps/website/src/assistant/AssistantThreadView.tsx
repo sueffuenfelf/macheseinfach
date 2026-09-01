@@ -3,25 +3,19 @@ import type { ChatAttachment, StoredMessage } from '@macheseinfach/assistant-cor
 import { useToast } from '../shell/toast';
 import { useAssistant } from './AssistantProvider';
 import { AssistantMarkdown } from './AssistantMarkdown';
-import {
-    getAttachmentObjectUrl,
-    revokeAttachmentObjectUrl,
-} from './attachment-service';
+import { getAttachmentObjectUrl, revokeAttachmentObjectUrl } from './attachment-service';
 import { getAssistantPersistence } from './persistence';
 import { looksSensitiveContent } from './sensitive-content';
 
 const TOOL_LABELS: Record<string, string> = {
     list_areas: 'Bereiche auflisten',
     get_area: 'Bereich laden',
-    list_flows: 'Vorhaben auflisten',
-    get_flow: 'Vorhaben laden',
     search_tools: 'Tools suchen',
     get_tool: 'Tool-Details',
     list_favorites: 'Favoriten',
     request_user_input: 'Eingabe anfordern',
     attach_from_chat: 'Anhang referenzieren',
     run_tool: 'Tool ausführen',
-    open_flow: 'Vorhaben öffnen',
     open_tool: 'Tool öffnen',
 };
 
@@ -97,9 +91,9 @@ function isImageMime(mime?: string): boolean {
 
 function MessageAttachments({ attachmentIds }: { attachmentIds: string[] }) {
     const persistence = getAssistantPersistence();
-    const [items, setItems] = useState<
-        Array<{ attachment: ChatAttachment; previewUrl?: string }>
-    >([]);
+    const [items, setItems] = useState<Array<{ attachment: ChatAttachment; previewUrl?: string }>>(
+        [],
+    );
     const previewIdsRef = useRef<string[]>([]);
 
     useEffect(() => {
@@ -115,7 +109,11 @@ function MessageAttachments({ attachmentIds }: { attachmentIds: string[] }) {
                 const attachment = persistence.attachments.get(id);
                 if (!attachment) continue;
                 let previewUrl: string | undefined;
-                if (attachment.kind === 'file' && attachment.blobKey && isImageMime(attachment.mime)) {
+                if (
+                    attachment.kind === 'file' &&
+                    attachment.blobKey &&
+                    isImageMime(attachment.mime)
+                ) {
                     const blob = await persistence.blobs.get(attachment.blobKey);
                     if (blob) {
                         previewUrl = getAttachmentObjectUrl(attachment.id, blob);
@@ -180,8 +178,7 @@ function MessageBubble({
     const isUser = message.role === 'user';
     const content = message.content ?? '';
     const attachmentIds = message.attachmentIds ?? [];
-    const displayContent =
-        attachmentIds.length && content === 'Siehe Anhang.' ? '' : content;
+    const displayContent = attachmentIds.length && content === 'Siehe Anhang.' ? '' : content;
     const sensitive = isUser && displayContent && looksSensitiveContent(displayContent);
 
     return (

@@ -49,7 +49,8 @@ export function checkPaperSize(values: FieldValues): CheckResult {
             ok: false,
             tone: 'warn',
             heading: 'Beide Maße angeben',
-            message: 'Für den Abgleich Breite und Höhe in mm eingeben — oder leer lassen für Standardmaße.',
+            message:
+                'Für den Abgleich Breite und Höhe in mm eingeben — oder leer lassen für Standardmaße.',
         };
     }
 

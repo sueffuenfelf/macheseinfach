@@ -8,8 +8,8 @@ describe('composer slash commands', () => {
     });
 
     test('parses command args', () => {
-        const parsed = parseComposerSlashInput('/tool iban prüfen');
+        const parsed = parseComposerSlashInput('/tool json formatieren');
         expect(parsed?.commandName).toBe('tool');
-        expect(parsed?.args).toBe('iban prüfen');
+        expect(parsed?.args).toBe('json formatieren');
     });
 });

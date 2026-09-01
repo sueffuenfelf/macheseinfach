@@ -8,7 +8,9 @@ describe('jwt-inspector compute', () => {
     test('decodes sample jwt header and payload', () => {
         const findings = analyzeJwt(SAMPLE_JWT);
         expect(findings.some((f) => f.id === 'header' && f.detail?.includes('HS256'))).toBe(true);
-        expect(findings.some((f) => f.id === 'payload' && f.detail?.includes('John Doe'))).toBe(true);
+        expect(findings.some((f) => f.id === 'payload' && f.detail?.includes('John Doe'))).toBe(
+            true,
+        );
     });
 
     test('rejects invalid format', () => {

@@ -34,10 +34,7 @@ export type PasteShellRuntime = {
 
 export type ExtractShellRuntime = {
     kind: 'extract';
-    extract: (input: {
-        text?: string;
-        file?: File;
-    }) => ExtractField[] | Promise<ExtractField[]>;
+    extract: (input: { text?: string; file?: File }) => ExtractField[] | Promise<ExtractField[]>;
     mode?: 'text' | 'file' | 'both';
 };
 

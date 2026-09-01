@@ -281,7 +281,8 @@ function ThreadMenu() {
 function AssistantLayoutSettingsMenu() {
     const { settings, updateSettings } = useAssistant();
     const isSidebar = settings.layoutMode === 'sidebar';
-    const { open, setOpen, menuId, rootRef, triggerRef, menuRef, menuStyle } = useAnchoredPopover(120);
+    const { open, setOpen, menuId, rootRef, triggerRef, menuRef, menuStyle } =
+        useAnchoredPopover(120);
 
     const menu =
         open && menuStyle ? (

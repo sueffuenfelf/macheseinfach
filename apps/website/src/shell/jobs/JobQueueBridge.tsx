@@ -40,13 +40,6 @@ export function JobQueueBridge({ children }: { children: ReactNode }) {
                         variant: 'info',
                     });
                 }
-                toast({
-                    title: job.context.label,
-                    message: 'Im Hintergrund pausiert — im Job-Panel fortsetzen.',
-                    variant: 'info',
-                    context: jobToastContext(job),
-                    notifyInBackground: true,
-                });
             },
             onJobCompleted(job) {
                 const toastId = toastIdsRef.current.get(job.id);
@@ -58,13 +51,6 @@ export function JobQueueBridge({ children }: { children: ReactNode }) {
                     });
                     window.setTimeout(() => dismiss(toastId), 5000);
                 }
-                toast({
-                    title: job.context.label,
-                    message: 'Alle Einträge erfolgreich verarbeitet.',
-                    variant: 'success',
-                    context: jobToastContext(job),
-                    notifyInBackground: true,
-                });
                 toastIdsRef.current.delete(job.id);
             },
             onJobFailed(job) {

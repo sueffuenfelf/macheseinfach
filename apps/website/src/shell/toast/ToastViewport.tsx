@@ -1,5 +1,6 @@
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
+import { useJobQueue } from '../jobs';
 import { useToast } from './context';
 import type { ToastVariant } from './types';
 
@@ -18,21 +19,28 @@ const VARIANT_ICONS: Record<ToastVariant, string> = {
 export function ToastViewport() {
     const navigate = useNavigate();
     const { toasts, dismiss } = useToast();
+    const { jobs, pauseJob, resumeJob, canResumeJob, cancelJob } = useJobQueue();
 
     if (toasts.length === 0) return null;
 
     return createPortal(
         <div
-            className="pointer-events-none fixed right-4 bottom-4 z-[60] flex w-full max-w-[22rem] flex-col gap-2 px-4 sm:right-6 sm:bottom-6 sm:px-0"
+            className="pointer-events-none fixed right-4 bottom-20 z-[60] flex w-full max-w-[22rem] flex-col gap-2 px-4 sm:right-6 md:bottom-6 sm:px-0"
             aria-live="polite"
             aria-relevant="additions"
         >
-            {toasts.map((item) => (
-                <div
-                    key={item.id}
-                    role="status"
-                    className={`ms-animate-pop pointer-events-auto flex flex-col gap-2 rounded-[12px] border-2 border-black px-3 py-2.5 shadow-brutal ${VARIANT_STYLES[item.variant]}`}
-                >
+            {toasts.map((item) => {
+                const job =
+                    item.kind === 'job' && item.context?.jobId
+                        ? jobs.find((record) => record.id === item.context?.jobId)
+                        : undefined;
+
+                return (
+                    <div
+                        key={item.id}
+                        role="status"
+                        className={`ms-animate-pop pointer-events-auto flex flex-col gap-2 rounded-[12px] border-2 border-black px-3 py-2.5 shadow-brutal ${VARIANT_STYLES[item.variant]}`}
+                    >
                     <div className="flex items-start gap-2.5">
                         <svg
                             viewBox="0 0 24 24"
@@ -53,14 +61,6 @@ export function ToastViewport() {
                                     {item.message}
                                 </p>
                             ) : null}
-                            {item.context?.toolSlug ? (
-                                <p className="mt-1 font-mono text-[10px] text-[var(--color-ink-muted)]">
-                                    {item.context.toolSlug}
-                                    {item.context.jobId
-                                        ? ` · ${item.context.jobId.slice(0, 8)}`
-                                        : ''}
-                                </p>
-                            ) : null}
                         </div>
                         <button
                             type="button"
@@ -79,7 +79,39 @@ export function ToastViewport() {
                             />
                         </div>
                     ) : null}
-                    {item.context?.route && item.actionLabel ? (
+                    {job && (job.status === 'running' || job.status === 'paused' || job.status === 'queued') ? (
+                        <div className="flex flex-wrap gap-1.5">
+                            {job.status === 'running' ? (
+                                <button
+                                    type="button"
+                                    className="ms-btn py-1 text-[11px]"
+                                    onClick={() => pauseJob(job.id)}
+                                >
+                                    Pause
+                                </button>
+                            ) : null}
+                            {(job.status === 'paused' || job.status === 'queued') &&
+                            canResumeJob(job.id) ? (
+                                <button
+                                    type="button"
+                                    className="ms-btn py-1 text-[11px]"
+                                    onClick={() => resumeJob(job.id)}
+                                >
+                                    Fortsetzen
+                                </button>
+                            ) : null}
+                            <button
+                                type="button"
+                                className="ms-btn py-1 text-[11px]"
+                                onClick={() => {
+                                    cancelJob(job.id);
+                                    dismiss(item.id);
+                                }}
+                            >
+                                Abbrechen
+                            </button>
+                        </div>
+                    ) : item.context?.route && item.actionLabel ? (
                         <button
                             type="button"
                             className="ms-btn w-full py-1 text-[11px]"
@@ -88,8 +120,9 @@ export function ToastViewport() {
                             {item.actionLabel}
                         </button>
                     ) : null}
-                </div>
-            ))}
+                    </div>
+                );
+            })}
         </div>,
         document.body,
     );

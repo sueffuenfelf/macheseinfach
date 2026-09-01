@@ -38,11 +38,7 @@ export function ComposerAttachMenu({
     disabled: boolean;
     isRunning: boolean;
 }) {
-    const {
-        attachFiles,
-        attachFromClipboard,
-        thread,
-    } = useAssistant();
+    const { attachFiles, attachFromClipboard, thread } = useAssistant();
     const { toast } = useToast();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const imageInputRef = useRef<HTMLInputElement>(null);
@@ -53,9 +49,7 @@ export function ComposerAttachMenu({
     });
 
     const menuDisabled = disabled || isRunning;
-    const hasMessages = thread.messages.some(
-        (m) => m.role === 'user' || m.role === 'assistant',
-    );
+    const hasMessages = thread.messages.some((m) => m.role === 'user' || m.role === 'assistant');
 
     async function onFilesSelected(files: FileList | null, input?: HTMLInputElement | null) {
         if (!files?.length) return;
@@ -104,7 +98,14 @@ export function ComposerAttachMenu({
                     onClick={() => fileInputRef.current?.click()}
                 >
                     <MenuIcon>
-                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
+                        <svg
+                            viewBox="0 0 24 24"
+                            className="h-3.5 w-3.5"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.2"
+                            aria-hidden
+                        >
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                             <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
                         </svg>
@@ -118,7 +119,14 @@ export function ComposerAttachMenu({
                     onClick={() => imageInputRef.current?.click()}
                 >
                     <MenuIcon>
-                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
+                        <svg
+                            viewBox="0 0 24 24"
+                            className="h-3.5 w-3.5"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.2"
+                            aria-hidden
+                        >
                             <rect x="3" y="5" width="18" height="14" rx="2" />
                             <circle cx="8.5" cy="10.5" r="1.5" />
                             <path d="M21 17l-5.5-5.5a1.5 1.5 0 0 0-2.12 0L7 18" />
@@ -133,7 +141,14 @@ export function ComposerAttachMenu({
                     onClick={() => cameraInputRef.current?.click()}
                 >
                     <MenuIcon>
-                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
+                        <svg
+                            viewBox="0 0 24 24"
+                            className="h-3.5 w-3.5"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.2"
+                            aria-hidden
+                        >
                             <path d="M4 7h3l2-3h6l2 3h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z" />
                             <circle cx="12" cy="13" r="3.5" />
                         </svg>
@@ -147,7 +162,14 @@ export function ComposerAttachMenu({
                     onClick={() => void attachFromClipboard().then(() => setOpen(false))}
                 >
                     <MenuIcon>
-                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
+                        <svg
+                            viewBox="0 0 24 24"
+                            className="h-3.5 w-3.5"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.2"
+                            aria-hidden
+                        >
                             <rect x="8" y="2" width="8" height="4" rx="1" />
                             <path d="M16 4h1a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1" />
                         </svg>
@@ -168,7 +190,14 @@ export function ComposerAttachMenu({
                     onClick={() => void copyThread()}
                 >
                     <MenuIcon>
-                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
+                        <svg
+                            viewBox="0 0 24 24"
+                            className="h-3.5 w-3.5"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.2"
+                            aria-hidden
+                        >
                             <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
                             <polyline points="16 6 12 2 8 6" />
                             <line x1="12" y1="2" x2="12" y2="15" />

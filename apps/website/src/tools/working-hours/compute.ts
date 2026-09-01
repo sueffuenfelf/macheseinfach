@@ -33,7 +33,10 @@ export function computeWorkingHours(values: FieldValues): CalcResult {
             { label: 'Ende', value: formatMinutesAsHHMM(end % (24 * 60)) },
             { label: 'Brutto', value: `${Math.floor(gross / 60)}h ${gross % 60}min` },
             { label: 'Pause', value: breakMin ? `${breakMin} min` : 'Keine' },
-            { label: 'Netto-Arbeitszeit', value: `${hours}h ${minutes}min (${(net / 60).toFixed(2)} h)` },
+            {
+                label: 'Netto-Arbeitszeit',
+                value: `${hours}h ${minutes}min (${(net / 60).toFixed(2)} h)`,
+            },
         ],
         hint: end <= start ? 'Ende liegt am Folgetag (Nachtschicht).' : undefined,
     };

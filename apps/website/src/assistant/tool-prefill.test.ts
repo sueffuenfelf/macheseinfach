@@ -10,18 +10,18 @@ import type { FieldDef } from '../tools/_shared/shells/types';
 describe('tool-prefill', () => {
     test('file prefill is consumed once', () => {
         const file = new File(['hello'], 'test.txt', { type: 'text/plain' });
-        setToolFilePrefill('hash-file', file);
-        expect(consumeToolFilePrefill('hash-file')).toBe(file);
-        expect(consumeToolFilePrefill('hash-file')).toBeNull();
+        setToolFilePrefill('ocr-local', file);
+        expect(consumeToolFilePrefill('ocr-local')).toBe(file);
+        expect(consumeToolFilePrefill('ocr-local')).toBeNull();
     });
 
     test('scalar prefill merges into field defaults', () => {
         const fields: FieldDef[] = [
-            { id: 'cold', type: 'currency', label: 'Kaltmiete', placeholder: '0' },
+            { id: 'a', type: 'number', label: 'A', placeholder: '0' },
         ];
-        setToolScalarPrefill('deposit-calc', { cold: '900' });
-        const values = fieldDefaultsWithPrefill('deposit-calc', fields);
-        expect(values.cold).toBe('900');
-        expect(fieldDefaultsWithPrefill('deposit-calc', fields).cold).not.toBe('900');
+        setToolScalarPrefill('percent-calc', { a: '10' });
+        const values = fieldDefaultsWithPrefill('percent-calc', fields);
+        expect(values.a).toBe('10');
+        expect(fieldDefaultsWithPrefill('percent-calc', fields).a).not.toBe('10');
     });
 });

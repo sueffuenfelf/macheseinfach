@@ -11,7 +11,9 @@ export {
 } from './route-meta';
 
 /** @deprecated Use jsonLd from RouteMeta.jsonLd */
-export function jsonLdWebApplication(meta: import('./route-meta').RouteMeta): Record<string, unknown> {
+export function jsonLdWebApplication(
+    meta: import('./route-meta').RouteMeta,
+): Record<string, unknown> {
     const existing = meta.jsonLd?.find((entry) => entry['@type'] === 'WebApplication');
     if (existing) return existing;
     return {

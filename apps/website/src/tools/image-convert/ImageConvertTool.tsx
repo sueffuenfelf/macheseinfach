@@ -14,7 +14,7 @@ import { getFormat, IMAGE_FORMATS, liveTargetFormats } from '../_shared/image/fo
 import { downloadBlob } from '../_shared/pdf/io';
 import type { ImageFormatId } from '../_shared/image/types';
 import { ContinueWithNextTool, useImageToolSession } from '../_shared/image/useImageToolSession';
-import { useFlowImageFile } from '../_shared/image/useFlowImageFile';
+import { useImageToolFile } from '../_shared/image/useImageToolFile';
 
 type ImageConvertToolProps = {
     tool: Tool;
@@ -109,7 +109,7 @@ export function ImageConvertTool({ tool }: ImageConvertToolProps) {
         convertedRef.current.clear();
     }, []);
 
-    const flowFile = useFlowImageFile(tool.id, 'file');
+    const flowFile = useImageToolFile(tool.id, 'file');
 
     useImageToolSession({ toolId: tool.id, onIncomingFile: acceptIncomingFile });
 

@@ -1,6 +1,6 @@
-import type { AreaId, StoryId, ToolId } from '../data/catalog/types';
+import type { AreaId, ToolId } from '../data/catalog/types';
 
-export type SearchDocumentKind = 'tool' | 'variant' | 'story' | 'area';
+export type SearchDocumentKind = 'tool' | 'variant' | 'area';
 
 export type DocumentSlots = {
     formats: string[];
@@ -20,7 +20,6 @@ export type SearchDocument = {
     readonly href: string;
     readonly toolId?: ToolId;
     readonly areaId?: AreaId;
-    readonly storyId?: StoryId;
     readonly variantSlug?: string;
 };
 

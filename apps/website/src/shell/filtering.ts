@@ -1,14 +1,11 @@
 import {
+    type AreaId,
     areas,
     getTool,
-    storiesInArea,
-    toolMatchesTags,
-    toolsForStory,
-    toolsInArea,
-    type AreaId,
     type ToolDefinition,
     type ToolId,
-    type UserStory,
+    toolMatchesTags,
+    toolsInArea,
 } from '../data/catalog';
 
 export function areaMatchesQuery(areaId: AreaId, normalizedQuery: string): boolean {
@@ -24,16 +21,6 @@ export function areaMatchesQuery(areaId: AreaId, normalizedQuery: string): boole
     );
 }
 
-export function storyMatchesQuery(story: UserStory, normalizedQuery: string): boolean {
-    if (!normalizedQuery) return true;
-    const firstTool = toolsForStory(story.id)[0];
-    const toolTag = firstTool?.shortTitle ?? 'geplant';
-    const haystack =
-        `${story.title} ${story.role} ${story.want} ${story.situation} ${story.outcome} ${toolTag}`.toLowerCase();
-    if (haystack.includes(normalizedQuery)) return true;
-    return toolsForStory(story.id).some((tool) => toolMatchesQuery(tool, normalizedQuery));
-}
-
 export function toolMatchesQuery(tool: ToolDefinition, normalizedQuery: string): boolean {
     if (!normalizedQuery) return true;
     return (
@@ -47,66 +34,7 @@ export function toolMatchesQuery(tool: ToolDefinition, normalizedQuery: string):
     );
 }
 
-export function areaHasMatchingTools(areaId: AreaId, activeTags: readonly string[]): boolean {
-    return toolsInArea(areaId).some((t) => toolMatchesTags(t, activeTags));
-}
-
-export function filterVisibleAreas(
-    areaIds: readonly AreaId[],
-    activeTags: readonly string[],
-    query: string,
-): AreaId[] {
-    const normalizedQuery = query.trim().toLowerCase();
-    return areaIds.filter(
-        (id) => areaHasMatchingTools(id, activeTags) && areaMatchesQuery(id, normalizedQuery),
-    );
-}
-
-export function filterVisibleStories(
-    storyList: readonly UserStory[],
-    activeTags: readonly string[],
-    query: string,
-): UserStory[] {
-    const normalizedQuery = query.trim().toLowerCase();
-    return storyList.filter((story) => {
-        const tools = toolsForStory(story.id);
-        if (!tools.some((t) => toolMatchesTags(t, activeTags))) return false;
-        return storyMatchesQuery(story, normalizedQuery);
-    });
-}
-
-export function storiesForAreaFiltered(
-    areaId: AreaId,
-    activeTags: readonly string[],
-    query: string,
-): UserStory[] {
-    const areaStories = storiesInArea(areaId).filter((story) => story.areaIds.includes(areaId));
-    return filterVisibleStories(areaStories, activeTags, query);
-}
-
-/**
- * Tools in an area that are not reachable via any story listed on that area.
- * Shown as “Direkt zum Tool” entries so areas without (or with incomplete) stories stay usable.
- */
-export function orphanToolsInArea(areaId: AreaId): ToolDefinition[] {
-    const covered = new Set(
-        storiesInArea(areaId).flatMap((story) => story.steps.map((s) => s.toolId)),
-    );
-    return toolsInArea(areaId).filter((tool) => !covered.has(tool.id));
-}
-
-export function toolsForAreaDirectFiltered(
-    areaId: AreaId,
-    activeTags: readonly string[],
-    query: string,
-): ToolDefinition[] {
-    const normalizedQuery = query.trim().toLowerCase();
-    return orphanToolsInArea(areaId).filter((tool) => {
-        if (!toolMatchesTags(tool, activeTags)) return false;
-        if (!normalizedQuery) return true;
-        return toolMatchesQuery(tool, normalizedQuery);
-    });
-}
+export { toolMatchesTags };
 
 export function filterRecentTools(
     toolIds: readonly ToolId[],
@@ -116,19 +44,6 @@ export function filterRecentTools(
     const normalizedQuery = query.trim().toLowerCase();
     return toolIds.filter((toolId) => {
         const tool = getTool(toolId);
-        if (!toolMatchesTags(tool, activeTags)) return false;
-        if (!normalizedQuery) return true;
-        return toolMatchesQuery(tool, normalizedQuery);
-    });
-}
-
-export function filterToolsForStory(
-    storyId: UserStory['id'],
-    activeTags: readonly string[],
-    query: string,
-) {
-    const normalizedQuery = query.trim().toLowerCase();
-    return toolsForStory(storyId).filter((tool) => {
         if (!toolMatchesTags(tool, activeTags)) return false;
         if (!normalizedQuery) return true;
         return toolMatchesQuery(tool, normalizedQuery);

@@ -27,7 +27,6 @@ export default definePasteTool(
             theme: WEB_THEME,
             maturity: 'stable',
             areas: ['web'],
-            storyIds: [],
         },
         analyze: analyzeUserAgent,
         placeholder:

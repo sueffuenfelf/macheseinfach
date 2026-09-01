@@ -1,9 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import {
-    applyBulkReplace,
-    generateFindReplaceBulk,
-    parseReplaceRules,
-} from './compute';
+import { applyBulkReplace, generateFindReplaceBulk, parseReplaceRules } from './compute';
 
 describe('find-replace-bulk', () => {
     test('parses arrow and equals rules', () => {

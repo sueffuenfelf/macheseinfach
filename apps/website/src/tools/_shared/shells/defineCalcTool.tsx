@@ -24,5 +24,12 @@ export function defineCalcTool(def: CalcToolDefinition, expectedId?: string): To
             />
         );
     }
-    return defineTool({ catalog: def.catalog, page: Page, shell: { kind: 'calc', fields: def.fields, compute: def.compute } }, expectedId);
+    return defineTool(
+        {
+            catalog: def.catalog,
+            page: Page,
+            shell: { kind: 'calc', fields: def.fields, compute: def.compute },
+        },
+        expectedId,
+    );
 }

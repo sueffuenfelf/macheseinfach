@@ -18,7 +18,6 @@ const catalog = {
     theme: { accent: '#90a8ed', accentStrong: '#000', accentSoft: '#e6ecfb' },
     maturity: 'beta',
     areas: ['dokumente'],
-    storyIds: ['story-vertrag-unterschreiben'],
 } as const;
 
 export default defineTool(

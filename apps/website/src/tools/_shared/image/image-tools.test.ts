@@ -1,9 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import {
-    brightnessContrastFilter,
-    clampAdjustValue,
-    isNeutralAdjust,
-} from './adjust-filters';
+import { brightnessContrastFilter, clampAdjustValue, isNeutralAdjust } from './adjust-filters';
 import {
     clampCropRect,
     cropNaturalSize,

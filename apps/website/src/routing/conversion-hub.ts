@@ -1,6 +1,6 @@
-/** Story IDs that render a hub page instead of auto-opening a single tool. */
-const CONVERSION_HUB_STORY_IDS = new Set(['story-bild-format-aendern']);
+/** Conversion-format hub under Bilder — not a multi-tool journey. */
+export const CONVERSION_HUB_SLUG = 'format-aendern';
 
-export function isConversionHubStory(storyId: string): boolean {
-    return CONVERSION_HUB_STORY_IDS.has(storyId);
+export function isConversionHubSlug(areaId: string, slug: string): boolean {
+    return areaId === 'bilder' && slug === CONVERSION_HUB_SLUG;
 }

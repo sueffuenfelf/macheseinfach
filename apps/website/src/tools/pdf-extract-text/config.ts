@@ -32,7 +32,6 @@ export default defineExtractTool(
             theme: DOKUMENTE_THEME,
             maturity: 'beta',
             areas: ['dokumente'],
-            storyIds: [],
         },
         extract: async ({ file }) => {
             if (!file) throw new Error('Bitte eine PDF-Datei auswählen.');
@@ -64,8 +63,7 @@ export default defineExtractTool(
         mode: 'file',
         accept: 'application/pdf,.pdf',
         submitLabel: 'Text extrahieren',
-        emptyHint:
-            'Kein Text gefunden — vielleicht ist die PDF nur ein Scan. Dann hilft OCR.',
+        emptyHint: 'Kein Text gefunden — vielleicht ist die PDF nur ein Scan. Dann hilft OCR.',
     },
     'pdf-extract-text',
 );

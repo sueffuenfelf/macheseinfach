@@ -14,7 +14,12 @@ export default defineCalcTool(
             solution: 'Datum, Uhrzeit und Zonen wählen — Ergebnis sofort.',
             trust: TRUST_LOCAL,
             tags: ['Zeit', 'Umwandeln'],
-            keywords: ['zeitzone umrechner', 'utc nach mez', 'world clock convert', 'uhrzeit umrechnen'],
+            keywords: [
+                'zeitzone umrechner',
+                'utc nach mez',
+                'world clock convert',
+                'uhrzeit umrechnen',
+            ],
             fileHints: [],
             command: '/zeitzone',
             entry: 'form',
@@ -22,7 +27,6 @@ export default defineCalcTool(
             theme: ZEIT_THEME,
             maturity: 'stable',
             areas: ['zeit'],
-            storyIds: [],
         },
         fields: [
             { id: 'date', type: 'date', label: 'Datum' },

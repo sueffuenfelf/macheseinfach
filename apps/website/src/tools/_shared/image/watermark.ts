@@ -2,10 +2,7 @@ import { canvasToBlob, drawToCanvas, formatFromBlob, loadImageBitmap } from './c
 import { convertImage } from './convert';
 import { getFormat } from './formats';
 import type { ImageFormatId } from './types';
-import {
-    watermarkAnchor,
-    type WatermarkPosition,
-} from './watermark-position';
+import { watermarkAnchor, type WatermarkPosition } from './watermark-position';
 
 export type { WatermarkPosition } from './watermark-position';
 export { watermarkAnchor } from './watermark-position';

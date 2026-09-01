@@ -5,8 +5,8 @@ import tailwindcss from '@tailwindcss/vite';
 const config: StorybookConfig = {
     stories: ['../.storybook/**/*.mdx', '../src/**/*.stories.@(ts|tsx)'],
     addons: ['@storybook/addon-a11y', '@storybook/addon-docs'],
-      core: { allowedHosts: ['.kounds.local'] },
-  framework: '@storybook/react-vite',
+    core: { allowedHosts: ['.kounds.local'] },
+    framework: '@storybook/react-vite',
     viteFinal: async (config) => {
         config.plugins = [...(config.plugins ?? []), react(), tailwindcss()];
         return config;

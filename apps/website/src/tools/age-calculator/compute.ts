@@ -33,9 +33,7 @@ export function computeAge(values: FieldValues): CalcResult {
     }
 
     const { years, months, days } = ageParts(birth, reference);
-    const totalDays = Math.floor(
-        (reference.getTime() - birth.getTime()) / 86_400_000,
-    );
+    const totalDays = Math.floor((reference.getTime() - birth.getTime()) / 86_400_000);
 
     return {
         tone: 'info',

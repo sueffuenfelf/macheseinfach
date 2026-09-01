@@ -18,10 +18,14 @@ function readQuotedField(block: string, field: string): string | undefined {
 }
 
 function extractCatalogBlock(source: string): string | null {
-    const start = source.indexOf('catalog:');
-    if (start < 0) return null;
-
-    const braceStart = source.indexOf('{', start);
+    const markers = ['catalog:', 'const catalog ='] as const;
+    let braceStart = -1;
+    for (const marker of markers) {
+        const start = source.indexOf(marker);
+        if (start < 0) continue;
+        braceStart = source.indexOf('{', start);
+        if (braceStart >= 0) break;
+    }
     if (braceStart < 0) return null;
 
     let depth = 0;
@@ -64,13 +68,12 @@ function parseCatalogFromConfig(folderId: string, source: string): ToolDefinitio
         command: readQuotedField(block, 'command') ?? '',
         entry: 'form',
         theme: { accent: '#000', accentStrong: '#000', accentSoft: '#eee' },
-        maturity: 'stable',
+        maturity: (readQuotedField(block, 'maturity') as ToolDefinition['maturity']) ?? 'stable',
         areas: [],
-        storyIds: [],
     };
 }
 
-function loadToolCatalogs(): Record<string, ToolDefinition> {
+export function loadToolCatalogs(): Record<string, ToolDefinition> {
     const catalogs: Record<string, ToolDefinition> = {};
 
     for (const dirent of readdirSync(toolsRoot, { withFileTypes: true })) {
@@ -80,6 +83,7 @@ function loadToolCatalogs(): Record<string, ToolDefinition> {
             const source = readFileSync(configPath, 'utf8');
             const catalog = parseCatalogFromConfig(dirent.name, source);
             if (catalog) catalogs[catalog.id] = catalog;
+            else console.warn(`[seo-routes] skip ${dirent.name}: no catalog block`);
         } catch (error) {
             console.warn(`[seo-routes] skip ${dirent.name}:`, error);
         }
@@ -98,5 +102,7 @@ export function generateRouteManifest(outFile: string): RouteMeta[] {
 if (import.meta.main) {
     const outFile = join(__dirname, '.generated-routes.json');
     const routes = generateRouteManifest(outFile);
-    console.info(`[seo-routes] ${routes.length} routes (${Object.keys(loadToolCatalogs()).length} tools) → ${outFile}`);
+    console.info(
+        `[seo-routes] ${routes.length} routes (${Object.keys(loadToolCatalogs()).length} tools) → ${outFile}`,
+    );
 }

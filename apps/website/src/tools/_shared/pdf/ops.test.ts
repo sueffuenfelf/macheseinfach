@@ -1,12 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
-import {
-    fitPdfToA4,
-    reorderPdfPages,
-    rotatePdfPages,
-    splitPdfBySpec,
-    stampPdf,
-} from './mutate';
+import { fitPdfToA4, reorderPdfPages, rotatePdfPages, splitPdfBySpec, stampPdf } from './mutate';
 import { A4_POINTS } from './geometry';
 
 async function makeSamplePdf(pageCount = 3): Promise<File> {

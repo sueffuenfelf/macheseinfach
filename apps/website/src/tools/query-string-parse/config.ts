@@ -27,7 +27,6 @@ export default definePasteTool(
             theme: WEB_THEME,
             maturity: 'stable',
             areas: ['web'],
-            storyIds: [],
         },
         analyze: analyzeQueryString,
         placeholder: 'https://example.com/path?foo=1&bar=hallo%20welt',

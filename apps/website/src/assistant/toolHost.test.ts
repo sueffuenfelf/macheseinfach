@@ -10,10 +10,9 @@ const catalogLoaded = allTools.length > 0;
 describe('createAssistantHost', () => {
     const persistence = createInMemoryPersistence();
     const host = createAssistantHost({
-        favoriteIds: ['iban-validate'],
+        favoriteIds: ['percent-calc'],
         selectTool: () => {},
         navigateToTool: () => {},
-        selectStory: () => {},
         persistence,
         getThread: () => ({
             id: 't1',
@@ -37,33 +36,26 @@ describe('createAssistantHost', () => {
         });
     });
 
-    test.skipIf(!catalogLoaded)('search_tools finds IBAN tools', () => {
-        const hits = host.searchTools('iban', { limit: 5 });
+    test.skipIf(!catalogLoaded)('search_tools finds JSON tools', () => {
+        const hits = host.searchTools('json', { limit: 5 });
         expect(hits.length).toBeGreaterThan(0);
-        expect(hits.some((h) => h.id.includes('iban'))).toBe(true);
+        expect(hits.some((h) => h.id.includes('json'))).toBe(true);
     });
 
     test.skipIf(!catalogLoaded)('list_favorites maps platform favorites', () => {
         const favorites = host.listFavorites();
         expect(favorites).toHaveLength(1);
-        expect(favorites[0]?.id).toBe('iban-validate');
+        expect(favorites[0]?.id).toBe('percent-calc');
     });
 
-    test('list_flows maps legacy stories', () => {
-        const flows = host.listFlows();
-        expect(flows.length).toBeGreaterThan(0);
-        expect(flows[0]).toMatchObject({
-            id: expect.stringMatching(/^story-/),
-            title: expect.any(String),
-        });
-    });
-
-    test.skipIf(!catalogLoaded)('runTool executes iban-validate', async () => {
-        const result = await host.runTool('iban-validate', {
-            iban: 'DE89370400440532013000',
+    test.skipIf(!catalogLoaded)('runTool executes percent-calc', async () => {
+        const result = await host.runTool('percent-calc', {
+            a: '10',
+            b: '200',
+            mode: 'of',
         });
         expect(result.ok).toBe(true);
-        expect(result.summary).toContain('IBAN');
+        expect(result.summary).toContain('%');
     });
 
     test('resolveAttachment respects thread membership', async () => {
@@ -102,27 +94,10 @@ describe('createAssistantHost', () => {
 describe('buildSystemPrompt favorites', () => {
     test('includes live favorite titles', () => {
         const prompt = buildSystemPrompt({
-            favorites: [{ id: 'iban-validate', title: 'IBAN prüfen' }],
+            favorites: [{ id: 'percent-calc', title: 'Prozentrechner' }],
             locale: 'de',
         });
-        expect(prompt).toContain('IBAN prüfen (iban-validate)');
-    });
-
-    test('includes active flow slots when provided', () => {
-        const prompt = buildSystemPrompt({
-            favorites: [],
-            locale: 'de',
-            activeFlow: {
-                id: 'story-pdf-pack',
-                title: 'PDF-Paket',
-                slots: [
-                    { id: 'sourcePdf', label: 'Quell-PDF', status: 'gesetzt' },
-                    { id: 'note', label: 'Notiz', status: 'leer' },
-                ],
-            },
-        });
-        expect(prompt).toContain('Aktives Vorhaben: PDF-Paket');
-        expect(prompt).toContain('Quell-PDF (sourcePdf)=gesetzt');
+        expect(prompt).toContain('Prozentrechner (percent-calc)');
     });
 });
 

@@ -12,7 +12,7 @@ import { getFormat, IMAGE_FORMATS } from '../_shared/image/formats';
 import { downloadBlob } from '../_shared/pdf/io';
 import type { ImageFormatId } from '../_shared/image/types';
 import { ContinueWithNextTool, useImageToolSession } from '../_shared/image/useImageToolSession';
-import { useFlowImageFile } from '../_shared/image/useFlowImageFile';
+import { useImageToolFile } from '../_shared/image/useImageToolFile';
 
 type ImageExifStripToolProps = {
     tool: Tool;
@@ -65,7 +65,7 @@ export function ImageExifStripTool({ tool }: ImageExifStripToolProps) {
         processedRef.current.clear();
     }, []);
 
-    const flowFile = useFlowImageFile(tool.id, 'file');
+    const flowFile = useImageToolFile(tool.id, 'file');
 
     useImageToolSession({ toolId: tool.id, onIncomingFile: acceptIncomingFile });
 

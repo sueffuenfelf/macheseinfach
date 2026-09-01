@@ -5,7 +5,13 @@ import { getFormat } from './formats';
 import type { ImageFormatId } from './types';
 
 export type { CropRect } from './crop-rect';
-export { FULL_CROP, isFullCrop, clampCropRect, cropRectWithAspect, cropNaturalSize } from './crop-rect';
+export {
+    FULL_CROP,
+    isFullCrop,
+    clampCropRect,
+    cropRectWithAspect,
+    cropNaturalSize,
+} from './crop-rect';
 
 export type CropOptions = {
     format?: ImageFormatId;

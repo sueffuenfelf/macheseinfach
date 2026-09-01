@@ -12,7 +12,6 @@ import type {
     PasteFinding,
 } from '../tools/_shared/shells';
 import type { ToolShellRuntime } from '../tools/shell-runtime';
-import { validateIban } from '../lib/iban';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -38,7 +37,11 @@ function formatCalcSummary(result: CalcResult): string {
 }
 
 function formatCheckSummary(result: CheckResult): string {
-    return result.summary ?? result.heading ?? (result.ok ? 'Prüfung bestanden.' : 'Prüfung fehlgeschlagen.');
+    return (
+        result.summary ??
+        result.heading ??
+        (result.ok ? 'Prüfung bestanden.' : 'Prüfung fehlgeschlagen.')
+    );
 }
 
 function formatGenerateSummary(output: GenerateOutput): string {
@@ -59,8 +62,7 @@ function formatPasteSummary(findings: PasteFinding[]): string {
 function formatExtractSummary(fields: ExtractField[]): string {
     if (!fields.length) return 'Keine Felder extrahiert.';
     const first = fields[0];
-    const preview =
-        first.value.length > 80 ? `${first.value.slice(0, 77)}…` : first.value;
+    const preview = first.value.length > 80 ? `${first.value.slice(0, 77)}…` : first.value;
     return fields.length === 1
         ? `${first.label}: ${preview}`
         : `${fields.length} Felder — zuerst ${first.label}: ${preview}`;
@@ -187,32 +189,7 @@ async function runShellRuntime(
     }
 }
 
-function runBespokeTool(toolId: string, input: Record<string, unknown>): ToolRunResult | null {
-    if (toolId === 'iban-validate') {
-        const iban =
-            typeof input.iban === 'string'
-                ? input.iban
-                : typeof input.value === 'string'
-                  ? input.value
-                  : typeof input.text === 'string'
-                    ? input.text
-                    : '';
-        if (!iban.trim()) {
-            return {
-                ok: false,
-                error: 'IBAN fehlt.',
-                summary: 'Bitte input.iban als String übergeben.',
-            };
-        }
-        const result = validateIban(iban);
-        return {
-            ok: result.ok,
-            summary: result.ok
-                ? `IBAN gültig — ${result.bank} (${result.bic})`
-                : 'IBAN ungültig.',
-            output: result,
-        };
-    }
+function runBespokeTool(_toolId: string, _input: Record<string, unknown>): ToolRunResult | null {
     return null;
 }
 
@@ -222,10 +199,7 @@ export function isFileEntryTool(toolId: string): boolean {
     return tool.entry === 'file' || tool.entry === 'file-or-form';
 }
 
-export async function runCatalogTool(
-    toolId: string,
-    input: unknown,
-): Promise<ToolRunResult> {
+export async function runCatalogTool(toolId: string, input: unknown): Promise<ToolRunResult> {
     const tool = getTool(toolId);
     if (!tool) {
         return {

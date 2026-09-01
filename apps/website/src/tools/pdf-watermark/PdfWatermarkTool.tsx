@@ -44,7 +44,9 @@ export function PdfWatermarkTool({ tool }: PdfWatermarkToolProps) {
         } catch (err) {
             toast({
                 message:
-                    err instanceof Error ? err.message : 'Wasserzeichen konnte nicht eingefügt werden.',
+                    err instanceof Error
+                        ? err.message
+                        : 'Wasserzeichen konnte nicht eingefügt werden.',
                 variant: 'error',
             });
         } finally {

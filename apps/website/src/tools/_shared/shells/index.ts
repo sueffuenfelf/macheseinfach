@@ -12,7 +12,6 @@ export {
     type FilePipelineToolShellProps,
     usePipelineFile,
 } from './FilePipelineToolShell';
-export { FlowAwareField } from './FlowAwareField';
 export {
     CurrencyField,
     DateField,

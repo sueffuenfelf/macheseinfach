@@ -226,23 +226,23 @@ export function AssistantLauncher() {
 
     const ui = !isOpen ? (
         <button
-                type="button"
-                onClick={openPanel}
-                className="ms-focus fixed bottom-4 right-4 z-50 inline-flex min-h-11 items-center gap-2 rounded-[999px] border-2 border-black bg-[var(--color-accent)] px-4 py-2.5 font-display text-[14px] font-bold shadow-brutal-lg transition hover:-translate-x-[1px] hover:-translate-y-[1px] max-md:bottom-[max(1rem,env(safe-area-inset-bottom))] max-md:right-[max(1rem,env(safe-area-inset-right))]"
-                aria-label="Assistent öffnen"
+            type="button"
+            onClick={openPanel}
+            className="ms-focus fixed bottom-4 right-4 z-50 inline-flex min-h-11 items-center gap-2 rounded-[999px] border-2 border-black bg-[var(--color-accent)] px-4 py-2.5 font-display text-[14px] font-bold shadow-brutal-lg transition hover:-translate-x-[1px] hover:-translate-y-[1px] max-md:bottom-[max(1rem,env(safe-area-inset-bottom))] max-md:right-[max(1rem,env(safe-area-inset-right))]"
+            aria-label="Assistent öffnen"
+        >
+            <svg
+                viewBox="0 0 24 24"
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                aria-hidden="true"
             >
-                <svg
-                    viewBox="0 0 24 24"
-                    className="h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.2"
-                    aria-hidden="true"
-                >
-                    <path d="M12 3a7 7 0 0 0-4 12.7V21l4-2 4 2v-5.3A7 7 0 0 0 12 3z" />
-                </svg>
-                Assistent
-            </button>
+                <path d="M12 3a7 7 0 0 0-4 12.7V21l4-2 4 2v-5.3A7 7 0 0 0 12 3z" />
+            </svg>
+            Assistent
+        </button>
     ) : isMinimized ? (
         <button
             type="button"

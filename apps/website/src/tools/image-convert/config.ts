@@ -19,7 +19,6 @@ const catalog = {
     theme: { accent: '#f4a261', accentStrong: '#000', accentSoft: '#fde8d4' },
     maturity: 'beta',
     areas: ['bilder'],
-    storyIds: ['story-heic-portal', 'story-bild-format-aendern', 'story-portal-foto'],
 } as const;
 
 export default defineTool(

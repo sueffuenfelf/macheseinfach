@@ -104,7 +104,7 @@ export function SearchPage() {
                     <>
                         Stichwörter, Formate und ganze Sätze — mit Filtern wie{' '}
                         <span className="font-mono text-[13px]">@tools</span> oder{' '}
-                        <span className="font-mono text-[13px]">@buchhaltung</span>.
+                        <span className="font-mono text-[13px]">@bilder</span>.
                     </>
                 }
             />

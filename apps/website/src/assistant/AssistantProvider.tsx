@@ -24,10 +24,7 @@ import { usePlatform } from '../context/PlatformContext';
 import { getTool } from '../data/catalog';
 import { usePlatformNav } from '../routing/usePlatformNav';
 import { useToast } from '../shell/toast';
-import {
-    AssistantInputRequestModal,
-    type InputRequestState,
-} from './AssistantInputRequestModal';
+import { AssistantInputRequestModal, type InputRequestState } from './AssistantInputRequestModal';
 import {
     addComposerAttachments,
     addComposerTextAttachment,
@@ -36,7 +33,6 @@ import {
     removeThreadAttachment,
 } from './toolHost';
 import { createThread, getAssistantPersistence, listThreadAttachments } from './persistence';
-import { buildActiveFlowContext } from './flow-context';
 import {
     ASSISTANT_SETTINGS_CHANGED_EVENT,
     readAssistantSettings,
@@ -140,8 +136,7 @@ function summarizeToolResult(name: string, result: string): string | undefined {
         name !== 'run_tool' &&
         name !== 'request_user_input' &&
         name !== 'attach_from_chat' &&
-        name !== 'open_tool' &&
-        name !== 'open_flow'
+        name !== 'open_tool'
     ) {
         return undefined;
     }
@@ -162,7 +157,9 @@ function summarizeToolResult(name: string, result: string): string | undefined {
     return undefined;
 }
 
-function loadThreadIndex(persistence: ReturnType<typeof getAssistantPersistence>): ThreadIndexEntry[] {
+function loadThreadIndex(
+    persistence: ReturnType<typeof getAssistantPersistence>,
+): ThreadIndexEntry[] {
     return persistence.threadIndex.list();
 }
 
@@ -226,7 +223,9 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
         (next: AssistantThread) => {
             const titled: AssistantThread = {
                 ...next,
-                title: next.titleLocked ? next.title.trim() || 'Neuer Chat' : deriveThreadTitle(next),
+                title: next.titleLocked
+                    ? next.title.trim() || 'Neuer Chat'
+                    : deriveThreadTitle(next),
                 updatedAt: Date.now(),
             };
             persistence.threads.save(titled);
@@ -270,11 +269,6 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
             .filter((h): h is ToolHit => h !== null);
     }, [platform.favorites]);
 
-    const activeFlow = useMemo(
-        () => buildActiveFlowContext(platform.activeStoryId),
-        [platform.activeStoryId],
-    );
-
     const requestUserInput = useCallback(
         (req: UserInputRequest): Promise<AttachmentRef | { cancelled: true }> => {
             return new Promise((resolve) => {
@@ -317,14 +311,12 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
                 favoriteIds: platform.favorites,
                 selectTool: nav.selectTool,
                 navigateToTool: nav.selectTool,
-                selectStory: nav.selectStory,
                 persistence,
                 getThread: () => threadRef.current,
                 updateThread: (patch) => patchThread(patch),
                 requestUserInput,
             }),
         [
-            nav.selectStory,
             nav.selectTool,
             patchThread,
             persistence,
@@ -458,19 +450,11 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
             host,
             favorites: favoriteHits,
             attachments: listThreadAttachments(threadRef.current),
-            activeFlow,
             onEvent: handleEvent,
             stream: true,
             signal: controller.signal,
         });
-    }, [
-        activeFlow,
-        favoriteHits,
-        handleEvent,
-        host,
-        settings.model,
-        settings.openRouterApiKey,
-    ]);
+    }, [favoriteHits, handleEvent, host, settings.model, settings.openRouterApiKey]);
 
     const sendMessage = useCallback(
         async (text: string) => {
@@ -611,11 +595,7 @@ export function AssistantProvider({ children }: { children: ReactNode }) {
         async (text: string, name?: string) => {
             const trimmed = text.trim();
             if (!trimmed) return;
-            const attachment = await addComposerTextAttachment(
-                { persistence },
-                trimmed,
-                name,
-            );
+            const attachment = await addComposerTextAttachment({ persistence }, trimmed, name);
             setDraftAttachmentIds((prev) =>
                 prev.includes(attachment.id) ? prev : [...prev, attachment.id],
             );

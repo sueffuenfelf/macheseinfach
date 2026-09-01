@@ -1,6 +1,5 @@
 import { describe, expect, test } from 'bun:test';
 import { documentMatchesFilters, parseSearchFilters } from './filters';
-import type { SearchDocument } from './types';
 
 describe('parseSearchFilters', () => {
     test('parses kind and text tokens', () => {
@@ -12,17 +11,10 @@ describe('parseSearchFilters', () => {
     });
 
     test('parses stacked kind and area filters', () => {
-        const parsed = parseSearchFilters('@tools @buchhaltung');
+        const parsed = parseSearchFilters('@tools @bilder');
         expect(parsed.textQuery).toBe('');
         expect(parsed.kinds?.has('tool')).toBe(true);
-        expect(parsed.areaId).toBe('buchhaltung');
-    });
-
-    test('parses vorhaben filter', () => {
-        const parsed = parseSearchFilters('@vorhaben miete');
-        expect(parsed.textQuery).toBe('miete');
-        expect(parsed.kinds?.has('story')).toBe(true);
-        expect(parsed.kinds?.has('tool')).toBe(false);
+        expect(parsed.areaId).toBe('bilder');
     });
 
     test('parses area slug without kind', () => {
@@ -36,22 +28,18 @@ describe('parseSearchFilters', () => {
 describe('documentMatchesFilters', () => {
     const toolDoc = {
         kind: 'tool' as const,
-        areaId: 'buchhaltung' as const,
+        areaId: 'bilder' as const,
     };
 
     test('matches kind and area', () => {
-        const filters = parseSearchFilters('@tools @buchhaltung');
+        const filters = parseSearchFilters('@tools @bilder');
         expect(documentMatchesFilters(toolDoc, filters)).toBe(true);
-        expect(
-            documentMatchesFilters({ kind: 'story', areaId: 'buchhaltung' }, filters),
-        ).toBe(false);
+        expect(documentMatchesFilters({ kind: 'area', areaId: 'bilder' }, filters)).toBe(false);
     });
 
     test('area-only filter includes matching tools', () => {
         const filters = parseSearchFilters('@bilder');
         expect(documentMatchesFilters({ kind: 'tool', areaId: 'bilder' }, filters)).toBe(true);
-        expect(documentMatchesFilters({ kind: 'tool', areaId: 'buchhaltung' }, filters)).toBe(
-            false,
-        );
+        expect(documentMatchesFilters({ kind: 'tool', areaId: 'web' }, filters)).toBe(false);
     });
 });

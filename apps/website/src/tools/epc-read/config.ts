@@ -15,10 +15,9 @@ const catalog = {
     command: '/epc read',
     entry: 'file-or-form',
     entryPlaceholder: 'IBAN einfügen oder aus Zwischenablage',
-    theme: { accent: '#ff90e8', accentStrong: '#000', accentSoft: '#ffe3f7' },
+    theme: { accent: '#90a8ed', accentStrong: '#000', accentSoft: '#e6ecfb' },
     maturity: 'planned',
-    areas: ['buchhaltung', 'dokumente'],
-    storyIds: ['story-iban-aus-rechnung'],
+    areas: ['dokumente'],
 } as const;
 
 export default defineTool(

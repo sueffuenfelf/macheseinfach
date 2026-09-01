@@ -27,7 +27,6 @@ export default defineCalcTool(
             theme: ZEIT_THEME,
             maturity: 'stable',
             areas: ['zeit'],
-            storyIds: [],
         },
         fields: [
             { id: 'start', type: 'text', label: 'Beginn', placeholder: '09:00', default: '09:00' },

@@ -1,7 +1,11 @@
 import type { CalcResult, FieldValues } from '../_shared/shells';
 import { parseFieldDate, parseFieldNumber } from '../_shared/shells';
 import { formatGermanDateShort } from '../_shared/zeit/date';
-import { getGermanHolidayName, isGermanHoliday, listGermanHolidays } from '../_shared/zeit/holidays';
+import {
+    getGermanHolidayName,
+    isGermanHoliday,
+    listGermanHolidays,
+} from '../_shared/zeit/holidays';
 
 /** Feiertage DE prüfen oder Jahresübersicht. */
 export function computeDeHolidays(values: FieldValues): CalcResult {
@@ -44,7 +48,10 @@ export function computeDeHolidays(values: FieldValues): CalcResult {
         rows: [
             { label: 'Datum', value: formatGermanDateShort(date) },
             { label: 'Bundesland', value: region },
-            { label: 'Status', value: holiday ? `Feiertag: ${name}` : 'Normaler Werktag/Wochenende' },
+            {
+                label: 'Status',
+                value: holiday ? `Feiertag: ${name}` : 'Normaler Werktag/Wochenende',
+            },
             {
                 label: 'Wochentag',
                 value: date.toLocaleDateString('de-DE', { weekday: 'long' }),

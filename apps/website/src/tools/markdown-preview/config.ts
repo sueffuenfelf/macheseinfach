@@ -13,12 +13,7 @@ export default defineGenerateTool(
             solution: 'Markdown einfügen — HTML-Vorschau als Code zum Kopieren.',
             trust: 'Lokal gerendert · Raw-HTML wird escaped',
             tags: ['Text', 'Markdown', 'Schreiben'],
-            keywords: [
-                'markdown preview',
-                'markdown zu html',
-                'md vorschau',
-                'markdown konverter',
-            ],
+            keywords: ['markdown preview', 'markdown zu html', 'md vorschau', 'markdown konverter'],
             fileHints: [],
             command: '/md',
             entry: 'form',
@@ -26,7 +21,6 @@ export default defineGenerateTool(
             theme: { accent: '#7dd3c0', accentStrong: '#000', accentSoft: '#e8f7f3' },
             maturity: 'stable',
             areas: ['text'],
-            storyIds: ['story-markdown-vorschau'],
         },
         fields: [
             {

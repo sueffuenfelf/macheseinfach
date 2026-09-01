@@ -1,11 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type { ToolDefinition } from '../../../data/catalog/types';
 import { consumePasteTextPrefill } from '../../../assistant/tool-prefill';
-import { FlowBoundChip } from '../../../flow/FlowBoundChip';
-import { useFlowContext } from '../../../flow/FlowContextProvider';
-import { useFlowSession } from '../../../flow/FlowWorkspace';
-import { chipLabelFromSlot, decodeText } from '../../../flow/slot-codec';
-import { useFlowInput } from '../../../flow/useFlowInput';
 import { ResultCard } from '../_shared';
 import type { PasteFinding, PasteSeverity, ResultTone } from './types';
 
@@ -14,11 +9,9 @@ export type PasteAnalyzeToolShellProps = {
     analyze: (input: string) => PasteFinding[] | Promise<PasteFinding[]>;
     placeholder?: string;
     submitLabel?: string;
-    /** Optional URL mode — caller still receives the raw string; network is tool's job. */
     allowUrl?: boolean;
     urlHint?: string;
     intro?: string;
-    /** stepBindings input key — default `paste` */
     pasteInputKey?: string;
 };
 
@@ -44,67 +37,23 @@ export function PasteAnalyzeToolShell({
     allowUrl = false,
     urlHint = 'URL laden sendet eine Anfrage nach außen — nur nutzen, wenn du der Quelle vertraust.',
     intro,
-    pasteInputKey = 'paste',
 }: PasteAnalyzeToolShellProps) {
-    const paste = useFlowInput(tool.id, pasteInputKey, decodeText);
-    const ctx = useFlowContext();
-    const flowSession = useFlowSession();
     const [mode, setMode] = useState<'text' | 'url'>('text');
     const [localInput, setLocalInput] = useState(() => consumePasteTextPrefill(tool.id) ?? '');
     const [findings, setFindings] = useState<PasteFinding[] | null>(null);
     const [loading, setLoading] = useState(false);
 
-    const flowPasteValue = paste.source === 'flow' ? paste.value : null;
-    const effectiveInput = paste.source === 'flow' ? paste.value : (paste.value ?? localInput);
-
-    useEffect(() => {
-        if (flowPasteValue == null) return;
-        // Auto-run once when arriving with a filled Vorhaben slot
-        let cancelled = false;
-        setLoading(true);
-        void Promise.resolve(analyze(flowPasteValue))
-            .then((next) => {
-                if (!cancelled) {
-                    setFindings(next);
-                    flowSession?.reportToolSuccess(tool.id);
-                }
-            })
-            .finally(() => {
-                if (!cancelled) setLoading(false);
-            });
-        return () => {
-            cancelled = true;
-        };
-    }, [analyze, flowPasteValue, flowSession, tool.id]);
-
     async function onSubmit(e: React.FormEvent) {
         e.preventDefault();
-        const text = effectiveInput.trim();
+        const text = localInput.trim();
         if (!text) return;
         setLoading(true);
         try {
-            const next = await analyze(text);
-            setFindings(next);
-            flowSession?.reportToolSuccess(tool.id);
+            setFindings(await analyze(text));
         } finally {
             setLoading(false);
         }
     }
-
-    function setInput(next: string) {
-        setLocalInput(next);
-        if (paste.source === 'local') {
-            paste.setValue(next.trim().length > 0 ? next : null);
-        }
-    }
-
-    const chipLabel =
-        paste.source === 'flow'
-            ? (() => {
-                  const raw = ctx?.getSlot(paste.slotId) ?? null;
-                  return raw ? chipLabelFromSlot(raw) : paste.value;
-              })()
-            : '';
 
     return (
         <div className="ms-animate-fade mx-auto w-full max-w-2xl space-y-4 px-4 py-6 md:px-6">
@@ -112,86 +61,70 @@ export function PasteAnalyzeToolShell({
                 <p className="text-[14px] leading-snug text-[var(--color-ink-soft)]">{intro}</p>
             ) : null}
 
-            {paste.source === 'flow' ? (
-                <FlowBoundChip label={chipLabel} onEdit={paste.editInFlow} />
-            ) : (
-                <>
-                    {allowUrl ? (
-                        <div className="flex flex-wrap gap-2">
-                            {(
-                                [
-                                    { id: 'text' as const, label: 'Text' },
-                                    { id: 'url' as const, label: 'URL' },
-                                ] as const
-                            ).map((tab) => {
-                                const selected = mode === tab.id;
-                                return (
-                                    <button
-                                        key={tab.id}
-                                        type="button"
-                                        aria-pressed={selected}
-                                        className={`rounded-lg border-2 border-black px-3 py-2 font-display text-[12px] font-bold uppercase tracking-[0.04em] shadow-[2px_2px_0_#000] ${
-                                            selected ? 'bg-black text-white' : 'bg-white'
-                                        }`}
-                                        onClick={() => {
-                                            setMode(tab.id);
-                                            setFindings(null);
-                                        }}
-                                    >
-                                        {tab.label}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    ) : null}
-
-                    <form onSubmit={onSubmit} className="space-y-3" data-flow-source="local">
-                        <div>
-                            <label
-                                htmlFor={`${tool.id}-paste`}
-                                className="mb-1 block font-display text-[12px] font-bold uppercase tracking-[0.05em]"
+            {allowUrl ? (
+                <div className="flex flex-wrap gap-2">
+                    {(
+                        [
+                            { id: 'text' as const, label: 'Text' },
+                            { id: 'url' as const, label: 'URL' },
+                        ] as const
+                    ).map((tab) => {
+                        const selected = mode === tab.id;
+                        return (
+                            <button
+                                key={tab.id}
+                                type="button"
+                                aria-pressed={selected}
+                                className={`rounded-lg border-2 border-black px-3 py-2 font-display text-[12px] font-bold uppercase tracking-[0.04em] shadow-[2px_2px_0_#000] ${
+                                    selected ? 'bg-black text-white' : 'bg-white'
+                                }`}
+                                onClick={() => {
+                                    setMode(tab.id);
+                                    setFindings(null);
+                                }}
                             >
-                                {mode === 'url' ? 'URL' : 'Eingabe'}
-                            </label>
-                            {mode === 'url' ? (
-                                <input
-                                    id={`${tool.id}-paste`}
-                                    className="ms-input"
-                                    value={localInput}
-                                    onChange={(e) => setInput(e.target.value)}
-                                    placeholder="https://…"
-                                    data-testid="paste-primary-input"
-                                />
-                            ) : (
-                                <textarea
-                                    id={`${tool.id}-paste`}
-                                    className="ms-input min-h-[160px] resize-y py-3 font-mono text-[13px] leading-relaxed"
-                                    value={localInput}
-                                    onChange={(e) => setInput(e.target.value)}
-                                    placeholder={placeholder}
-                                    data-testid="paste-primary-input"
-                                />
-                            )}
-                            {mode === 'url' ? (
-                                <p className="mt-1 text-[12.5px] text-[var(--color-ink-soft)]">
-                                    {urlHint}
-                                </p>
-                            ) : null}
-                        </div>
-                        <button
-                            type="submit"
-                            className="ms-btn-primary h-[44px]"
-                            disabled={loading}
-                        >
-                            {loading ? 'Analysiere …' : submitLabel}
-                        </button>
-                    </form>
-                </>
-            )}
-
-            {paste.source === 'flow' && loading ? (
-                <p className="ms-pulse text-[14px] font-semibold">Analysiere …</p>
+                                {tab.label}
+                            </button>
+                        );
+                    })}
+                </div>
             ) : null}
+
+            <form onSubmit={onSubmit} className="space-y-3">
+                <div>
+                    <label
+                        htmlFor={`${tool.id}-paste`}
+                        className="mb-1 block font-display text-[12px] font-bold uppercase tracking-[0.05em]"
+                    >
+                        {mode === 'url' ? 'URL' : 'Eingabe'}
+                    </label>
+                    {mode === 'url' ? (
+                        <input
+                            id={`${tool.id}-paste`}
+                            className="ms-input"
+                            value={localInput}
+                            onChange={(e) => setLocalInput(e.target.value)}
+                            placeholder="https://…"
+                            data-testid="paste-primary-input"
+                        />
+                    ) : (
+                        <textarea
+                            id={`${tool.id}-paste`}
+                            className="ms-input min-h-[160px] resize-y py-3 font-mono text-[13px] leading-relaxed"
+                            value={localInput}
+                            onChange={(e) => setLocalInput(e.target.value)}
+                            placeholder={placeholder}
+                            data-testid="paste-primary-input"
+                        />
+                    )}
+                    {mode === 'url' ? (
+                        <p className="mt-1 text-[12.5px] text-[var(--color-ink-soft)]">{urlHint}</p>
+                    ) : null}
+                </div>
+                <button type="submit" className="ms-btn-primary h-[44px]" disabled={loading}>
+                    {loading ? 'Analysiere …' : submitLabel}
+                </button>
+            </form>
 
             {findings ? (
                 <div className="space-y-3">

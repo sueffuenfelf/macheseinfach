@@ -43,17 +43,17 @@ export function PdfExtractPagesTool({ tool }: PdfExtractPagesToolProps) {
     });
 
     const selectedCount =
-        pageCount > 0
-            ? range.trim()
-              ? parsePageSpec(range, pageCount).length
-              : pageCount
-            : 0;
+        pageCount > 0 ? (range.trim() ? parsePageSpec(range, pageCount).length : pageCount) : 0;
 
     async function extractAndDownload() {
         if (!file || !pageCount || working) return;
         setWorking(true);
         try {
-            const spec = range.trim() || allPageIndices(pageCount).map((i) => i + 1).join(',');
+            const spec =
+                range.trim() ||
+                allPageIndices(pageCount)
+                    .map((i) => i + 1)
+                    .join(',');
             const { bytes, pageCount: extracted } = await splitPdfBySpec(file, spec);
             downloadPdfBytes(bytes, swapBaseFilename(file.name, '-seiten'));
             toast({

@@ -13,7 +13,14 @@ type SideNavFavoritesSectionProps = {
 
 function StarIcon() {
     return (
-        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="#ffc900" stroke="black" strokeWidth="2" aria-hidden>
+        <svg
+            viewBox="0 0 24 24"
+            className="h-4 w-4"
+            fill="#ffc900"
+            stroke="black"
+            strokeWidth="2"
+            aria-hidden
+        >
             <path d="M12 3.8l2.68 5.43 5.99.87-4.33 4.22 1.02 5.96L12 17.43l-5.36 2.83 1.02-5.96-4.33-4.22 5.99-.87z" />
         </svg>
     );
@@ -29,8 +36,9 @@ export function SideNavFavoritesSection({
 
     const favoriteTools = favorites
         .map((toolId) => ({ toolId, tool: getTool(toolId) }))
-        .filter((entry): entry is { toolId: ToolId; tool: NonNullable<ReturnType<typeof getTool>> } =>
-            Boolean(entry.tool),
+        .filter(
+            (entry): entry is { toolId: ToolId; tool: NonNullable<ReturnType<typeof getTool>> } =>
+                Boolean(entry.tool),
         );
 
     if (favoriteTools.length === 0) return null;
@@ -40,7 +48,7 @@ export function SideNavFavoritesSection({
     const hiddenCount = favoriteTools.length - FAVORITES_PREVIEW;
 
     return (
-        <div className="mt-2 shrink-0 px-2">
+        <div className="mt-2 shrink-0 px-3">
             <div className="flex items-center justify-between px-2.5 py-1">
                 <p className="font-display text-[11px] font-bold tracking-[0.05em] text-[var(--color-ink-muted)] uppercase">
                     Favoriten

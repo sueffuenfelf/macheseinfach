@@ -74,10 +74,7 @@ export function injectSeoHead(html: string, meta: RouteMeta): string {
         return withHead.replace(/<noscript>[\s\S]*?<\/noscript>/, noscript);
     }
 
-    return withHead.replace(
-        '<div id="root"></div>',
-        `${noscript}\n    <div id="root"></div>`,
-    );
+    return withHead.replace('<div id="root"></div>', `${noscript}\n    <div id="root"></div>`);
 }
 
 export { DEFAULT_DESCRIPTION };

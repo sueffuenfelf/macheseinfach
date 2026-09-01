@@ -1,54 +1,61 @@
 import { describe, expect, test } from 'bun:test';
 import { getTool } from '../data/catalog';
-import { computeDeposit } from '../tools/deposit-calc/compute';
+import { computePercent } from '../tools/percent-calc/compute';
 import { defaultsFromFields } from '../tools/_shared/shells';
 import type { FieldDef } from '../tools/_shared/shells';
 import { runCatalogTool } from './shellRunner';
 
-const catalogLoaded = Boolean(getTool('iban-validate'));
+const catalogLoaded = Boolean(getTool('percent-calc'));
 
-const DEPOSIT_FIELDS: FieldDef[] = [
+const PERCENT_FIELDS: FieldDef[] = [
     {
-        id: 'cold',
-        type: 'currency',
-        label: 'Kaltmiete (monatlich)',
-        placeholder: '850,00',
+        id: 'mode',
+        type: 'segment',
+        label: 'Modus',
+        default: 'of',
+        options: [{ value: 'of', label: '% von' }],
+    },
+    {
+        id: 'a',
+        type: 'number',
+        label: 'A',
+        placeholder: '10',
+    },
+    {
+        id: 'b',
+        type: 'number',
+        label: 'B',
+        placeholder: '200',
     },
 ];
 
-describe('runCatalogTool (deposit-calc via shell registry)', () => {
-    test.skipIf(!catalogLoaded)('computes deposit when shell is registered', async () => {
-        const direct = computeDeposit({ ...defaultsFromFields(DEPOSIT_FIELDS), cold: '900' });
+describe('runCatalogTool (percent-calc via shell registry)', () => {
+    test.skipIf(!catalogLoaded)('computes percent when shell is registered', async () => {
+        const direct = computePercent({
+            ...defaultsFromFields(PERCENT_FIELDS),
+            a: '10',
+            b: '200',
+        });
         expect(direct.error).toBeUndefined();
 
-        const result = await runCatalogTool('deposit-calc', { cold: '900' });
+        const result = await runCatalogTool('percent-calc', { a: '10', b: '200', mode: 'of' });
         expect(result.ok).toBe(true);
-        expect(result.summary).toContain('Kaution');
-    });
-
-    test.skipIf(!catalogLoaded)('iban-validate bespoke runner', async () => {
-        const result = await runCatalogTool('iban-validate', {
-            iban: 'DE89370400440532013000',
-        });
-        expect(result.ok).toBe(true);
-        expect(result.summary).toContain('IBAN');
+        expect(result.summary).toContain('%');
     });
 
     test('rejects non-object input', async () => {
-        const result = await runCatalogTool('deposit-calc', 'nope');
+        const result = await runCatalogTool('percent-calc', 'nope');
         expect(result.ok).toBe(false);
     });
 
-    test.skipIf(!catalogLoaded)('hash-file runs headless via extract shell', async () => {
-        const file = new File(['hello'], 'test.txt', { type: 'text/plain' });
-        const result = await runCatalogTool('hash-file', { file });
+    test.skipIf(!catalogLoaded)('json-format runs via paste shell', async () => {
+        const result = await runCatalogTool('json-format', { paste: '{"a":1}' });
         expect(result.ok).toBe(true);
-        expect(result.summary).toContain('SHA');
     });
 
-    test.skipIf(!catalogLoaded)('pdf-redact requires UI', async () => {
+    test.skipIf(!catalogLoaded)('pdf-sign requires UI', async () => {
         const file = new File(['%PDF'], 'doc.pdf', { type: 'application/pdf' });
-        const result = await runCatalogTool('pdf-redact', { file });
+        const result = await runCatalogTool('pdf-sign', { file });
         expect(result.ok).toBe(false);
         expect(result.summary).toContain('Oberfläche');
     });

@@ -63,7 +63,7 @@ export function moveIndex<T>(items: readonly T[], from: number, to: number): T[]
 export type RotateDegrees = 0 | 90 | 180 | 270;
 
 export function normalizeRotateDegrees(value: number): RotateDegrees {
-    const normalized = ((Math.round(value / 90) * 90) % 360 + 360) % 360;
+    const normalized = (((Math.round(value / 90) * 90) % 360) + 360) % 360;
     if (normalized === 90 || normalized === 180 || normalized === 270) return normalized;
     return 0;
 }

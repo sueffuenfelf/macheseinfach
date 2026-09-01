@@ -2,9 +2,8 @@ import {
     areaOrder,
     areas,
     getTool,
-    stories,
+    tools as catalogTools,
     type AreaId,
-    type StoryId,
     type ToolDefinition,
     type ToolId,
 } from '../data/catalog';
@@ -12,7 +11,13 @@ import { buildConversionVariants } from '../tools/_shared/image/variants';
 import type { ToolVariant } from '../tools/types';
 import type { ParsedRoute } from '../routing/paths';
 import { getVariantBySlug } from '../tools/variant-registry';
-import { DEFAULT_DESCRIPTION, isIndexingDisallowed, isRouteIndexable, SITE_NAME, SITE_URL } from './site-config';
+import {
+    DEFAULT_DESCRIPTION,
+    isIndexingDisallowed,
+    isRouteIndexable,
+    SITE_NAME,
+    SITE_URL,
+} from './site-config';
 
 export type RouteMeta = {
     path: string;
@@ -35,9 +40,7 @@ function toolDescription(tool: ReturnType<typeof getTool>): string {
     return `${tool.pain} ${tool.solution}`.trim();
 }
 
-function breadcrumbJsonLd(
-    items: { name: string; url: string }[],
-): Record<string, unknown> {
+function breadcrumbJsonLd(items: { name: string; url: string }[]): Record<string, unknown> {
     return {
         '@context': 'https://schema.org',
         '@type': 'BreadcrumbList',
@@ -99,7 +102,10 @@ export function metaForVariant(variant: ToolVariant, siteUrl: string): RouteMeta
         webApplicationJsonLd(meta),
         breadcrumbJsonLd([
             { name: 'Start', url: absoluteUrl('/', siteUrl) },
-            { name: areas.bilder.label, url: absoluteUrl(`/bereich/${areas.bilder.slug}`, siteUrl) },
+            {
+                name: areas.bilder.label,
+                url: absoluteUrl(`/bereich/${areas.bilder.slug}`, siteUrl),
+            },
             { name: variant.seo.h1, url: canonical },
         ]),
     ];
@@ -114,34 +120,39 @@ function resolveTool(
 }
 
 export function metaForTool(
-    areaId: AreaId,
-    storyId: StoryId,
+    _areaId: AreaId,
     toolId: ToolId,
     siteUrl: string,
     catalogs?: Readonly<Record<string, ToolDefinition>>,
 ): RouteMeta {
-    const area = areas[areaId];
-    const story = stories[storyId];
+    return metaForToolShortcut(toolId, siteUrl, catalogs);
+}
+
+/** Standalone tool shortlink SEO (`/tool/:slug`). */
+export function metaForToolShortcut(
+    toolId: ToolId,
+    siteUrl: string,
+    catalogs?: Readonly<Record<string, ToolDefinition>>,
+): RouteMeta {
     const tool = resolveTool(toolId, catalogs);
     const toolSlug = tool?.slug ?? toolId;
-    const path = `/bereich/${area.slug}/${story.slug}/${toolSlug}`;
+    const path = `/tool/${toolSlug}`;
     const canonical = absoluteUrl(path, siteUrl);
+    const areaId = tool?.areas[0];
+    const area = areaId ? areas[areaId] : null;
     const meta: RouteMeta = {
         path,
-        title: tool ? `${tool.title} — ${SITE_NAME}` : `${story.outcome} — ${SITE_NAME}`,
-        description: tool ? toolDescription(tool) : story.situation,
-        h1: tool?.title ?? story.outcome,
+        title: tool ? `${tool.title} — ${SITE_NAME}` : `${toolId} — ${SITE_NAME}`,
+        description: tool ? toolDescription(tool) : DEFAULT_DESCRIPTION,
+        h1: tool?.title,
         canonical,
     };
-    meta.jsonLd = [
-        webApplicationJsonLd(meta),
-        breadcrumbJsonLd([
-            { name: 'Start', url: absoluteUrl('/', siteUrl) },
-            { name: area.label, url: absoluteUrl(`/bereich/${area.slug}`, siteUrl) },
-            { name: story.outcome, url: absoluteUrl(`/bereich/${area.slug}/${story.slug}`, siteUrl) },
-            { name: meta.h1 ?? story.outcome, url: canonical },
-        ]),
-    ];
+    const crumbs = [{ name: 'Start', url: absoluteUrl('/', siteUrl) }];
+    if (area) {
+        crumbs.push({ name: area.label, url: absoluteUrl(`/bereich/${area.slug}`, siteUrl) });
+    }
+    crumbs.push({ name: tool?.title ?? toolId, url: canonical });
+    meta.jsonLd = [webApplicationJsonLd(meta), breadcrumbJsonLd(crumbs)];
     return meta;
 }
 
@@ -184,22 +195,32 @@ export function resolveRouteMeta(route: ParsedRoute, siteUrl: string): RouteMeta
         return {
             path: '/suche',
             title: `Suche — ${SITE_NAME}`,
-            description:
-                'Finde Tools, Vorhaben und Bild-Varianten — lokal im Browser, ohne Upload.',
+            description: 'Finde Tools und Bild-Varianten — lokal im Browser, ohne Upload.',
             h1: 'Suche',
             canonical: base('/suche'),
         };
     }
 
-    if (route.page === 'vorhaben') {
-        return {
-            path: '/vorhaben',
-            title: `Vorhaben — ${SITE_NAME}`,
-            description:
-                'Alle Multi-Tool-Vorhaben auf macheseinfach — Schritt für Schritt im Browser.',
-            h1: 'Vorhaben',
-            canonical: base('/vorhaben'),
+    if (route.page === 'conversion' && route.areaId) {
+        const area = areas[route.areaId];
+        const path = `/bereich/${area.slug}/format-aendern`;
+        const canonical = base(path);
+        const meta: RouteMeta = {
+            path,
+            title: `Bildformat ändern — ${SITE_NAME}`,
+            description: 'HEIC, PNG, JPG und WebP lokal im Browser umwandeln.',
+            h1: 'Bildformat ändern',
+            canonical,
         };
+        meta.jsonLd = [
+            webPageJsonLd(meta),
+            breadcrumbJsonLd([
+                { name: 'Start', url: base('/') },
+                { name: area.label, url: base(`/bereich/${area.slug}`) },
+                { name: 'Bildformat ändern', url: canonical },
+            ]),
+        ];
+        return meta;
     }
 
     if (route.page === 'area' && route.areaId) {
@@ -227,41 +248,14 @@ export function resolveRouteMeta(route: ParsedRoute, siteUrl: string): RouteMeta
         return meta;
     }
 
-    if (route.page === 'story' && route.areaId && route.storyId) {
-        const area = areas[route.areaId];
-        const story = stories[route.storyId];
-        const path = `/bereich/${area.slug}/${story.slug}`;
-        const canonical = base(path);
-        const meta: RouteMeta = {
-            path,
-            title: `${story.outcome} — ${SITE_NAME}`,
-            description: story.situation,
-            h1: story.outcome,
-            canonical,
-        };
-        if (route.tags.length > 0) {
-            meta.noindex = true;
-        } else {
-            meta.jsonLd = [
-                webPageJsonLd(meta),
-                breadcrumbJsonLd([
-                    { name: 'Start', url: base('/') },
-                    { name: area.label, url: base(`/bereich/${area.slug}`) },
-                    { name: story.outcome, url: canonical },
-                ]),
-            ];
-        }
-        return meta;
-    }
-
-    if (route.page === 'tool' && route.areaId && route.storyId && route.toolId) {
+    if (route.page === 'tool' && route.toolId) {
         if (route.variantSlug) {
             const variant = getVariantBySlug(route.variantSlug);
             if (variant) {
                 return metaForVariant(variant, siteUrl);
             }
         }
-        return metaForTool(route.areaId, route.storyId, route.toolId, siteUrl);
+        return metaForToolShortcut(route.toolId, siteUrl);
     }
 
     return {
@@ -272,48 +266,69 @@ export function resolveRouteMeta(route: ParsedRoute, siteUrl: string): RouteMeta
     };
 }
 
+function isIndexableTool(
+    toolId: string,
+    catalogs?: Readonly<Record<string, ToolDefinition>>,
+): boolean {
+    const tool = resolveTool(toolId, catalogs);
+    if (!tool) return true;
+    return tool.maturity !== 'planned';
+}
+
 /** All indexable routes for static HTML shells and sitemap. */
 export function collectStaticRoutes(
     siteUrl: string,
     catalogs?: Readonly<Record<string, ToolDefinition>>,
 ): RouteMeta[] {
     const routes: RouteMeta[] = [
-        resolveRouteMeta({ page: 'home', areaId: null, storyId: null, toolId: null, variantSlug: null, tags: [] }, siteUrl),
-        resolveRouteMeta({ page: 'search', areaId: null, storyId: null, toolId: null, variantSlug: null, tags: [] }, siteUrl),
-        resolveRouteMeta({ page: 'vorhaben', areaId: null, storyId: null, toolId: null, variantSlug: null, tags: [] }, siteUrl),
+        resolveRouteMeta(
+            {
+                page: 'home',
+                areaId: null,
+                toolId: null,
+                variantSlug: null,
+                tags: [],
+            },
+            siteUrl,
+        ),
+        resolveRouteMeta(
+            {
+                page: 'search',
+                areaId: null,
+                toolId: null,
+                variantSlug: null,
+                tags: [],
+            },
+            siteUrl,
+        ),
     ];
 
     for (const areaId of areaOrder) {
-        const area = areas[areaId];
         routes.push(
             resolveRouteMeta(
-                { page: 'area', areaId, storyId: null, toolId: null, variantSlug: null, tags: [] },
+                { page: 'area', areaId, toolId: null, variantSlug: null, tags: [] },
                 siteUrl,
             ),
         );
+    }
 
-        for (const storyId of area.storyIds) {
-            const story = stories[storyId];
-            if (story.status === 'planned' && story.steps.length === 0) continue;
+    routes.push(
+        resolveRouteMeta(
+            {
+                page: 'conversion',
+                areaId: 'bilder',
+                toolId: null,
+                variantSlug: null,
+                tags: [],
+            },
+            siteUrl,
+        ),
+    );
 
-            routes.push(
-                resolveRouteMeta(
-                    {
-                        page: 'story',
-                        areaId,
-                        storyId,
-                        toolId: null,
-                        variantSlug: null,
-                        tags: [],
-                    },
-                    siteUrl,
-                ),
-            );
-
-            for (const toolId of story.steps.map((step) => step.toolId)) {
-                routes.push(metaForTool(areaId, storyId, toolId, siteUrl, catalogs));
-            }
-        }
+    const toolSource = catalogs ?? catalogTools;
+    for (const toolId of Object.keys(toolSource)) {
+        if (!isIndexableTool(toolId, catalogs)) continue;
+        routes.push(metaForToolShortcut(toolId as ToolId, siteUrl, catalogs));
     }
 
     for (const variant of buildConversionVariants()) {

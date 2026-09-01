@@ -4,7 +4,7 @@ import { PlatformProvider } from './context/PlatformContext';
 import { SettingsProvider } from './context/SettingsContext';
 import { PlatformRouterSync, TagUrlSync } from './routing/PlatformRouterSync';
 import { RouteRedirects } from './routing/RouteRedirects';
-import { JobDock, JobQueueBridge } from './shell/jobs';
+import { JobQueueBridge } from './shell/jobs';
 import { SessionSplash } from './shell/SessionSplash';
 import { ToolShell } from './shell/ToolShell';
 import { ToastProvider, ToastViewport } from './shell/toast';
@@ -24,7 +24,6 @@ function AppRoutes() {
                             <Route path="/*" element={<ToolShell />} />
                         </Routes>
                         <ToastViewport />
-                        <JobDock />
                     </PlatformProvider>
                 </JobQueueBridge>
             </ToastProvider>

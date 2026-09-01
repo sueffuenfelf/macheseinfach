@@ -15,10 +15,9 @@ const catalog = {
     fileHints: ['pdf'],
     command: '/pdf flatten',
     entry: 'file',
-    theme: { accent: '#ffc900', accentStrong: '#000', accentSoft: '#fff7cf' },
+    theme: { accent: '#90a8ed', accentStrong: '#000', accentSoft: '#e6ecfb' },
     maturity: 'beta',
-    areas: ['dokumente', 'behoerden'],
-    storyIds: [],
+    areas: ['dokumente'],
 } as const;
 
 export default defineTool(

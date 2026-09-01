@@ -36,18 +36,18 @@ Example:
 
 ```ts
 import { defineCalcTool } from '../_shared/shells';
-import { computeVat } from './compute';
+import { computePercent } from './compute';
 
 export default defineCalcTool(
   {
-    catalog: { id: 'vat-calculator', /* … */, areas: ['buchhaltung'] },
+    catalog: { id: 'percent-calc', /* … */, areas: ['einheiten'] },
     fields: [
-      { id: 'amount', type: 'currency', label: 'Betrag' },
-      { id: 'rate', type: 'segment', label: 'MwSt', options: [/* … */] },
+      { id: 'a', type: 'number', label: 'A' },
+      { id: 'b', type: 'number', label: 'B' },
     ],
-    compute: computeVat,
+    compute: computePercent,
   },
-  'vat-calculator',
+  'percent-calc',
 );
 ```
 

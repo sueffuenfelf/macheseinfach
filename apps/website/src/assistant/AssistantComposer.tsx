@@ -83,20 +83,18 @@ export function AssistantComposer() {
     const [draft, setDraft] = useState(() => readDraft());
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const disabled = !settings.openRouterApiKey.trim();
-    const canSend =
-        !disabled && !isRunning && (draft.trim().length > 0 || attachments.length > 0);
+    const canSend = !disabled && !isRunning && (draft.trim().length > 0 || attachments.length > 0);
 
     const commandContext = useCallback(
         () => ({
             startFreshThread,
             selectArea: nav.selectArea,
-            selectStory: nav.selectStory,
             selectTool: nav.selectTool,
             listFavorites: () => nav.favorites,
             goToSearch: nav.goToSearch,
-            goToVorhaben: nav.goToVorhaben,
             attachFromClipboard,
-            injectAssistantReply: (text: string) => injectLocalReply(text, draft.trim() || undefined),
+            injectAssistantReply: (text: string) =>
+                injectLocalReply(text, draft.trim() || undefined),
             navigate: (href: string) => navigate(href),
         }),
         [
@@ -105,9 +103,7 @@ export function AssistantComposer() {
             injectLocalReply,
             nav.favorites,
             nav.goToSearch,
-            nav.goToVorhaben,
             nav.selectArea,
-            nav.selectStory,
             nav.selectTool,
             navigate,
             startFreshThread,

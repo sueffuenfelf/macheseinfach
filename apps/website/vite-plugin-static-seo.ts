@@ -6,10 +6,7 @@ import type { RouteMeta } from './src/seo/route-meta';
 import { buildRobotsTxt, buildSitemapXml } from './src/seo/route-meta';
 import { isRouteIndexable, SITE_URL } from './src/seo/site-config';
 
-const GENERATED_ROUTES = path.resolve(
-    import.meta.dirname,
-    'src/seo/.generated-routes.json',
-);
+const GENERATED_ROUTES = path.resolve(import.meta.dirname, 'src/seo/.generated-routes.json');
 
 function routeOutFile(distDir: string, routePath: string): string {
     if (routePath === '/') return path.join(distDir, 'index.html');

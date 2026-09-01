@@ -1,13 +1,10 @@
 import { Link } from 'react-router-dom';
-import { areas, stories } from '../data/catalog';
+import { areas } from '../data/catalog';
 import { variantPath } from '../routing/paths';
 import { getVariantsForTool } from '../tools/variant-registry';
 import { AppPageHeader, PageContainer } from './PageContainer';
 
-const HUB_STORY_ID = 'story-bild-format-aendern' as const;
-
 export function ConversionVariantHub() {
-    const story = stories[HUB_STORY_ID];
     const area = areas.bilder;
     const variants = getVariantsForTool('image-convert');
 
@@ -15,8 +12,8 @@ export function ConversionVariantHub() {
         <PageContainer wide>
             <AppPageHeader
                 showBack
-                title={story.outcome}
-                subtitle={`${story.situation} Wähle die passende Konvertierung — alle Varianten laufen lokal im Browser.`}
+                title="Bildformat ändern"
+                subtitle="Wähle die passende Konvertierung — alle Varianten laufen lokal im Browser."
             />
 
             <section className="max-w-[720px]">

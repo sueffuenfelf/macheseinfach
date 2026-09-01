@@ -1,7 +1,7 @@
 export type { AssistantHost } from './host';
 export { META_TOOLS, META_TOOL_NAMES, metaToolsToDefinitions } from './meta-tools';
 export type { MetaToolName } from './meta-tools';
-export { buildSystemPrompt, type ActiveFlowContext, type ActiveFlowSlotSummary } from './system-prompt';
+export { buildSystemPrompt } from './system-prompt';
 export { buildTurnMessages, runAssistantTurn } from './loop';
 export type { RunAssistantTurnArgs } from './loop';
 export type { AssistantEvent, AssistantEventHandler } from './events';
@@ -15,9 +15,6 @@ export type {
     AttachmentPayload,
     AttachmentRef,
     ChatAttachment,
-    FlowDefinition,
-    FlowSummary,
-    FlowStep,
     StoredMessage,
     ToolHit,
     ToolMeta,

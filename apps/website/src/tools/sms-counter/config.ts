@@ -21,7 +21,6 @@ export default defineCalcTool(
             theme: { accent: '#7dd3c0', accentStrong: '#000', accentSoft: '#e8f7f3' },
             maturity: 'stable',
             areas: ['text'],
-            storyIds: [],
         },
         fields: [
             {

@@ -73,9 +73,8 @@ describe('score-lexical', () => {
         const raw = scoreLexical('heic zu png', docs);
         const normalized = normalizeLexicalScores(raw);
         const variantScore = normalized.get('variant:heic-zu-png') ?? 0;
-        const ibanScore =
-            normalized.get('tool:iban-validate:buchhaltung:story-iban-vor-ueberweisung') ?? 0;
-        expect(variantScore).toBeGreaterThan(ibanScore);
+        const jsonScore = normalized.get('tool:json-format:web:story-json-base64') ?? 0;
+        expect(variantScore).toBeGreaterThan(jsonScore);
     });
 
     test('fixture queries match expected top results', () => {

@@ -1,8 +1,5 @@
 import { AssistantHost, AssistantProvider } from '../assistant';
-import { stories } from '../data/catalog';
-import { FlowWorkspace, shouldUseFlowWorkspace } from '../flow/FlowWorkspace';
 import { isFeatureEnabled } from '../lib/featureFlags';
-import { isConversionHubStory } from '../routing/conversion-hub';
 import { usePlatformNav } from '../routing/usePlatformNav';
 import { RouteHead } from '../seo/RouteHead';
 import { AppShell } from './AppShell';
@@ -11,56 +8,31 @@ import { CommandPalette } from './CommandPalette';
 import { ConversionVariantHub } from './ConversionVariantHub';
 import { SearchPage } from './SearchPage';
 import { SettingsPage } from './SettingsPage';
-import { StoriesOverviewPage } from './StoriesOverviewPage';
-import { StoryPickStep, ToolPickForStory } from './StoryPickStep';
+import { AreaToolsStep } from './AreaToolsStep';
 import { ToolWorkspace } from './ToolWorkspace';
 
 function ShellMainContent() {
     const platform = usePlatformNav();
-    const { page, activeAreaId, activeStoryId, activeTool } = platform;
-
-    const flowWorkspaceActive = (() => {
-        if (!activeStoryId) return false;
-        if (isConversionHubStory(activeStoryId)) return false;
-        return shouldUseFlowWorkspace(stories[activeStoryId]);
-    })();
+    const { page, activeAreaId, activeTool } = platform;
 
     if (page === 'settings') return <SettingsPage />;
     if (page === 'search') return <SearchPage />;
-    if (page === 'vorhaben') return <StoriesOverviewPage />;
+    if (page === 'conversion') return <ConversionVariantHub />;
     if (!activeAreaId) return <AreaStep />;
 
-    if (flowWorkspaceActive && activeStoryId && (page === 'story' || page === 'tool')) {
-        return <FlowWorkspace flowId={activeStoryId} />;
-    }
     if (page === 'tool' && activeTool) {
         return <ToolWorkspace tool={activeTool} />;
     }
-    if (page === 'story' && activeStoryId) {
-        if (isConversionHubStory(activeStoryId)) {
-            return <ConversionVariantHub />;
-        }
-        return <ToolPickForStory storyId={activeStoryId} />;
-    }
     if (activeAreaId) {
-        return <StoryPickStep areaId={activeAreaId} />;
+        return <AreaToolsStep areaId={activeAreaId} />;
     }
     return <AreaStep />;
 }
 
 function ShellContent() {
     const platform = usePlatformNav();
-    const { page, activeStoryId, activeTool } = platform;
-
-    const flowWorkspaceActive = (() => {
-        if (!activeStoryId) return false;
-        if (isConversionHubStory(activeStoryId)) return false;
-        return shouldUseFlowWorkspace(stories[activeStoryId]);
-    })();
-
-    const contentFill =
-        flowWorkspaceActive ||
-        (page === 'tool' && Boolean(activeTool) && !isConversionHubStory(activeStoryId ?? ''));
+    const { page, activeTool } = platform;
+    const contentFill = page === 'tool' && Boolean(activeTool);
 
     return (
         <AppShell contentFill={contentFill}>
