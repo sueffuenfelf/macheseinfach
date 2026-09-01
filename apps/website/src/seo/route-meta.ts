@@ -13,8 +13,10 @@ import type { ParsedRoute } from '../routing/paths';
 import { getVariantBySlug } from '../tools/variant-registry';
 import {
     DEFAULT_DESCRIPTION,
+    IMPRINT_PATH,
     isIndexingDisallowed,
     isRouteIndexable,
+    PRIVACY_PATH,
     SITE_NAME,
     SITE_URL,
 } from './site-config';
@@ -37,7 +39,9 @@ export function absoluteUrl(path: string, siteUrl: string): string {
 
 function toolDescription(tool: ReturnType<typeof getTool>): string {
     if (tool.sub.trim()) return tool.sub;
-    return `${tool.pain} ${tool.solution}`.trim();
+    const combined = `${tool.pain} ${tool.solution}`.trim();
+    if (combined) return combined;
+    return `${tool.title} — lokal im Browser, ohne Upload.`;
 }
 
 function breadcrumbJsonLd(items: { name: string; url: string }[]): Record<string, unknown> {
@@ -181,6 +185,22 @@ export function resolveRouteMeta(route: ParsedRoute, siteUrl: string): RouteMeta
         return meta;
     }
 
+    if (route.page === 'legal') {
+        const isPrivacy = route.legalKind === 'privacy';
+        const path = isPrivacy ? PRIVACY_PATH : IMPRINT_PATH;
+        const title = isPrivacy ? `Datenschutz — ${SITE_NAME}` : `Impressum — ${SITE_NAME}`;
+        const description = isPrivacy
+            ? 'Datenschutzhinweise für macheseinfa.ch — Verarbeitung lokal im Browser, ohne Nutzerkonto.'
+            : 'Impressum von macheseinfa.ch — Angaben zum Anbieter gemäß DDG.';
+        return {
+            path,
+            title,
+            description,
+            h1: isPrivacy ? 'Datenschutz' : 'Impressum',
+            canonical: base(path),
+            noindex: true,
+        };
+    }
     if (route.page === 'settings') {
         return {
             path: '/einstellungen',
@@ -266,16 +286,16 @@ export function resolveRouteMeta(route: ParsedRoute, siteUrl: string): RouteMeta
     };
 }
 
-function isIndexableTool(
+function isPublishedTool(
     toolId: string,
     catalogs?: Readonly<Record<string, ToolDefinition>>,
 ): boolean {
     const tool = resolveTool(toolId, catalogs);
-    if (!tool) return true;
-    return tool.maturity !== 'planned';
+    if (!tool) return false;
+    return Boolean(tool.slug && tool.title && toolDescription(tool).length >= 8);
 }
 
-/** All indexable routes for static HTML shells and sitemap. */
+/** All prerendered routes (legal pages included, marked noindex). */
 export function collectStaticRoutes(
     siteUrl: string,
     catalogs?: Readonly<Record<string, ToolDefinition>>,
@@ -298,6 +318,28 @@ export function collectStaticRoutes(
                 toolId: null,
                 variantSlug: null,
                 tags: [],
+            },
+            siteUrl,
+        ),
+        resolveRouteMeta(
+            {
+                page: 'legal',
+                areaId: null,
+                toolId: null,
+                variantSlug: null,
+                tags: [],
+                legalKind: 'imprint',
+            },
+            siteUrl,
+        ),
+        resolveRouteMeta(
+            {
+                page: 'legal',
+                areaId: null,
+                toolId: null,
+                variantSlug: null,
+                tags: [],
+                legalKind: 'privacy',
             },
             siteUrl,
         ),
@@ -327,7 +369,7 @@ export function collectStaticRoutes(
 
     const toolSource = catalogs ?? catalogTools;
     for (const toolId of Object.keys(toolSource)) {
-        if (!isIndexableTool(toolId, catalogs)) continue;
+        if (!isPublishedTool(toolId, catalogs)) continue;
         routes.push(metaForToolShortcut(toolId as ToolId, siteUrl, catalogs));
     }
 
@@ -366,6 +408,8 @@ Disallow: /
 
     return `User-agent: *
 Allow: /
+Disallow: ${IMPRINT_PATH}
+Disallow: ${PRIVACY_PATH}
 
 Sitemap: ${absoluteUrl('/sitemap.xml', siteUrl)}
 `;

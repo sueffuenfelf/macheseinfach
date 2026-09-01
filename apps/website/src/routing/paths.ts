@@ -10,7 +10,7 @@ import { CONVERSION_HUB_SLUG, isConversionHubSlug } from './conversion-hub';
 import { isVariantStorySlug } from '../data/catalog/variant-stories';
 import { getVariantBySlug } from '../tools/variant-registry';
 
-export type AppPage = 'home' | 'area' | 'tool' | 'settings' | 'search' | 'conversion';
+export type AppPage = 'home' | 'area' | 'tool' | 'settings' | 'search' | 'conversion' | 'legal';
 
 export function homePath(): string {
     return '/';
@@ -18,6 +18,14 @@ export function homePath(): string {
 
 export function settingsPath(): string {
     return '/einstellungen';
+}
+
+export function imprintPath(): string {
+    return '/impressum';
+}
+
+export function privacyPath(): string {
+    return '/datenschutz';
 }
 
 export function searchPath(query?: string): string {
@@ -65,6 +73,7 @@ export type ParsedRoute = {
     toolId: ToolId | null;
     variantSlug: string | null;
     tags: string[];
+    legalKind?: 'imprint' | 'privacy' | null;
 };
 
 function homeRoute(): ParsedRoute {
@@ -74,6 +83,7 @@ function homeRoute(): ParsedRoute {
         toolId: null,
         variantSlug: null,
         tags: [],
+        legalKind: null,
     };
 }
 
@@ -111,6 +121,26 @@ export function parsePathname(pathname: string, search: string): ParsedRoute {
     }
     if (pathname === '/favoriten') {
         return homeRoute();
+    }
+    if (pathname === '/impressum') {
+        return {
+            page: 'legal',
+            areaId: null,
+            toolId: null,
+            variantSlug: null,
+            tags: [],
+            legalKind: 'imprint',
+        };
+    }
+    if (pathname === '/datenschutz') {
+        return {
+            page: 'legal',
+            areaId: null,
+            toolId: null,
+            variantSlug: null,
+            tags: [],
+            legalKind: 'privacy',
+        };
     }
     if (pathname === '/einstellungen') {
         return {

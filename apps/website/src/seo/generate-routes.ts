@@ -50,7 +50,10 @@ function parseCatalogFromConfig(folderId: string, source: string): ToolDefinitio
     const id = readQuotedField(block, 'id') ?? folderId;
     const slug = readQuotedField(block, 'slug');
     const title = readQuotedField(block, 'title');
-    const sub = readQuotedField(block, 'sub');
+    const fallbackSub = [readQuotedField(block, 'pain'), readQuotedField(block, 'solution')]
+        .filter(Boolean)
+        .join(' ');
+    const sub = readQuotedField(block, 'sub') ?? (fallbackSub || undefined);
     if (!slug || !title || !sub) return null;
 
     return {

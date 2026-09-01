@@ -3,6 +3,8 @@
 
 [variables]
 NIXPACKS_NODE_VERSION = "22"
+FF_DISALLOW_INDEXING = "false"
+VITE_FF_DISALLOW_INDEXING = "false"
 
 [phases.setup]
 nixpkgsArchive = "51ad838b03a05b1de6f9f2a0fffecee64a9788ee"

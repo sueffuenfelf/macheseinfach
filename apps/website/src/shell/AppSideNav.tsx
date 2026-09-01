@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { areas } from '../data/catalog';
-import { areaPath, homePath, settingsPath } from '../routing/paths';
+import { areaPath, homePath, imprintPath, privacyPath, settingsPath } from '../routing/paths';
 import { usePlatformNav } from '../routing/usePlatformNav';
 import { BrandLogo } from './BrandLogo';
 import { Icon } from './Icon';
@@ -151,9 +151,13 @@ export function AppSideNav({ onNavigate, className = '' }: AppSideNavProps) {
                     Lokal · kein Konto · Open Source
                 </p>
                 <div className="flex flex-wrap gap-x-3 gap-y-1 px-2.5 text-[10px] text-[var(--color-ink-muted)]">
-                    <span>Datenschutz</span>
+                    <Link to={privacyPath()} onClick={dismiss} className="underline decoration-dotted">
+                        Datenschutz
+                    </Link>
                     <span>Quelltext</span>
-                    <span>Impressum</span>
+                    <Link to={imprintPath()} onClick={dismiss} className="underline decoration-dotted">
+                        Impressum
+                    </Link>
                 </div>
             </div>
         </nav>

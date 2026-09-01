@@ -122,7 +122,8 @@ export function PlatformProvider({ children }: { children: ReactNode }) {
             snapshot.page === 'home' ||
             snapshot.page === 'settings' ||
             snapshot.page === 'search' ||
-            snapshot.page === 'conversion'
+            snapshot.page === 'conversion' ||
+            snapshot.page === 'legal'
         ) {
             setFileState(null);
         }

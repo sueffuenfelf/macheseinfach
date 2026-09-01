@@ -18,14 +18,16 @@ export const SITE_NAME = 'macheseinfa.ch';
 export const DEFAULT_DESCRIPTION =
     'Datenschutzfreundliche Alltags-Tools für Deutschland — 100 % im Browser, ohne Registrierung, ohne Server-Upload.';
 
+export const PRIVACY_PATH = '/datenschutz';
+export const IMPRINT_PATH = '/impressum';
+
 /**
- * When true (default), all pages get `noindex` and robots.txt blocks crawlers.
- * Set `FF_DISALLOW_INDEXING=false` in production to allow search indexing.
+ * Indexing is on unless explicitly disabled (`true` / `1`).
+ * Honor both `FF_DISALLOW_INDEXING` (build) and `VITE_FF_DISALLOW_INDEXING` (client).
  */
 export function isIndexingDisallowed(): boolean {
-    const raw = readEnv('FF_DISALLOW_INDEXING');
-    if (raw === 'false') return false;
-    return true;
+    const raw = readEnv('FF_DISALLOW_INDEXING') ?? readEnv('VITE_FF_DISALLOW_INDEXING');
+    return raw === 'true' || raw === '1';
 }
 
 export function robotsDirectiveForRoute(routeNoindex?: boolean): string {

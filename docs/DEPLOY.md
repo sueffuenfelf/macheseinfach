@@ -44,7 +44,7 @@ Ohne Publish directory läuft das **Nixpacks-Image** weiter und startet:
 | --- | --- |
 | `PORT` | von Dokploy gesetzt (Standard `3000`) |
 | `VITE_SITE_URL` | Canonical URL für SEO |
-| `FF_DISALLOW_INDEXING` | `false` in Prod, wenn indexiert werden soll |
+| `FF_DISALLOW_INDEXING` | Indexierung **an** (Default). `true` setzt die ganze Site auf noindex. Impressum und Datenschutz bleiben immer noindex. |
 
 ## Lokal testen
 

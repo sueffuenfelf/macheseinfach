@@ -7,7 +7,6 @@ import {
     buildSitemapXml,
     collectStaticRoutes,
     metaForToolShortcut,
-    resolveRouteMeta,
 } from './route-meta';
 import { isIndexingDisallowed, SITE_URL } from './site-config';
 
@@ -50,10 +49,11 @@ describe('route meta', () => {
         expect(paths).toContain('/bereich/bilder/format-aendern');
         expect(paths).toContain('/bereich/bilder/heic-zu-png/image-convert');
         expect(paths).toContain('/tool/image-convert');
-        expect(paths).not.toContain('/tool/ocr-local');
-        expect(paths).not.toContain('/tool/epc-read');
+        expect(paths).toContain('/tool/ocr-local');
+        expect(paths).toContain('/tool/epc-read');
 
-        expect(paths).not.toContain('/vorhaben');
+        expect(paths).toContain('/impressum');
+        expect(paths).toContain('/datenschutz');
         expect(paths.some((path) => path.startsWith('/bereich/wohnen'))).toBe(false);
         expect(paths.some((path) => path.startsWith('/bereich/buchhaltung'))).toBe(false);
         expect(paths).not.toContain('/bereich/bilder/portal-foto');
@@ -63,7 +63,6 @@ describe('route meta', () => {
         expect(variantRoutes.length).toBe(8);
 
         for (const tool of Object.values(catalogs)) {
-            if (tool.maturity === 'planned') continue;
             expect(paths).toContain(`/tool/${tool.slug}`);
         }
     });
@@ -86,8 +85,24 @@ describe('route meta', () => {
 });
 
 describe('indexing policy', () => {
-    test('disallows indexing by default', () => {
+    test('allows indexing by default', () => {
         delete process.env.FF_DISALLOW_INDEXING;
+        expect(isIndexingDisallowed()).toBe(false);
+
+        const meta = metaForToolShortcut('image-convert', SITE_URL, tools);
+        const html = injectSeoHead(SAMPLE_HTML, meta);
+        expect(html).toContain('content="index, follow"');
+
+        const routes = collectStaticRoutes(SITE_URL, tools);
+        expect(buildSitemapXml(routes)).toContain('<loc>');
+        expect(buildRobotsTxt(SITE_URL)).toContain('Sitemap:');
+        expect(buildRobotsTxt(SITE_URL)).toContain('Allow: /');
+        expect(buildRobotsTxt(SITE_URL)).toContain('Disallow: /impressum');
+        expect(buildRobotsTxt(SITE_URL)).toContain('Disallow: /datenschutz');
+    });
+
+    test('disallows indexing when FF_DISALLOW_INDEXING=true', () => {
+        process.env.FF_DISALLOW_INDEXING = 'true';
         expect(isIndexingDisallowed()).toBe(true);
 
         const meta = metaForToolShortcut('image-convert', SITE_URL, tools);
@@ -99,18 +114,32 @@ describe('indexing policy', () => {
         expect(buildRobotsTxt(SITE_URL)).toContain('Disallow: /');
     });
 
-    test('allows indexing when FF_DISALLOW_INDEXING=false', () => {
-        process.env.FF_DISALLOW_INDEXING = 'false';
-        expect(isIndexingDisallowed()).toBe(false);
-
-        const meta = metaForToolShortcut('image-convert', SITE_URL, tools);
-        const html = injectSeoHead(SAMPLE_HTML, meta);
-        expect(html).toContain('content="index, follow"');
-
+    test('legal pages are noindex and omitted from the sitemap', () => {
+        delete process.env.FF_DISALLOW_INDEXING;
         const routes = collectStaticRoutes(SITE_URL, tools);
-        expect(buildSitemapXml(routes)).toContain('<loc>');
-        expect(buildRobotsTxt(SITE_URL)).toContain('Sitemap:');
-        expect(buildRobotsTxt(SITE_URL)).toContain('Allow: /');
+        const imprint = routes.find((route) => route.path === '/impressum');
+        const privacy = routes.find((route) => route.path === '/datenschutz');
+        expect(imprint?.noindex).toBe(true);
+        expect(privacy?.noindex).toBe(true);
+        const xml = buildSitemapXml(routes);
+        expect(xml).not.toContain('/impressum');
+        expect(xml).not.toContain('/datenschutz');
+        expect(injectSeoHead(SAMPLE_HTML, imprint!)).toContain('content="noindex, nofollow"');
+    });
+
+    test('every published tool has title, description, canonical, and json-ld', () => {
+        delete process.env.FF_DISALLOW_INDEXING;
+        const catalogs = loadToolCatalogs();
+        const routes = collectStaticRoutes(SITE_URL, catalogs);
+        const toolRoutes = routes.filter((route) => route.path.startsWith('/tool/'));
+        expect(toolRoutes.length).toBeGreaterThan(10);
+        for (const route of toolRoutes) {
+            expect(route.title.length).toBeGreaterThan(8);
+            expect(route.description.length).toBeGreaterThan(8);
+            expect(route.canonical.startsWith(SITE_URL)).toBe(true);
+            expect(route.jsonLd?.length ?? 0).toBeGreaterThan(0);
+            expect(route.noindex).toBeFalsy();
+        }
     });
 });
 
